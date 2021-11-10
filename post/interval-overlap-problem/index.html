@@ -2,7 +2,7 @@
 <head>
 <meta charset=utf-8>
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Interval Overlap Problem - gobai's blog</title>
+<title>区间重叠问题 - gobai's blog</title>
 <meta name=renderer content="webkit">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=cache-control content="no-transform">
@@ -11,7 +11,7 @@
 <meta name=msapplication-navbutton-color content="#f8f5ec">
 <meta name=apple-mobile-web-app-capable content="yes">
 <meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec">
-<meta name=author content="gobai"><meta name=description content="优雅处理区间重叠问题"><meta name=keywords content="Hugo,theme,even">
+<meta name=author content="gobai"><meta name=description content="优雅处理区间重叠问题 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 首先对于两个连续区间有重合部分的状态有四种，没重合"><meta name=keywords content="Hugo,theme,even">
 <meta name=generator content="Hugo 0.89.2 with theme even">
 <link rel=canonical href=https://blog.gocn.top/post/interval-overlap-problem/>
 <link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
@@ -21,19 +21,19 @@
 <link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5>
 <link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous>
-<meta property="og:title" content="Interval Overlap Problem">
-<meta property="og:description" content="优雅处理区间重叠问题">
+<meta property="og:title" content="区间重叠问题">
+<meta property="og:description" content="优雅处理区间重叠问题 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 首先对于两个连续区间有重合部分的状态有四种，没重合">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://blog.gocn.top/post/interval-overlap-problem/"><meta property="article:section" content="post">
 <meta property="article:published_time" content="2021-11-10T11:59:41+08:00">
 <meta property="article:modified_time" content="2021-11-10T11:59:41+08:00">
-<meta itemprop=name content="Interval Overlap Problem">
-<meta itemprop=description content="优雅处理区间重叠问题"><meta itemprop=datePublished content="2021-11-10T11:59:41+08:00">
+<meta itemprop=name content="区间重叠问题">
+<meta itemprop=description content="优雅处理区间重叠问题 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 首先对于两个连续区间有重合部分的状态有四种，没重合"><meta itemprop=datePublished content="2021-11-10T11:59:41+08:00">
 <meta itemprop=dateModified content="2021-11-10T11:59:41+08:00">
-<meta itemprop=wordCount content="10">
+<meta itemprop=wordCount content="83">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
-<meta name=twitter:title content="Interval Overlap Problem">
-<meta name=twitter:description content="优雅处理区间重叠问题"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
+<meta name=twitter:title content="区间重叠问题">
+<meta name=twitter:description content="优雅处理区间重叠问题 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 首先对于两个连续区间有重合部分的状态有四种，没重合"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
 <script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]-->
 </head>
 <body>
@@ -84,7 +84,7 @@
 <div id=content class=content>
 <article class=post>
 <header class=post-header>
-<h1 class=post-title>Interval Overlap Problem</h1>
+<h1 class=post-title>区间重叠问题</h1>
 <div class=post-meta>
 <span class=post-time> 2021-11-10 </span>
 </div>
@@ -109,6 +109,12 @@
 </div>
 <div class=post-content>
 <h3 id=优雅处理区间重叠问题>优雅处理区间重叠问题</h3>
+<blockquote>
+<p>给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。</p>
+</blockquote>
+<p>首先对于两个连续区间有重合部分的状态有四种，没重合部分的状态有两种。</p>
+<p><img src=data:image/png;base64,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 alt></p>
+<p>可以看出</p>
 </div>
 <div class=post-copyright>
 <p class=copyright-item>
