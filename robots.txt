@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: https://blog.gocn.top/sitemap.xml
+Sitemap: localhost:1313
