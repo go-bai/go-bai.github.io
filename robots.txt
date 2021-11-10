@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: https://pyai.top/blog/sitemap.xml
+Sitemap: https://blog.gocn.top/sitemap.xml
