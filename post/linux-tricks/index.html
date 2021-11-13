@@ -2,7 +2,7 @@
 <head>
 <meta charset=utf-8>
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Git Tricks - gobai's blog</title>
+<title>Linux Tricks - gobai's blog</title>
 <meta name=renderer content="webkit">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=cache-control content="no-transform">
@@ -11,9 +11,9 @@
 <meta name=msapplication-navbutton-color content="#f8f5ec">
 <meta name=apple-mobile-web-app-capable content="yes">
 <meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec">
-<meta name=author content="gobai"><meta name=description content="目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错"><meta name=keywords content="Hugo,theme,even">
+<meta name=author content="gobai"><meta name=description content="journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/"><meta name=keywords content="Hugo,theme,even">
 <meta name=generator content="Hugo 0.89.2 with theme even">
-<link rel=canonical href=https://blog.gocn.top/post/git-tricks/>
+<link rel=canonical href=https://blog.gocn.top/post/linux-tricks/>
 <link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
@@ -22,19 +22,19 @@
 <script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
 <link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous>
-<meta property="og:title" content="Git Tricks">
-<meta property="og:description" content="目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错">
+<meta property="og:title" content="Linux Tricks">
+<meta property="og:description" content="journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://blog.gocn.top/post/git-tricks/"><meta property="article:section" content="post">
-<meta property="article:published_time" content="2021-11-12T15:36:19+08:00">
-<meta property="article:modified_time" content="2021-11-12T15:36:19+08:00">
-<meta itemprop=name content="Git Tricks">
-<meta itemprop=description content="目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错"><meta itemprop=datePublished content="2021-11-12T15:36:19+08:00">
-<meta itemprop=dateModified content="2021-11-12T15:36:19+08:00">
-<meta itemprop=wordCount content="149">
-<meta itemprop=keywords content="git,"><meta name=twitter:card content="summary">
-<meta name=twitter:title content="Git Tricks">
-<meta name=twitter:description content="目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
+<meta property="og:url" content="https://blog.gocn.top/post/linux-tricks/"><meta property="article:section" content="post">
+<meta property="article:published_time" content="2021-11-14T01:47:04+08:00">
+<meta property="article:modified_time" content="2021-11-14T01:47:04+08:00">
+<meta itemprop=name content="Linux Tricks">
+<meta itemprop=description content="journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/"><meta itemprop=datePublished content="2021-11-14T01:47:04+08:00">
+<meta itemprop=dateModified content="2021-11-14T01:47:04+08:00">
+<meta itemprop=wordCount content="44">
+<meta itemprop=keywords content="linux,"><meta name=twitter:card content="summary">
+<meta name=twitter:title content="Linux Tricks">
+<meta name=twitter:description content="journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
 <script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]-->
 </head>
 <body>
@@ -85,9 +85,9 @@
 <div id=content class=content>
 <article class=post>
 <header class=post-header>
-<h1 class=post-title>Git Tricks</h1>
+<h1 class=post-title>Linux Tricks</h1>
 <div class=post-meta>
-<span class=post-time> 2021-11-12 </span>
+<span class=post-time> 2021-11-14 </span>
 <span id=busuanzi_container_page_pv class=more-meta> <span id=busuanzi_value_page_pv><img src=/img/spinner.svg alt=spinner.svg></span> times read </span>
 </div>
 </header>
@@ -100,7 +100,7 @@
 <ul>
 <li>
 <ul>
-<li><a href=#暂存当前代码改动>暂存当前代码改动</a></li>
+<li><a href=#journal-相关><code>journal</code> 相关</a></li>
 </ul>
 </li>
 </ul>
@@ -110,28 +110,42 @@
 </div>
 </div>
 <div class=post-content>
-<p>目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。</p>
-<h3 id=暂存当前代码改动>暂存当前代码改动</h3>
-<p>场景是在一个git branch写了不少代码以后发现写错分支了，总不能删了再重新写吧，可以使用 <code>git stash</code> 命令解决。</p>
+<h3 id=journal-相关><code>journal</code> 相关</h3>
+<h4 id=查看-journal-占用磁盘量>查看 <code>journal</code> 占用磁盘量</h4>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>journalctl --disk-usage
+</code></pre></td></tr></table>
+</div>
+</div><h4 id=查看某-service-日志>查看某 <code>service</code> 日志</h4>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>journalctl -f -u xxx.service
+</code></pre></td></tr></table>
+</div>
+</div><h4 id=限制持久化配置>限制持久化配置</h4>
 <div class=highlight><div class=chroma>
 <table class=lntable><tr><td class=lntd>
 <pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
-</span><span class=lnt>4
-</span><span class=lnt>5
-</span><span class=lnt>6
 </span></code></pre></td>
 <td class=lntd>
-<pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback>// 将当前改动的代码暂存
-git stash
-// git checkout 到你要工作的分支
-git checkout your_workspace_branch
-// 把暂存的代码从堆栈弹出到当前分支
-git stash pop
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>vim /etc/systemd/journald.conf
+<span class=nv>SystemMaxUse</span><span class=o>=</span>16M
+<span class=nv>ForwardToSyslog</span><span class=o>=</span>no
 </code></pre></td></tr></table>
 </div>
-</div>
+</div><p>参考链接</p>
+<blockquote>
+<p><a href=https://www.cnsre.cn/posts/210401140104/>https://www.cnsre.cn/posts/210401140104/</a></p>
+</blockquote>
 </div>
 <div class=post-copyright>
 <p class=copyright-item>
@@ -141,22 +155,17 @@ git stash pop
 <p class=copyright-item>
 <span class=item-title>LastMod</span>
 <span class=item-content>
-2021-11-12
+2021-11-14
 </span>
 </p>
 </div>
 <footer class=post-footer>
 <div class=post-tags>
-<a href=/tags/git/>git</a>
+<a href=/tags/linux/>linux</a>
 </div>
 <nav class=post-nav>
-<a class=prev href=/post/linux-tricks/>
-<i class="iconfont icon-left"></i>
-<span class="prev-text nav-default">Linux Tricks</span>
-<span class="prev-text nav-mobile">Prev</span>
-</a>
-<a class=next href=/post/interval-overlap-problem/>
-<span class="next-text nav-default">区间重叠问题</span>
+<a class=next href=/post/git-tricks/>
+<span class="next-text nav-default">Git Tricks</span>
 <span class="next-text nav-mobile">Next</span>
 <i class="iconfont icon-right"></i>
 </a>
