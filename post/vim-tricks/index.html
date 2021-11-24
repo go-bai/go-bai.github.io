@@ -2,7 +2,7 @@
 <head>
 <meta charset=utf-8>
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>gobai's blog</title>
+<title>Vim Tricks - gobai's blog</title>
 <meta name=renderer content="webkit">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv=cache-control content="no-transform">
@@ -11,11 +11,9 @@
 <meta name=msapplication-navbutton-color content="#f8f5ec">
 <meta name=apple-mobile-web-app-capable content="yes">
 <meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec">
-<meta name=author content="gobai"><meta name=description content="Hugo theme even example site."><meta name=keywords content="Hugo,theme,even">
+<meta name=author content="gobai"><meta name=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><meta name=keywords content="Hugo,theme,even">
 <meta name=generator content="Hugo 0.89.2 with theme even">
-<link rel=canonical href=https://blog.gocn.top/>
-<link href=https://blog.gocn.top/index.xml rel=alternate type=application/rss+xml title="gobai's blog">
-<link href=https://blog.gocn.top/index.xml rel=feed type=application/rss+xml title="gobai's blog">
+<link rel=canonical href=https://blog.gocn.top/post/vim-tricks/>
 <link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
 <link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
 <link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
@@ -24,14 +22,19 @@
 <script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
 <link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous>
-<meta property="og:title" content="gobai's blog">
-<meta property="og:description" content="Hugo theme even example site.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://blog.gocn.top/">
-<meta itemprop=name content="gobai's blog">
-<meta itemprop=description content="Hugo theme even example site."><meta name=twitter:card content="summary">
-<meta name=twitter:title content="gobai's blog">
-<meta name=twitter:description content="Hugo theme even example site."><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
+<meta property="og:title" content="Vim Tricks">
+<meta property="og:description" content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.gocn.top/post/vim-tricks/"><meta property="article:section" content="post">
+<meta property="article:published_time" content="2021-11-24T21:45:54+08:00">
+<meta property="article:modified_time" content="2021-11-24T21:45:54+08:00">
+<meta itemprop=name content="Vim Tricks">
+<meta itemprop=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><meta itemprop=datePublished content="2021-11-24T21:45:54+08:00">
+<meta itemprop=dateModified content="2021-11-24T21:45:54+08:00">
+<meta itemprop=wordCount content="13">
+<meta itemprop=keywords content="vim,"><meta name=twitter:card content="summary">
+<meta name=twitter:title content="Vim Tricks">
+<meta name=twitter:description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
 <script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]-->
 </head>
 <body>
@@ -80,91 +83,69 @@
 <main id=main class=main>
 <div class=content-wrapper>
 <div id=content class=content>
-<section id=posts class=posts>
 <article class=post>
 <header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/vim-tricks/>Vim Tricks</a></h1>
+<h1 class=post-title>Vim Tricks</h1>
 <div class=post-meta>
 <span class=post-time> 2021-11-24 </span>
+<span id=busuanzi_container_page_pv class=more-meta> <span id=busuanzi_value_page_pv><img src=/img/spinner.svg alt=spinner.svg></span> times read </span>
 </div>
 </header>
-<div class=post-content>
-<div class=post-summary>
-批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2
-</div>
-<div class=read-more>
-<a href=/post/vim-tricks/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/go-app-reduce-size/>减小go程序编译后的体积</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-22 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-编译经典程序 程序代码 1 2 3 4 5 6 7 package main import "fmt" func main() { fmt.Println("Hello World.") } 编译环境 1 2 $ go version go version go1.16.7 linux/amd64 0. 直接编译 1 2 3 $ go build -o helloword main.go $ ls -lh helloword -rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword 1. 修改
-</div>
-<div class=read-more>
-<a href=/post/go-app-reduce-size/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/linux-tricks/>Linux Tricks</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-14 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/
-</div>
-<div class=read-more>
-<a href=/post/linux-tricks/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/git-tricks/>Git Tricks</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-12 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错
-</div>
-<div class=read-more>
-<a href=/post/git-tricks/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/interval-overlap-problem/>区间重叠问题</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-10 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-问题描述 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 问题分析 首先对于两个连续区间有重合部分的状态有四种，没重合部分
-</div>
-<div class=read-more>
-<a href=/post/interval-overlap-problem/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-</section>
-<nav class=pagination>
+<div class=post-toc id=post-toc>
+<h2 class=post-toc-title>Contents</h2>
+<div class="post-toc-content always-active">
+<nav id=TableOfContents>
+<ul>
+<li>
+<ul>
+<li><a href=#批量替换>批量替换</a></li>
+</ul>
+</li>
+</ul>
 </nav>
 </div>
+</div>
+<div class=post-content>
+<h2 id=批量替换>批量替换</h2>
+<p>批量替换 1.1.1.1 为 2.2.2.2</p>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>:%s+1.1.1.1+2.2.2.2
+</code></pre></td></tr></table>
+</div>
+</div>
+</div>
+<div class=post-copyright>
+<p class=copyright-item>
+<span class=item-title>Author</span>
+<span class=item-content>gobai</span>
+</p>
+<p class=copyright-item>
+<span class=item-title>LastMod</span>
+<span class=item-content>
+2021-11-24
+</span>
+</p>
+</div>
+<footer class=post-footer>
+<div class=post-tags>
+<a href=/tags/vim/>vim</a>
+</div>
+<nav class=post-nav>
+<a class=next href=/post/go-app-reduce-size/>
+<span class="next-text nav-default">减小go程序编译后的体积</span>
+<span class="next-text nav-mobile">Next</span>
+<i class="iconfont icon-right"></i>
+</a>
+</nav>
+</footer>
+</article>
+</div>
+<script src=https://utteranc.es/client.js repo=wolibo/blog issue-term=pathname theme=github-light crossorigin=anonymous async></script>
+<noscript>Please enable JavaScript to view the <a href=https://github.com/utterance>comments powered by utterances.</a></noscript>
 </div>
 </main>
 <footer id=footer class=footer>
