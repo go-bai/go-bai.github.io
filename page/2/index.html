@@ -83,89 +83,25 @@
 <section id=posts class=posts>
 <article class=post>
 <header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/sqlite3-notes/>sqlite3 笔记</a></h1>
+<h1 class=post-title><a class=post-link href=/post/interval-overlap-problem/>区间重叠问题</a></h1>
 <div class=post-meta>
-<span class=post-time> 2021-12-14 </span>
+<span class=post-time> 2021-11-10 </span>
 </div>
 </header>
 <div class=post-content>
 <div class=post-summary>
-rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESE
+问题描述 给定一个左闭右开连续区间 [L,R), 判断与另一个左闭右开连续区间是否有重合部分。 问题分析 首先对于两个连续区间有重合部分的状态有四种，没重合部分
 </div>
 <div class=read-more>
-<a href=/post/sqlite3-notes/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/vim-tricks/>Vim Tricks</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-24 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2
-</div>
-<div class=read-more>
-<a href=/post/vim-tricks/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/go-app-reduce-size/>减小go程序编译后的体积</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-22 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-编译经典程序 程序代码 1 2 3 4 5 6 7 package main import "fmt" func main() { fmt.Println("Hello World.") } 编译环境 1 2 $ go version go version go1.16.7 linux/amd64 0. 直接编译 1 2 3 $ go build -o helloword main.go $ ls -lh helloword -rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword 1. 修改
-</div>
-<div class=read-more>
-<a href=/post/go-app-reduce-size/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/linux-tricks/>Linux Tricks</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-14 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-journal 相关 查看 journal 占用磁盘量 1 journalctl --disk-usage 查看某 service 日志 1 journalctl -f -u xxx.service 限制持久化配置 1 2 3 vim /etc/systemd/journald.conf SystemMaxUse=16M ForwardToSyslog=no 参考链接 https://www.cnsre.cn/posts/210401140104/
-</div>
-<div class=read-more>
-<a href=/post/linux-tricks/ class=read-more-link>Read more...</a>
-</div>
-</div>
-</article>
-<article class=post>
-<header class=post-header>
-<h1 class=post-title><a class=post-link href=/post/git-tricks/>Git Tricks</a></h1>
-<div class=post-meta>
-<span class=post-time> 2021-11-12 </span>
-</div>
-</header>
-<div class=post-content>
-<div class=post-summary>
-目前对git的理解程度较低，只是能应付日常开发，所以写出来的水平有限。 暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错
-</div>
-<div class=read-more>
-<a href=/post/git-tricks/ class=read-more-link>Read more...</a>
+<a href=/post/interval-overlap-problem/ class=read-more-link>Read more...</a>
 </div>
 </div>
 </article>
 </section>
 <nav class=pagination>
-<a class=next href=/page/2/>
-<span class=next-text>Next</span>
-<i class="iconfont icon-right"></i>
+<a class=prev href=/>
+<i class="iconfont icon-left"></i>
+<span class=prev-text>Prev</span>
 </a>
 </nav>
 </div>

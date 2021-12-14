@@ -1,0 +1,325 @@
+<!doctype html><html lang=en>
+<head>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
+<title>sqlite3 笔记 - gobai's blog</title>
+<meta name=renderer content="webkit">
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta http-equiv=cache-control content="no-transform">
+<meta http-equiv=cache-control content="no-siteapp">
+<meta name=theme-color content="#f8f5ec">
+<meta name=msapplication-navbutton-color content="#f8f5ec">
+<meta name=apple-mobile-web-app-capable content="yes">
+<meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec">
+<meta name=author content="gobai"><meta name=description content="rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESE"><meta name=keywords content="Hugo,theme,even">
+<meta name=generator content="Hugo 0.89.2 with theme even">
+<link rel=canonical href=https://blog.gocn.top/post/sqlite3-notes/>
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
+<link rel=manifest href=/manifest.json>
+<link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5>
+<script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script>
+<link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet>
+<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous>
+<meta property="og:title" content="sqlite3 笔记">
+<meta property="og:description" content="rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESE">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.gocn.top/post/sqlite3-notes/"><meta property="article:section" content="post">
+<meta property="article:published_time" content="2021-12-14T10:33:14+08:00">
+<meta property="article:modified_time" content="2021-12-14T10:33:14+08:00">
+<meta itemprop=name content="sqlite3 笔记">
+<meta itemprop=description content="rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESE"><meta itemprop=datePublished content="2021-12-14T10:33:14+08:00">
+<meta itemprop=dateModified content="2021-12-14T10:33:14+08:00">
+<meta itemprop=wordCount content="1165">
+<meta itemprop=keywords content="sqlite3,"><meta name=twitter:card content="summary">
+<meta name=twitter:title content="sqlite3 笔记">
+<meta name=twitter:description content="rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESE"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
+<script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]-->
+</head>
+<body>
+<div id=mobile-navbar class=mobile-navbar>
+<div class=mobile-header-logo>
+<a href=/ class=logo>gobai</a>
+</div>
+<div class=mobile-navbar-icon>
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
+<nav id=mobile-menu class="mobile-menu slideout-menu">
+<ul class=mobile-menu-list>
+<a href=/>
+<li class=mobile-menu-item>Home</li>
+</a><a href=/post/>
+<li class=mobile-menu-item>Archives</li>
+</a><a href=/tags/>
+<li class=mobile-menu-item>Tags</li>
+</a><a href=/about/>
+<li class=mobile-menu-item>About</li>
+</a>
+</ul>
+</nav>
+<div class=container id=mobile-panel>
+<header id=header class=header>
+<div class=logo-wrapper>
+<a href=/ class=logo>gobai</a>
+</div>
+<nav class=site-navbar>
+<ul id=menu class=menu>
+<li class=menu-item>
+<a class=menu-item-link href=/>Home</a>
+</li><li class=menu-item>
+<a class=menu-item-link href=/post/>Archives</a>
+</li><li class=menu-item>
+<a class=menu-item-link href=/tags/>Tags</a>
+</li><li class=menu-item>
+<a class=menu-item-link href=/about/>About</a>
+</li>
+</ul>
+</nav>
+</header>
+<main id=main class=main>
+<div class=content-wrapper>
+<div id=content class=content>
+<article class=post>
+<header class=post-header>
+<h1 class=post-title>sqlite3 笔记</h1>
+<div class=post-meta>
+<span class=post-time> 2021-12-14 </span>
+<span id=busuanzi_container_page_pv class=more-meta> <span id=busuanzi_value_page_pv><img src=/img/spinner.svg alt=spinner.svg></span> times read </span>
+</div>
+</header>
+<div class=post-toc id=post-toc>
+<h2 class=post-toc-title>Contents</h2>
+<div class="post-toc-content always-active">
+<nav id=TableOfContents>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href=#rollback日志模式下的五种锁状态介绍>rollback日志模式下的五种锁状态介绍</a></li>
+<li><a href=#优化篇>优化篇</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+<div class=post-content>
+<h3 id=rollback日志模式下的五种锁状态介绍>rollback日志模式下的五种锁状态介绍</h3>
+<ul>
+<li><code>UNLOCKED</code>
+<ul>
+<li>没锁状态</li>
+</ul>
+</li>
+<li><code>SHARED</code>
+<ul>
+<li>获取<code>SHARED</code>锁才能执行读操作，一个数据库可同时存在多个<code>SHARED</code>锁</li>
+</ul>
+</li>
+<li><code>RESERVED</code>
+<ul>
+<li>获取<code>RESERVED</code>锁才能在未来写数据库，一个数据库同一时间只能存在一个<code>RESERVED</code>锁</li>
+<li>有<code>RESERVED</code>锁时说明还没开始写，所以有<code>RESERVED</code>锁时可以获取新的<code>SHARED</code>锁</li>
+</ul>
+</li>
+<li><code>PENDING</code>
+<ul>
+<li>有<code>PENDING</code>锁意味着要开始写了，但是此时有其他连接拥有<code>SHARED</code>锁在读数据，此时写操作只能等待所有<code>SHARED</code>释放。</li>
+<li><code>PENDING</code>阻塞其他连接获取新的<code>SHARED</code>锁，当<code>SHARED</code>锁释放完时转为<code>EXCLUSIVE</code>锁开始写操作。</li>
+</ul>
+</li>
+<li><code>EXCLUSIVE</code>
+<ul>
+<li>同一时间只能存在一个<code>EXCLUSIVE</code>锁，并且有<code>EXCLUSIVE</code>锁存在时不允许其他任何锁类型存在。</li>
+</ul>
+</li>
+</ul>
+<p>所以总结一下就是读读可并发，读写不可并发，写写不可并发。</p>
+<h3 id=优化篇>优化篇</h3>
+<h4 id=sqlite_busy-问题><code>SQLITE_BUSY</code> 问题</h4>
+<p>看到上面这么多锁不能共存的情况应该会想到，冲突会很频繁，如 <code>EXCLUSIVE</code> 锁存在时不允许其他连接获取任何锁，当其他进程需要读写操作时就会获取锁失败，立即报 <code>SQLITE_BUSY</code> 错误。</p>
+<p>设置 <code>busy_timeout</code> 就不会立即返回 <code>SQLITE_BUSY</code>，会定时retry失败的操作，如果在设置的 <code>busy_timeout</code> 时间内还没执行成功，依然会返回 <code>SQLITE_BUSY</code>。</p>
+<p>使用不同sqlite驱动，设置 <code>busy_timeout</code> 的方式不同</p>
+<ul>
+<li>modernc.org/sqlite <code>database.db?_pragma=busy_timeout%3d50000</code></li>
+<li>github.com/mattn/go-sqlite3 <code>database.db?_busy_timeout=50000</code></li>
+</ul>
+<p>Shared cache mode 支持 table level locks，暂时还没研究。</p>
+<h4 id=针对写操作慢的问题>针对写操作慢的问题</h4>
+<p>解决方案：将多个写操作放入一个事务里执行。sqlite官方<a href=https://www.sqlite.org/faq.html#q19>FAQ</a>对其解释如下</p>
+<blockquote>
+<p>(19) INSERT is really slow - I can only do few dozen INSERTs per second
+Actually, SQLite will easily do 50,000 or more INSERT statements per second on an average desktop computer. But it will only do a few dozen transactions per second. Transaction speed is limited by the rotational speed of your disk drive. A transaction normally requires two complete rotations of the disk platter, which on a 7200RPM disk drive limits you to about 60 transactions per second.
+Transaction speed is limited by disk drive speed because (by default) SQLite actually waits until the data really is safely stored on the disk surface before the transaction is complete. That way, if you suddenly lose power or if your OS crashes, your data is still safe. For details, read about <a href=https://www.sqlite.org/atomiccommit.html>atomic commit in SQLite..</a>
+By default, each INSERT statement is its own transaction. But if you surround multiple INSERT statements with BEGIN&mldr;COMMIT then all the inserts are grouped into a single transaction. The time needed to commit the transaction is amortized over all the enclosed insert statements and so the time per insert statement is greatly reduced.
+Another option is to run PRAGMA synchronous=OFF. This command will cause SQLite to not wait on data to reach the disk surface, which will make write operations appear to be much faster. But if you lose power in the middle of a transaction, your database file might go corrupt.</p>
+</blockquote>
+<p>测试环境</p>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># 表信息</span>
+sqlite&gt; <span class=k>select</span> count<span class=o>(</span>*<span class=o>)</span> from users<span class=p>;</span>
+<span class=m>1553471</span>
+
+<span class=c1># 日志模式</span>
+sqlite&gt; PRAGMA journal_mode<span class=p>;</span>
+delete
+</code></pre></td></tr></table>
+</div>
+</div><p>10次 insert 不在一个事务里</p>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ go <span class=nb>test</span> -bench<span class=o>=</span><span class=s2>&#34;^Bench&#34;</span> -benchtime<span class=o>=</span>5s .
+goos: linux
+goarch: amd64
+pkg: gocn/sqlite-test
+cpu: Intel<span class=o>(</span>R<span class=o>)</span> Xeon<span class=o>(</span>R<span class=o>)</span> Silver <span class=m>4214</span> CPU @ 2.20GHz
+BenchmarkWrite-8              <span class=m>52</span>         <span class=m>128920972</span> ns/op
+BenchmarkRead-8           <span class=m>141531</span>             <span class=m>43400</span> ns/op
+BenchmarkWriteCGO-8           <span class=m>63</span>          <span class=m>81576398</span> ns/op
+BenchmarkReadCGO-8        <span class=m>644850</span>              <span class=m>8446</span> ns/op
+PASS
+ok      gocn/sqlite-test        29.049s
+
+<span class=c1># 结果解释</span>
+<span class=c1># write 和 read 单次执行内容分别是十条 inster 和一条 select</span>
+<span class=c1># BenchmarkWrite 是使用 modernc.org/sqlite 驱动的写操作</span>
+<span class=c1># BenchmarkWriteCGO 是使用 github.com/mattn/go-sqlite3 驱动的写操作</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>10次 insert 在一个事务里后</p>
+<div class=highlight><div class=chroma>
+<table class=lntable><tr><td class=lntd>
+<pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td>
+<td class=lntd>
+<pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ go <span class=nb>test</span> -bench<span class=o>=</span><span class=s2>&#34;^Bench&#34;</span> -benchtime<span class=o>=</span>5s .
+goos: linux
+goarch: amd64
+pkg: gocn/sqlite-test
+cpu: Intel<span class=o>(</span>R<span class=o>)</span> Xeon<span class=o>(</span>R<span class=o>)</span> Silver <span class=m>4214</span> CPU @ 2.20GHz
+BenchmarkWrite-8             <span class=m>601</span>          <span class=m>12099375</span> ns/op
+BenchmarkRead-8           <span class=m>142848</span>             <span class=m>43089</span> ns/op
+BenchmarkWriteCGO-8          <span class=m>912</span>           <span class=m>8050617</span> ns/op
+BenchmarkReadCGO-8        <span class=m>720722</span>              <span class=m>8244</span> ns/op
+PASS
+ok      gocn/sqlite-test        38.372s
+</code></pre></td></tr></table>
+</div>
+</div><p>可以看出来，写操作性能提升明显，写的单次操作(十次insert)时间直接下降了一个数量级，如果能将更多写操作放入一个事务里，性能提升也会越多，直至达到sqlite的写操作瓶颈(50,000 or more INSERT statements per second)。</p>
+<p>参考文档</p>
+<ul>
+<li><a href=https://www.sqlite.org/lockingv3.html>官方文档-五种锁状态介绍</a></li>
+<li><a href=https://www.sqlite.org/faq.html#q19>官方FAQ</a></li>
+</ul>
+</div>
+<div class=post-copyright>
+<p class=copyright-item>
+<span class=item-title>Author</span>
+<span class=item-content>gobai</span>
+</p>
+<p class=copyright-item>
+<span class=item-title>LastMod</span>
+<span class=item-content>
+2021-12-14
+</span>
+</p>
+</div>
+<footer class=post-footer>
+<div class=post-tags>
+<a href=/tags/sqlite3/>sqlite3</a>
+</div>
+<nav class=post-nav>
+<a class=next href=/post/vim-tricks/>
+<span class="next-text nav-default">Vim Tricks</span>
+<span class="next-text nav-mobile">Next</span>
+<i class="iconfont icon-right"></i>
+</a>
+</nav>
+</footer>
+</article>
+</div>
+<script src=https://utteranc.es/client.js repo=go-bai/blog issue-term=pathname theme=github-light crossorigin=anonymous async></script>
+<noscript>Please enable JavaScript to view the <a href=https://github.com/utterance>comments powered by utterances.</a></noscript>
+</div>
+</main>
+<footer id=footer class=footer>
+<div class=social-links>
+<a href=mailto:599500688@qq.com class="iconfont icon-email" title=email></a>
+<a href=https://github.com/gobai class="iconfont icon-github" title=github></a>
+<a href=https://blog.gocn.top/index.xml type=application/rss+xml class="iconfont icon-rss" title=rss></a>
+</div>
+<div class=copyright>
+<span class=power-by>
+Powered by <a class=hexo-link href=https://gohugo.io>Hugo</a>
+</span>
+<span class=division>|</span>
+<span class=theme-info>
+Theme -
+<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a>
+</span>
+<div class=busuanzi-footer>
+<span id=busuanzi_container_site_pv> site pv: <span id=busuanzi_value_site_pv><img src=/img/spinner.svg alt=spinner.svg></span> </span>
+<span class=division>|</span>
+<span id=busuanzi_container_site_uv> site uv: <span id=busuanzi_value_site_uv><img src=/img/spinner.svg alt=spinner.svg></span> </span>
+</div>
+<span class=copyright-year>
+&copy;
+2021<span class=heart><i class="iconfont icon-heart"></i></span><span>gobai</span>
+</span>
+</div>
+</footer>
+<div class=back-to-top id=back-to-top>
+<i class="iconfont icon-up"></i>
+</div>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script>
+<script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script>
+<script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script>
+<script type=text/javascript src=/js/main.min.c99b103c33d1539acf3025e1913697534542c4a5aa5af0ccc20475ed2863603b.js></script>
+</body>
+</html>
