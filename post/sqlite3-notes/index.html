@@ -98,10 +98,11 @@
 <ul>
 <li>
 <ul>
-<li>
-<ul>
 <li><a href=#rollback日志模式下的五种锁状态介绍>rollback日志模式下的五种锁状态介绍</a></li>
-<li><a href=#优化篇>优化篇</a></li>
+<li><a href=#优化篇>优化篇</a>
+<ul>
+<li><a href=#sqlite_busy-问题><code>SQLITE_BUSY</code> 问题</a></li>
+<li><a href=#针对写操作慢的问题>针对写操作慢的问题</a></li>
 </ul>
 </li>
 </ul>
@@ -111,7 +112,7 @@
 </div>
 </div>
 <div class=post-content>
-<h3 id=rollback日志模式下的五种锁状态介绍>rollback日志模式下的五种锁状态介绍</h3>
+<h2 id=rollback日志模式下的五种锁状态介绍>rollback日志模式下的五种锁状态介绍</h2>
 <ul>
 <li><code>UNLOCKED</code>
 <ul>
@@ -142,8 +143,8 @@
 </li>
 </ul>
 <p>所以总结一下就是读读可并发，读写不可并发，写写不可并发。</p>
-<h3 id=优化篇>优化篇</h3>
-<h4 id=sqlite_busy-问题><code>SQLITE_BUSY</code> 问题</h4>
+<h2 id=优化篇>优化篇</h2>
+<h3 id=sqlite_busy-问题><code>SQLITE_BUSY</code> 问题</h3>
 <p>看到上面这么多锁不能共存的情况应该会想到，冲突会很频繁，如 <code>EXCLUSIVE</code> 锁存在时不允许其他连接获取任何锁，当其他进程需要读写操作时就会获取锁失败，立即报 <code>SQLITE_BUSY</code> 错误。</p>
 <p>设置 <code>busy_timeout</code> 就不会立即返回 <code>SQLITE_BUSY</code>，会定时retry失败的操作，如果在设置的 <code>busy_timeout</code> 时间内还没执行成功，依然会返回 <code>SQLITE_BUSY</code>。</p>
 <p>使用不同sqlite驱动，设置 <code>busy_timeout</code> 的方式不同</p>
@@ -152,7 +153,7 @@
 <li>github.com/mattn/go-sqlite3 <code>database.db?_busy_timeout=50000</code></li>
 </ul>
 <p>Shared cache mode 支持 table level locks，暂时还没研究。</p>
-<h4 id=针对写操作慢的问题>针对写操作慢的问题</h4>
+<h3 id=针对写操作慢的问题>针对写操作慢的问题</h3>
 <p>解决方案：将多个写操作放入一个事务里执行。sqlite官方<a href=https://www.sqlite.org/faq.html#q19>FAQ</a>对其解释如下</p>
 <blockquote>
 <p>(19) INSERT is really slow - I can only do few dozen INSERTs per second
