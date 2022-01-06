@@ -11,7 +11,7 @@
 <meta name=msapplication-navbutton-color content="#f8f5ec">
 <meta name=apple-mobile-web-app-capable content="yes">
 <meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec">
-<meta name=author content="gobai"><meta name=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><meta name=keywords content="Hugo,theme,even">
+<meta name=author content="gobai"><meta name=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2 两行合为一行 NORMAL 模式下按 shift + j 就会将光标下一行合并到当前行行尾"><meta name=keywords content="Hugo,theme,even">
 <meta name=generator content="Hugo 0.89.2 with theme even">
 <link rel=canonical href=https://blog.gocn.top/post/vim-tricks/>
 <link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
@@ -23,18 +23,18 @@
 <link href=/sass/main.min.f92fd13721ddf72129410fd8250e73152cc6f2438082b6c0208dc24ee7c13fc4.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous>
 <meta property="og:title" content="Vim Tricks">
-<meta property="og:description" content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2">
+<meta property="og:description" content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2 两行合为一行 NORMAL 模式下按 shift + j 就会将光标下一行合并到当前行行尾">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://blog.gocn.top/post/vim-tricks/"><meta property="article:section" content="post">
 <meta property="article:published_time" content="2021-11-24T21:45:54+08:00">
 <meta property="article:modified_time" content="2021-11-24T21:45:54+08:00">
 <meta itemprop=name content="Vim Tricks">
-<meta itemprop=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><meta itemprop=datePublished content="2021-11-24T21:45:54+08:00">
+<meta itemprop=description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2 两行合为一行 NORMAL 模式下按 shift + j 就会将光标下一行合并到当前行行尾"><meta itemprop=datePublished content="2021-11-24T21:45:54+08:00">
 <meta itemprop=dateModified content="2021-11-24T21:45:54+08:00">
-<meta itemprop=wordCount content="13">
+<meta itemprop=wordCount content="43">
 <meta itemprop=keywords content="vim,"><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Vim Tricks">
-<meta name=twitter:description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
+<meta name=twitter:description content="批量替换 批量替换 1.1.1.1 为 2.2.2.2 1 :%s+1.1.1.1+2.2.2.2 两行合为一行 NORMAL 模式下按 shift + j 就会将光标下一行合并到当前行行尾"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script>
 <script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]-->
 </head>
 <body>
@@ -99,6 +99,7 @@
 <li>
 <ul>
 <li><a href=#批量替换>批量替换</a></li>
+<li><a href=#两行合为一行>两行合为一行</a></li>
 </ul>
 </li>
 </ul>
@@ -116,7 +117,8 @@
 <pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>:%s+1.1.1.1+2.2.2.2
 </code></pre></td></tr></table>
 </div>
-</div>
+</div><h2 id=两行合为一行>两行合为一行</h2>
+<p><code>NORMAL</code> 模式下按 <code>shift + j</code> 就会将光标下一行合并到当前行行尾</p>
 </div>
 <div class=post-copyright>
 <p class=copyright-item>
@@ -175,7 +177,8 @@ Theme -
 </div>
 <span class=copyright-year>
 &copy;
-2021<span class=heart><i class="iconfont icon-heart"></i></span><span>gobai</span>
+2021 -
+2022<span class=heart><i class="iconfont icon-heart"></i></span><span>gobai</span>
 </span>
 </div>
 </footer>
