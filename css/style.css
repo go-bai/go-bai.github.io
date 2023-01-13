@@ -13,6 +13,8 @@ body {
   background: #eee;
   padding: 5px;
   border-radius: 5px;
+}
+.menu a {
   border: 1px solid rgba(27,31,36,0.15);
 }
 a:hover {
