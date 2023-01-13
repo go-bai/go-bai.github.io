@@ -11,3 +11,4 @@ author: gobai
 - kubernetes
 - openstack
 - postgresql
+- minio
