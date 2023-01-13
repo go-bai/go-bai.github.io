@@ -13,4 +13,4 @@ https://www.cnsre.cn/posts/210401140104/</description></item><item><title>Git Tr
 问题分析 首先对于两个连续区间有重合部分的状态有四种，没重合部分的状态有两种，不重合两种状态如下所示。
 可以看出，只需要满足有一个区间的右边界小于等于另一个区间的左边界即可。 即满足 a.R &amp;lt;= b.L || b.R &amp;lt;= a.L 即可保证两个左闭右开区间不重合。(左闭右闭同理，去掉等于号即可)</description></item><item><title>关于我</title><link>/about/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/about/</guid><description> 服务端开发工程师，职场新人 喜欢一些“不务正业”的技术
 目前在学的内容
-kubernetes openstack postgresql</description></item></channel></rss>
+kubernetes openstack postgresql minio</description></item></channel></rss>
