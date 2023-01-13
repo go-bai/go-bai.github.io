@@ -1,6 +1,6 @@
 ---
 title: "关于我"
-authot: gobai
+author: gobai
 
 ---
 
