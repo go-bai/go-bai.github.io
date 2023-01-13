@@ -15,7 +15,7 @@ body {
   border-radius: 5px;
   border: 1px solid rgba(27,31,36,0.15);
 }
-.menu a:hover {
+a:hover {
   color: orange;
 }
 .terms { font-size: .9em; }
