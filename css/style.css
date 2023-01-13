@@ -29,6 +29,7 @@ pre {
   box-shadow: 5px 5px 5px #eee;
   padding: 1em;
   overflow-x: auto;
+  background: #f6f8fa;
 }
 code { 
   background: #f8f5ec; 
