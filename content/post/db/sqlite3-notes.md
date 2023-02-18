@@ -9,17 +9,17 @@ tags: ["sqlite3"]
 ## rollback日志模式下的五种锁状态介绍
 
 - `UNLOCKED`
-    - 没锁状态
+  - 没锁状态
 - `SHARED`
-    - 获取`SHARED`锁才能执行读操作，一个数据库可同时存在多个`SHARED`锁
+  - 获取`SHARED`锁才能执行读操作，一个数据库可同时存在多个`SHARED`锁
 - `RESERVED`
-    - 获取`RESERVED`锁才能在未来写数据库，一个数据库同一时间只能存在一个`RESERVED`锁
-    - 有`RESERVED`锁时说明还没开始写，所以有`RESERVED`锁时可以获取新的`SHARED`锁
+  - 获取`RESERVED`锁才能在未来写数据库，一个数据库同一时间只能存在一个`RESERVED`锁
+  - 有`RESERVED`锁时说明还没开始写，所以有`RESERVED`锁时可以获取新的`SHARED`锁
 - `PENDING`
-    - 有`PENDING`锁意味着要开始写了，但是此时有其他连接拥有`SHARED`锁在读数据，此时写操作只能等待所有`SHARED`释放。
-    - `PENDING`阻塞其他连接获取新的`SHARED`锁，当`SHARED`锁释放完时转为`EXCLUSIVE`锁开始写操作。
+  - 有`PENDING`锁意味着要开始写了，但是此时有其他连接拥有`SHARED`锁在读数据，此时写操作只能等待所有`SHARED`释放。
+  - `PENDING`阻塞其他连接获取新的`SHARED`锁，当`SHARED`锁释放完时转为`EXCLUSIVE`锁开始写操作。
 - `EXCLUSIVE`
-    - 同一时间只能存在一个`EXCLUSIVE`锁，并且有`EXCLUSIVE`锁存在时不允许其他任何锁类型存在。
+  - 同一时间只能存在一个`EXCLUSIVE`锁，并且有`EXCLUSIVE`锁存在时不允许其他任何锁类型存在。
 
 所以总结一下就是读读可并发，读写不可并发，写写不可并发。
 
@@ -98,7 +98,6 @@ ok      gocn/sqlite-test        38.372s
 ```
 
 可以看出来，写操作性能提升明显，写的单次操作(十次insert)时间直接下降了一个数量级，如果能将更多写操作放入一个事务里，性能提升也会越多，直至达到sqlite的写操作瓶颈(50,000 or more INSERT statements per second)。
-
 
 参考文档
 

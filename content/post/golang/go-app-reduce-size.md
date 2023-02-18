@@ -9,13 +9,13 @@ tags: ["golang"]
 
 ### 程序代码
 
-```go
+```golang
 package main
 
 import "fmt"
 
 func main() {
-	fmt.Println("Hello World.")
+    fmt.Println("Hello World.")
 }
 ```
 
@@ -28,7 +28,7 @@ go version go1.16.7 linux/amd64
 
 ## 0. 直接编译
 
-```
+```bash
 $ go build -o helloword main.go
 $ ls -lh helloword 
 -rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword
@@ -42,8 +42,8 @@ $ ls -lh helloword
 $ go build -ldflags="-s -w" -o helloword main.go
 $ ls -lh helloword 
 -rwxrwxr-x 1 gobai gobai 1.3M Nov 23 09:38 helloword
-
 ```
+
 ## 2. 使用 `UPX`
 
 对直接编译出的二进制使用 [upx](https://github.com/upx/upx) 进一步压缩
@@ -82,8 +82,6 @@ $ ls -lh helloword
 ```
 
 可以看出，压缩效果显著！
-
-
 
 参考链接
 

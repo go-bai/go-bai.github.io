@@ -11,16 +11,16 @@ tags: ["golang", "md5"]
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
-	"fmt"
+    "crypto/md5"
+    "encoding/hex"
+    "fmt"
 )
 
 func main() {
-	str := `this is the file content`
-	md5sum := md5.Sum([]byte(str))
-	fmt.Printf("%x\n", md5sum)
-	fmt.Printf("%s\n", hex.EncodeToString(md5sum[:]))
+    str := `this is the file content`
+    md5sum := md5.Sum([]byte(str))
+    fmt.Printf("%x\n", md5sum)
+    fmt.Printf("%s\n", hex.EncodeToString(md5sum[:]))
 }
 ```
 
