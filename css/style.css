@@ -33,7 +33,7 @@ hr {
 pre {
   border: 1px solid #ddd;
   box-shadow: 5px 5px 5px #eee;
-  padding: 1em;
+  padding: 0.5em;
   overflow-x: auto;
   background: #f6f8fa;
 }
@@ -43,6 +43,9 @@ code {
 }
 pre code { 
   background: none;
+}
+pre code.hljs {
+  padding: 0.5em !important;
 }
 
 /* misc elements */

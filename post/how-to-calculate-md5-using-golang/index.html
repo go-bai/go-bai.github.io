@@ -1,16 +1,16 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>使用golang计算md5 sum | gobai's blog</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>使用golang计算md5 sum</span></h1><h4 class=date>2023/01/13</h4><p class=terms>Tags: <a href=/tags/golang>golang</a> <a href=/tags/md5>md5</a></p></div><main><h3 id=代码>代码</h3><pre><code class=language-golang>package main
 
 import (
-	&quot;crypto/md5&quot;
-	&quot;encoding/hex&quot;
-	&quot;fmt&quot;
+    &quot;crypto/md5&quot;
+    &quot;encoding/hex&quot;
+    &quot;fmt&quot;
 )
 
 func main() {
-	str := `this is the file content`
-	md5sum := md5.Sum([]byte(str))
-	fmt.Printf(&quot;%x\n&quot;, md5sum)
-	fmt.Printf(&quot;%s\n&quot;, hex.EncodeToString(md5sum[:]))
+    str := `this is the file content`
+    md5sum := md5.Sum([]byte(str))
+    fmt.Printf(&quot;%x\n&quot;, md5sum)
+    fmt.Printf(&quot;%s\n&quot;, hex.EncodeToString(md5sum[:]))
 }
 </code></pre><h3 id=输出>输出</h3><pre><code class=language-bash>$ go run main.go
 89b4f1823325ce4530cc264cc758baa7

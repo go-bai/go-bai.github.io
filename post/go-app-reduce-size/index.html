@@ -1,19 +1,18 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>减小go程序编译后的体积 | gobai's blog</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>减小go程序编译后的体积</span></h1><h4 class=date>2021/11/22</h4><p class=terms>Tags: <a href=/tags/golang>golang</a></p></div><main><h2 id=编译经典程序>编译经典程序</h2><h3 id=程序代码>程序代码</h3><pre><code class=language-go>package main
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>减小go程序编译后的体积 | gobai's blog</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>减小go程序编译后的体积</span></h1><h4 class=date>2021/11/22</h4><p class=terms>Tags: <a href=/tags/golang>golang</a></p></div><main><h2 id=编译经典程序>编译经典程序</h2><h3 id=程序代码>程序代码</h3><pre><code class=language-golang>package main
 
 import &quot;fmt&quot;
 
 func main() {
-	fmt.Println(&quot;Hello World.&quot;)
+    fmt.Println(&quot;Hello World.&quot;)
 }
 </code></pre><h3 id=编译环境>编译环境</h3><pre><code class=language-bash>$ go version
 go version go1.16.7 linux/amd64
-</code></pre><h2 id=0-直接编译>0. 直接编译</h2><pre><code>$ go build -o helloword main.go
+</code></pre><h2 id=0-直接编译>0. 直接编译</h2><pre><code class=language-bash>$ go build -o helloword main.go
 $ ls -lh helloword 
 -rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword
 </code></pre><h2 id=1-修改编译选项>1. 修改编译选项</h2><p>除去编译时带的符号表和调试信息</p><pre><code class=language-bash>$ go build -ldflags=&quot;-s -w&quot; -o helloword main.go
 $ ls -lh helloword 
 -rwxrwxr-x 1 gobai gobai 1.3M Nov 23 09:38 helloword
-
 </code></pre><h2 id=2-使用-upx>2. 使用 <code>UPX</code></h2><p>对直接编译出的二进制使用 <a href=https://github.com/upx/upx>upx</a> 进一步压缩</p><pre><code class=language-bash>$ go build -o helloword main.go
 $ upx -9 helloword 
                        Ultimate Packer for eXecutables

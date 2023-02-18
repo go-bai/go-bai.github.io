@@ -1,0 +1,61 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>解决Go应用在容器中的时区问题 | gobai's blog</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>解决Go应用在容器中的时区问题</span></h1><h4 class=date>2023/02/18</h4><p class=terms>Tags: <a href=/tags/golang>golang</a> <a href=/tags/docker>docker</a> <a href=/tags/container>container</a> <a href=/tags/timezone>timezone</a></p></div><main><h2 id=容器中的时区问题>容器中的时区问题</h2><p>应用直接运行在服务器上需要设置服务器时区为东八区，现在很多应用都是部署在容器中了，同样也是要设置容器镜像的时区。</p><p>许多容器镜像默认时区为 <code>UTC</code> (<a href=https://zh.wikipedia.org/zh-hans/%E5%8D%8F%E8%B0%83%E4%B8%96%E7%95%8C%E6%97%B6>Coordinated Universal Time 协调世界时</a>)，比东八区慢八个小时，当程序涉及数据库写入操作或者日志记录等功能时就会有时间差。</p><p>常规解决方案一般两大类</p><ol><li>build docker镜像时就把镜像内的时区设置为 <code>Asia/Shanghai</code></li><li>运行容器时把本地时区正常的主机的时区配置文件挂载到容器。</li></ol><h3 id=看一下-go-是如何读取时区文件并设置-timetime-的时区的>看一下 <code>Go</code> 是如何读取时区文件并设置 <code>time.Time</code> 的时区的</h3><p><code>Go</code> 源码 <a href=https://github.com/golang/go/blob/master/src/time/zoneinfo_unix.go>src/time/zoneinfo_unix.go</a> 中代码和注释都很清晰👍</p><pre><code class=language-golang>package time
+
+import (
+    &quot;syscall&quot;
+)
+
+// Many systems use /usr/share/zoneinfo, Solaris 2 has
+// /usr/share/lib/zoneinfo, IRIX 6 has /usr/lib/locale/TZ,
+// NixOS has /etc/zoneinfo.
+var platformZoneSources = []string{
+    &quot;/usr/share/zoneinfo/&quot;,
+    &quot;/usr/share/lib/zoneinfo/&quot;,
+    &quot;/usr/lib/locale/TZ/&quot;,
+    &quot;/etc/zoneinfo&quot;,
+}
+
+func initLocal() {
+    // consult $TZ to find the time zone to use.
+    // no $TZ means use the system default /etc/localtime.
+    // $TZ=&quot;&quot; means use UTC.
+    // $TZ=&quot;foo&quot; or $TZ=&quot;:foo&quot; if foo is an absolute path, then the file pointed
+    // by foo will be used to initialize timezone; otherwise, file
+    // /usr/share/zoneinfo/foo will be used.
+
+    tz, ok := syscall.Getenv(&quot;TZ&quot;)
+    switch {
+    case !ok:
+        z, err := loadLocation(&quot;localtime&quot;, []string{&quot;/etc&quot;})
+        if err == nil {
+            localLoc = *z
+            localLoc.name = &quot;Local&quot;
+            return
+        }
+    case tz != &quot;&quot;:
+        if tz[0] == ':' {
+            tz = tz[1:]
+        }
+        if tz != &quot;&quot; &amp;&amp; tz[0] == '/' {
+            if z, err := loadLocation(tz, []string{&quot;&quot;}); err == nil {
+                localLoc = *z
+                if tz == &quot;/etc/localtime&quot; {
+                    localLoc.name = &quot;Local&quot;
+                } else {
+                    localLoc.name = tz
+                }
+                return
+            }
+        } else if tz != &quot;&quot; &amp;&amp; tz != &quot;UTC&quot; {
+            if z, err := loadLocation(tz, platformZoneSources); err == nil {
+                localLoc = *z
+                return
+            }
+        }
+    }
+
+    // Fall back to UTC.
+    localLoc.name = &quot;UTC&quot;
+}
+</code></pre><p>首先检查是否设置了 <code>TZ</code> 环境变量</p><ul><li>设置了 <code>TZ</code><ul><li><code>TZ</code> 为空<ul><li>则时区还是 <code>UTC</code></li></ul></li><li><code>TZ</code> 第一个字符为 <code>:</code><ul><li>去掉 <code>:</code></li></ul></li><li><code>TZ</code> 不为空且第一个字符为 <code>/</code><ul><li>从 <code>TZ</code> 设置的路径中加载时区文件并设置时区</li><li>如果没加载到时区文件，那么最终还是 <code>UTC</code> 时区。</li></ul></li><li><code>TZ</code> 不为空且不是 <code>UTC</code><ul><li>从 <code>platformZoneSources</code> 中的几个路径下中加载 <code>TZ</code> 指定的时区文件并设置时区</li><li>如果没加载到时区文件，那么最终还是 <code>UTC</code> 时区。</li></ul></li></ul></li><li>没设置 <code>TZ</code><ul><li>加载 <code>/etc/localtime</code> 时区文件</li><li>如果没加载到时区文件，那么最终还是 <code>UTC</code> 时区。</li></ul></li></ul><p>综上，在 <code>Dockerfile</code> 中可以用下面两种方式之一正确设置时区</p><ol><li>设置 <code>TZ</code> 为 <code>Asia/Shanghai</code></li><li>不设置 <code>TZ</code>，将 <code>/usr/share/zoneinfo/Asia/Shanghai</code> 拷贝或软链到 <code>/etc/localtime</code></li></ol><p>上面两种方式都需要有 <code>/usr/share/zoneinfo/Asia/Shanghai</code> 时区文件。</p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script>
+<script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2023 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
