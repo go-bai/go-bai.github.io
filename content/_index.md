@@ -2,7 +2,7 @@
 title: Home
 ---
 
-[<img src="/img/avatar.jpg" style="max-width:15%;min-width:40px;float:right;border-radius: 50%;border-style:solid;border-color:rgba(27,31,36,0.15)" alt="gobai's Github Repo" />](https://github.com/go-bai)
+[<img src="/imgs/avatar.jpg" style="max-width:15%;min-width:40px;float:right;border-radius: 50%;border-style:solid;border-color:rgba(27,31,36,0.15)" alt="gobai's Github Repo" />](https://github.com/go-bai)
 
 
 One of my favorite quote from "Leading" by Alex Ferguson:

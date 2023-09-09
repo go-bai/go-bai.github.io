@@ -8,7 +8,7 @@ ignoreFiles: ["\\.Rmd$", "\\.Rmarkdown$", "_cache$", "\\.knit\\.md$", "\\.utf8\\
 footnotereturnlinkcontents: "↩"
 
 permalinks:
-  post: "/post/:filename/"
+  posts: "/posts/:filename/"
 
 menu:
   main:
