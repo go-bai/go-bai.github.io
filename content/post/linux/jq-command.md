@@ -1,7 +1,7 @@
 ---
 title: "jq 命令"
 date: 2023-09-09T15:04:05+08:00
-draft: true
+draft: false
 tags: ['linux', 'jq']
 ---
 

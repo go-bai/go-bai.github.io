@@ -26,7 +26,7 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }} # https://github.com/peaceiris/actions-gh-pages/tree/v3/#supported-tokens GITHUB_TOKEN 无需配置
           PUBLISH_BRANCH: gh-pages  # 推送到当前 gh-pages 分支
           PUBLISH_DIR: ./public  # hugo 生成到 public 作为跟目录
           commit_message: ${{ github.event.head_commit.message }}
