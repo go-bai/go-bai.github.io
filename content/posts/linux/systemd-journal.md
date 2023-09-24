@@ -60,7 +60,7 @@ journalctl --vacuum-time=1month
 journalctl --vacuum-size=1G
 ```
 
-### 4 list all systemd service
+### 4 列出所有systemd服务
 
 ```bash
 systemctl list-units --type=service --all
