@@ -11,7 +11,7 @@ sudo rm -rf /usr/local/go &amp;&amp; sudo tar -C /usr/local -xzf go1.21.1.linux-
 go version go1.21.1 linux/amd64
 </code></pre><p><a href=https://go.dev/doc/install>Download and install</a></p><h3 id=安装-hugo>安装 hugo</h3><pre><code class=language-bash>sudo apt install build-essential -y
 CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
-</code></pre><p>设置当前用户<code>zsh</code>的<code>PATH</code>环境变量，增加<code>export PATH=${PATH}:</code>go env GOPATH<code>/bin</code></p><p>vim ~/.zshrc</p><pre><code class=language-diff>+ export PATH=${PATH}:`go env GOPATH`/bin
+</code></pre><p>设置当前用户<code>zsh</code>的<code>PATH</code>环境变量</p><p>vim ~/.zshrc</p><pre><code class=language-diff>+ export PATH=${PATH}:`go env GOPATH`/bin
 </code></pre><p>新开一个<code>zsh shell</code>会话验证</p><pre><code class=language-bash>➜  ~ hugo version
 hugo v0.118.2+extended linux/amd64 BuildDate=unknown
 </code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script>
