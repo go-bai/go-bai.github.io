@@ -1,5 +1,5 @@
 ---
-title: "jq 命令"
+title: "Linux jq Command"
 date: 2023-09-09T15:04:05+08:00
 draft: false
 tags: ['linux', 'jq']

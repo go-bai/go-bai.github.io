@@ -1,5 +1,5 @@
 ---
-title: "查看和操作 systemd 日志"
+title: "About Systemd"
 date: 2021-11-14T01:47:04+08:00
 draft: false
 tags: ["linux", 'systemd', 'journalctl']
@@ -58,4 +58,10 @@ journalctl --vacuum-time=1month
 
 ```bash
 journalctl --vacuum-size=1G
+```
+
+### 4 list all systemd service
+
+```bash
+systemctl list-units --type=service --all
 ```

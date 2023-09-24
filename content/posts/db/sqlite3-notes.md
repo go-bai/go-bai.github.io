@@ -1,5 +1,5 @@
 ---
-title: "sqlite3 笔记"
+title: "SQLite3 Note"
 date: 2021-12-14T10:33:14+08:00
 draft: false
 tags: ["sqlite3"]
