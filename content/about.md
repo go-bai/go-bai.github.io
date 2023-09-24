@@ -6,9 +6,21 @@ author: gobai
 
 > 服务端开发工程师，职场新人 喜欢一些“不务正业”的技术
 
-目前在学的内容
+### 目前在学的内容
 
+- golang
 - kubernetes
+- kubevirt
+- ceph
 - openstack
+- terraform
 - postgresql
-- minio
+- sqlite
+- prometheus
+- loki
+- grafana
+- linux
+
+### 我的设备
+
+

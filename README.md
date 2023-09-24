@@ -17,10 +17,22 @@ go version go1.21.1 linux/amd64
 CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
 ```
 
+### pull theme submodule
+
+```bash
+git submodule update --init
+```
+
 ### add a new page
 
 ```bash
 hugo new content post/linux/jq-command.md
+```
+
+### preview
+
+```bash
+hugo server
 ```
 
 ### push
