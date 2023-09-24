@@ -60,7 +60,7 @@ sudo apt install build-essential -y
 CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
 ```
 
-设置当前用户`zsh`的`PATH`环境变量，增加`export PATH=${PATH}:`go env GOPATH`/bin`
+设置当前用户`zsh`的`PATH`环境变量
 
 vim ~/.zshrc
 
