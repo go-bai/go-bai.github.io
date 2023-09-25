@@ -74,3 +74,20 @@ vim ~/.zshrc
 ➜  ~ hugo version
 hugo v0.118.2+extended linux/amd64 BuildDate=unknown
 ```
+
+### 安装 openssh-server
+
+```bash
+sudo apt install openssh-server
+```
+
+sudo vim /etc/ssh/sshd_config
+
+```diff
+- #PermitRootLogin prohibit-password
++ PermitRootLogin yes
+```
+
+```bash
+sudo systemctl restart ssh
+```

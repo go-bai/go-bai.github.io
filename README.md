@@ -26,7 +26,7 @@ git submodule update --init
 ### add a new page
 
 ```bash
-hugo new content post/linux/jq-command.md
+hugo new content posts/linux/jq-command.md
 ```
 
 ### preview

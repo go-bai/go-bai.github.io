@@ -31,6 +31,10 @@ UBUNTU_CODENAME=jammy
 sudo apt install virt-manager qemu bridge-utils -y
 ```
 
+#### 配置 `bridge` 类型网络
+
+TODO
+
 #### 修改`libvirtd`配置文件并重启
 
 `sudo vim /etc/libvirt/qemu.conf`
