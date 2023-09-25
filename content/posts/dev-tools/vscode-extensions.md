@@ -1,7 +1,7 @@
 ---
 title: "Vscode Extensions"
 date: 2023-09-25T21:27:06+08:00
-draft: true
+draft: false
 tags: [vscode]
 ---
 
