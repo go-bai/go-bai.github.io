@@ -12,7 +12,7 @@ BUG_REPORT_URL=&quot;https://bugs.launchpad.net/ubuntu/&quot;
 PRIVACY_POLICY_URL=&quot;https://www.ubuntu.com/legal/terms-and-policies/privacy-policy&quot;
 UBUNTU_CODENAME=jammy
 </code></pre><h3 id=安装配置>安装配置</h3><h4 id=安装>安装</h4><pre><code class=language-bash>sudo apt install virt-manager qemu bridge-utils -y
-</code></pre><h4 id=修改libvirtd配置文件并重启>修改<code>libvirtd</code>配置文件并重启</h4><p><code>sudo vim /etc/libvirt/qemu.conf</code></p><pre><code class=language-diff>- #user = &quot;root&quot;
+</code></pre><h4 id=配置-bridge-类型网络>配置 <code>bridge</code> 类型网络</h4><p>TODO</p><h4 id=修改libvirtd配置文件并重启>修改<code>libvirtd</code>配置文件并重启</h4><p><code>sudo vim /etc/libvirt/qemu.conf</code></p><pre><code class=language-diff>- #user = &quot;root&quot;
 + user = &quot;gobai&quot;
 
 - #group = &quot;root&quot;

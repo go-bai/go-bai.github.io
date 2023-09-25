@@ -14,6 +14,10 @@ CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
 </code></pre><p>设置当前用户<code>zsh</code>的<code>PATH</code>环境变量</p><p>vim ~/.zshrc</p><pre><code class=language-diff>+ export PATH=${PATH}:`go env GOPATH`/bin
 </code></pre><p>新开一个<code>zsh shell</code>会话验证</p><pre><code class=language-bash>➜  ~ hugo version
 hugo v0.118.2+extended linux/amd64 BuildDate=unknown
+</code></pre><h3 id=安装-openssh-server>安装 openssh-server</h3><pre><code class=language-bash>sudo apt install openssh-server
+</code></pre><p>sudo vim /etc/ssh/sshd_config</p><pre><code class=language-diff>- #PermitRootLogin prohibit-password
++ PermitRootLogin yes
+</code></pre><pre><code class=language-bash>sudo systemctl restart ssh
 </code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script>
 <script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script>
 <script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2023 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
