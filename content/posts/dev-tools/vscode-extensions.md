@@ -12,6 +12,10 @@ tags: [vscode]
 - vscode-icons-mac
 - GitLens
 - Go
+- Remote - SSH
+- shellman
+- REST Client
+- Todo Tree
 
 ### 一些配置
 
