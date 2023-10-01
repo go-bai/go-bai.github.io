@@ -7,4 +7,4 @@ title: Home
 
 `gobai`的老年简约博客:
 
-> 其实就是一个笔记本
+<img src="http://ghchart.rshah.org/go-bai" alt="go-bai's github chart" />
