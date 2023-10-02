@@ -64,7 +64,7 @@ Device       Start       End   Sectors  Size Type
 /dev/sda1     2048   1050623   1048576  512M EFI System
 /dev/sda2  1050624 207714303 206663680 98.5G Linux filesystem
 
-Command (m for help): w
+Command (m for help): w # 保存退出
 The partition table has been altered.
 Syncing disks.
 ```
@@ -94,7 +94,7 @@ Device       Start       End   Sectors  Size Type
 /dev/sda1     2048   1050623   1048576  512M EFI System
 /dev/sda2  1050624 207714303 206663680 98.5G Linux filesystem
 
-Command (m for help): d
+Command (m for help): d # 删除第二个分区, 不要保存退出, 退出就凉了
 Partition number (1,2, default 2): 2
 
 Partition 2 has been deleted.
@@ -111,8 +111,8 @@ Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039
 Device     Start     End Sectors  Size Type
 /dev/sda1   2048 1050623 1048576  512M EFI System
 
-Command (m for help): n
-Partition number (2-128, default 2): 2
+Command (m for help): n # 紧接着重新创建
+Partition number (2-128, default 2): 2 # 因为使用的是GPT分区表, 所以最多可以有128个分区, MBR的只能有4个分区
 First sector (1050624-209715166, default 1050624): 
 Last sector, +/-sectors or +/-size{K,M,G,T,P} (1050624-209715166, default 209715166): 
 
@@ -135,7 +135,7 @@ Device       Start       End   Sectors  Size Type
 /dev/sda1     2048   1050623   1048576  512M EFI System
 /dev/sda2  1050624 209715166 208664543 99.5G Linux filesystem
 
-Command (m for help): w
+Command (m for help): w # 保存退出
 The partition table has been altered.
 Syncing disks.
 ```
