@@ -49,6 +49,12 @@ network:
         stp: false
 </code></pre><h3 id=应用网络配置>应用网络配置</h3><p>容易失联，如果是ssh远程操作请谨慎操作</p><pre><code class=language-bash>netplan apply
 </code></pre><h3 id=补充>补充</h3><ol><li>如何没有安装<code>NetworkManager</code>需要先安装(通过<code>systemctl status NetworkManager</code>查看是否安装)</li></ol><pre><code class=language-bash>apt install network-manager -y
-</code></pre><ol start=2><li>生产环境可以<code>systemd-networkd</code>和<code>NetworkManager</code>共存</li></ol><p><a href=https://nmstate.io/>nmstate</a> 依赖<code>NetworkManager</code>服务, NM可以使用<code>10-globally-managed-devices.conf</code>配置不管理哪些接口</p><ol start=3><li><code>netplan apply</code>之后会发现<code>br0</code>会出现好几个<code>inet6</code></li></ol><p>相关讨论 <a href=https://www.linuxquestions.org/questions/linux-networking-3/why-does-my-ubuntu-server-have-4-ipv6-addresses-4175701900/>Why does my ubuntu-server have 4 ipv6 addresses?</a></p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script>
+</code></pre><ol start=2><li>生产环境可以<code>systemd-networkd</code>和<code>NetworkManager</code>共存, 但是在我这里遇到了一些问题</li></ol><p><a href=https://nmstate.io/>nmstate</a> 依赖<code>NetworkManager</code>服务, NM可以使用<code>10-globally-managed-devices.conf</code>配置不管理哪些接口</p><ol start=3><li>禁用 <code>systemd-networkd</code></li></ol><pre><code class=language-bash># 先关闭 systemd-networkd.socket, 否则每次关闭 systemd-networkd 都会被马上重新激活
+systemctl stop systemd-networkd.socket
+systemctl disable systemd-networkd.socket
+
+systemctl stop systemd-networkd
+systemctl disable systemd-networkd
+</code></pre><ol start=4><li><code>netplan apply</code>之后会发现<code>br0</code>会出现好几个<code>inet6</code></li></ol><p>相关讨论 <a href=https://www.linuxquestions.org/questions/linux-networking-3/why-does-my-ubuntu-server-have-4-ipv6-addresses-4175701900/>Why does my ubuntu-server have 4 ipv6 addresses?</a></p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script>
 <script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script>
 <script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2023 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
