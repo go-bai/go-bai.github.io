@@ -3,6 +3,10 @@
   renderer: NetworkManager
   ethernets:
     enp1s0:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    br0:
       addresses:
       - &quot;192.168.1.100/24&quot;
       nameservers:
@@ -10,15 +14,13 @@
         - 192.168.1.1
       dhcp4: false
       dhcp6: false
-      routes:
-      - to: &quot;default&quot;
-        via: &quot;192.168.1.1&quot;
-  bridges:
-    br0:
       interfaces:
       - enp1s0
       parameters:
         stp: false
+      routes:
+      - to: &quot;default&quot;
+        via: &quot;192.168.1.1&quot;
 </code></pre><p>由三个文件组成:</p><ol><li><code>/etc/netplan/01-network-manager-all.yaml</code></li></ol><pre><code class=language-yaml># Let NetworkManager manage all devices on this system
 network:
   version: 2
