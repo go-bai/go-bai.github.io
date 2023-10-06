@@ -102,10 +102,21 @@ netplan apply
 apt install network-manager -y
 ```
 
-2. 生产环境可以`systemd-networkd`和`NetworkManager`共存
+2. 生产环境可以`systemd-networkd`和`NetworkManager`共存, 但是在我这里遇到了一些问题
 
 [nmstate](https://nmstate.io/) 依赖`NetworkManager`服务, NM可以使用`10-globally-managed-devices.conf`配置不管理哪些接口
 
-3. `netplan apply`之后会发现`br0`会出现好几个`inet6`
+3. 禁用 `systemd-networkd`
+
+```bash
+# 先关闭 systemd-networkd.socket, 否则每次关闭 systemd-networkd 都会被马上重新激活
+systemctl stop systemd-networkd.socket
+systemctl disable systemd-networkd.socket
+
+systemctl stop systemd-networkd
+systemctl disable systemd-networkd
+```
+
+4. `netplan apply`之后会发现`br0`会出现好几个`inet6`
 
 相关讨论 [Why does my ubuntu-server have 4 ipv6 addresses?](https://www.linuxquestions.org/questions/linux-networking-3/why-does-my-ubuntu-server-have-4-ipv6-addresses-4175701900/)
