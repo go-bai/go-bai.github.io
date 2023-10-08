@@ -97,3 +97,12 @@ sudo systemctl restart ssh
 - 划词翻译插件(可选辞典web地址,我选择的bing) [Screen work translate](https://extensions.gnome.org/extension/1849/screen-word-translate/)
 - 在 top bar 上显示当前网络上下行速度和总流量 [Net speed Simplified](https://extensions.gnome.org/extension/3724/net-speed-simplified/)
 
+### 设置所有`sudo`组下的用户执行`sudo`命令不需要密码
+
+`EDITOR=vim visudo`
+
+```diff
+# Allow members of group sudo to execute any command
+- %sudo   ALL=(ALL:ALL) ALL
++ %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
+```

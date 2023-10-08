@@ -7,6 +7,8 @@ tags: [hypervisor,kvm,qemu]
 
 ### 环境
 
+#### 操作系统 Ubuntu 22.04.3 LTS Desktop
+
 ```bash
 ➜  ~ cat /etc/os-release 
 PRETTY_NAME="Ubuntu 22.04.3 LTS"
@@ -22,6 +24,10 @@ BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
 PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 UBUNTU_CODENAME=jammy
 ```
+
+#### 网络环境
+
+已创建`bridged network`, [Creating a bridged network with netplan on Ubuntu 22.04](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/)
 
 ### 安装配置
 
