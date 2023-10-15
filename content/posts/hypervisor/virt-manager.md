@@ -2,7 +2,7 @@
 title: "Virt Manager"
 date: 2023-09-23T22:28:35+08:00
 draft: false
-tags: [hypervisor,kvm,qemu]
+tags: [hypervisor,kvm,qemu,virsh]
 ---
 
 ### 环境
@@ -110,4 +110,20 @@ total 1.4G
 
 ```bash
 sudo virt-viewer --connect qemu:///session openwrt
+```
+
+#### `virsh`命令行工具
+
+```bash
+# ========== domain ==========
+# 虚机列表
+virsh list --all
+# 关闭虚机
+virsh shutdown domain
+# 启动虚机
+virsh start domain
+
+# ========== network ==========
+# 网络列表
+virsh net-list
 ```
