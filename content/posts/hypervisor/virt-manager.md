@@ -126,4 +126,8 @@ virsh start domain
 # ========== network ==========
 # 网络列表
 virsh net-list
+
+# ========== other ==========
+# 更改root用户密码, 此命令会和虚机内的qemu guest agent(qga)进程通过串口进行交互
+virsh set-user-password --domain domain --user root --password 123456
 ```
