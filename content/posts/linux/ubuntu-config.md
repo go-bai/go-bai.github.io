@@ -106,3 +106,11 @@ sudo systemctl restart ssh
 - %sudo   ALL=(ALL:ALL) ALL
 + %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
 ```
+
+### 所有网卡都禁用ipv6
+
+vim /etc/sysctl.conf
+
+```diff
++ net.ipv6.conf.all.disable_ipv6 = 1
+```
