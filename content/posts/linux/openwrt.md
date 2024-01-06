@@ -7,6 +7,10 @@ tags: [openWrt,linux,openclash,kvm,virt-install,network]
 
 很久没折腾`OpenWrt`了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(`ALL IN BOOM!`)
 
+先亮个当前的穷人版家庭网络拓扑图
+
+![穷人版家庭网络拓扑图](/posts/linux/imgs/home-network-topology-diagram.png)
+
 ### 准备`qcow2`镜像
 
 首先下载最新的[镜像](https://mirror-01.infra.openwrt.org/releases/), 截止目前最新版为`23.05.2`, 我这里下载的是x86-64的镜像
