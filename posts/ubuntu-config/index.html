@@ -23,4 +23,4 @@ hugo v0.118.2+extended linux/amd64 BuildDate=unknown
 - %sudo   ALL=(ALL:ALL) ALL
 + %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
 </code></pre><h3 id=所有网卡都禁用ipv6>所有网卡都禁用ipv6</h3><p>vim /etc/sysctl.conf</p><pre><code class=language-diff>+ net.ipv6.conf.all.disable_ipv6 = 1
-</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2023 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
