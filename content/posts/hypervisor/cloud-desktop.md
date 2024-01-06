@@ -1,7 +1,7 @@
 ---
 title: "Cloud Desktop"
 date: 2023-10-14T23:10:09+08:00
-draft: false
+draft: true
 tags: [hypervisor,VDI,IDV,VOI,DaaS]
 ---
 
