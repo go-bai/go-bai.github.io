@@ -60,7 +60,7 @@ tar -zxvf clash-linux-amd64.tar.gz
 mv clash /etc/openclash/core/clash
 # 如果没有可执行权限设置执行权限
 chmod +x /etc/openclash/core/clash
-</code></pre><h3 id=打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</h3><p>默认密码为空, 第一次登录后可以修改一下</p><p>打开<code>Services</code>下的<code>OpenClash</code>进行配置即可.</p><p>此处省略1w字&mldr;</p><p>验证<code>OpenWrt</code>的DHCP服务没问题后, 关闭路由器的DHCP服务.</p><p>至此大功告成, 连接wifi之后即可魔法上网, (手动撒花).</p><h3 id=其他>其他</h3><p>这里我使用<code>OpenWrt</code>提供的DHCP能力, 关闭了路由器的DHCP服务</p><h4 id=修改dhcp分配ip范围>修改dhcp分配ip范围</h4><p>修改配置文件 <code>/etc/config/dhcp</code></p><pre><code class=language-bash>config dhcp 'lan'
+</code></pre><h3 id=打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</h3><p>默认密码为空, 第一次登录后可以修改一下</p><p>打开<code>Services</code>下的<code>OpenClash</code>进行配置即可.</p><p>此处省略1w字&mldr;</p><p>验证<code>OpenWrt</code>的DHCP服务没问题后, 关闭路由器的DHCP服务.</p><p>至此大功告成, 连接wifi之后即可魔法上网, (手动撒花).</p><h3 id=其他>其他</h3><p>因为我的主路由不支持设置DHCP服务器的默认网关, 所以这里我使用<code>OpenWrt</code>提供的DHCP能力, 关闭了主路由器的DHCP服务</p><h4 id=修改dhcp分配ip范围>修改dhcp分配ip范围</h4><p>修改配置文件 <code>/etc/config/dhcp</code></p><pre><code class=language-bash>config dhcp 'lan'
         option interface 'lan'
         option start '150'
         option limit '100'
