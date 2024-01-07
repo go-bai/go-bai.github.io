@@ -162,13 +162,20 @@ chmod +x /etc/openclash/core/clash
 
 此处省略1w字...
 
-验证`OpenWrt`的DHCP服务没问题后, 关闭路由器的DHCP服务.
+验证`OpenWrt`的DHCP服务没问题后, 关闭主路由器的DHCP服务.
+
+关于为什么关闭主路由的DHCP功能: 因为我的主路由不支持设置DHCP服务器的默认网关, 所以只有设置静态ip并手动填写网关和DNS为`OpenWrt`的ip才能魔法上网. 不如直接不使用主路由的DHCP服务, 然后开启`OpenWrt` lan口的DHCP服务.
 
 至此大功告成, 连接wifi之后即可魔法上网, (手动撒花).
 
-### 其他
 
-因为我的主路由不支持设置DHCP服务器的默认网关, 所以这里我使用`OpenWrt`提供的DHCP能力, 关闭了主路由器的DHCP服务
+---
+
+分割线
+
+---
+
+### 其他小修改
 
 #### 修改dhcp分配ip范围
 
