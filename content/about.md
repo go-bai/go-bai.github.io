@@ -25,3 +25,7 @@ author: gobai
     - Ubuntu 22.04 + QEMU/KVM
 - 5G CPE VN009
 - OnePlus 9R
+
+### 联系方式: 
+
+- WeChat: `Z28tYmFp`
