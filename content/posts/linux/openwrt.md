@@ -86,7 +86,7 @@ service network restart
 
 ### 换源
 
-传统技艺了, 这里使用的中科大的源, 配置文件位于 `/etc/opkg/distfeeds.conf`
+大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 `/etc/opkg/distfeeds.conf`
 
 ```bash
 src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/targets/x86/64/packages
