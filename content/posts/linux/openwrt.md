@@ -82,7 +82,7 @@ config interface 'lan'
 service network restart
 ```
 
-测试网络`ping baidu.com`, 一切OK再继续下面的
+测试路由和DNS解析是否正常: `ping baidu.com`, 一切OK再继续下面的
 
 ### 换源
 
