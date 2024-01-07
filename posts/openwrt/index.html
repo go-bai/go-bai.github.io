@@ -34,7 +34,7 @@ config interface 'lan'
 	option gateway '192.168.1.1'
 	option dns '223.5.5.5'
 </code></pre><p>修改之后重启网络</p><pre><code class=language-bash>service network restart
-</code></pre><p>测试网络<code>ping baidu.com</code>, 一切OK再继续下面的</p><h3 id=换源>换源</h3><p>传统技艺了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><pre><code class=language-bash>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/targets/x86/64/packages
+</code></pre><p>测试网络<code>ping baidu.com</code>, 一切OK再继续下面的</p><h3 id=换源>换源</h3><p>大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><pre><code class=language-bash>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/targets/x86/64/packages
 src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/base
 src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/luci
 src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/packages
