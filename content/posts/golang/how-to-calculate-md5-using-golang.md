@@ -1,7 +1,7 @@
 ---
 title: "使用golang计算md5 sum"
 date: 2023-01-13T00:50:19+08:00
-draft: false
+draft: true
 tags: ["golang", "md5"]
 ---
 
