@@ -168,7 +168,7 @@ chmod +x /etc/openclash/core/clash
 
 ### 其他
 
-这里我使用`OpenWrt`提供的DHCP能力, 关闭了路由器的DHCP服务
+因为我的主路由不支持设置DHCP服务器的默认网关, 所以这里我使用`OpenWrt`提供的DHCP能力, 关闭了主路由器的DHCP服务
 
 #### 修改dhcp分配ip范围
 
