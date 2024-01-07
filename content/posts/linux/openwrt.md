@@ -111,6 +111,14 @@ opkg update
 
 https://openwrt.org/docs/guide-user/advanced/expand_root
 
+扩容之后就使用起来就不用扣扣搜搜的了
+
+```bash
+root@OpenWrt:~# df -hT /
+Filesystem           Type            Size      Used Available Use% Mounted on
+/dev/root            ext4          994.8M     56.9M    921.9M   6% /
+```
+
 ### 安装`OpenClash`
 
 主要是跟着[官方wiki](https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85)执行, 部分`Github`文件下载使用文件代理加速下载服务 https://mirror.ghproxy.com/
