@@ -9,7 +9,7 @@ tags: [openwrt,linux,openclash,kvm,virt-install,network]
 
 先亮个当前的穷人版家庭网络拓扑图
 
-![穷人版家庭网络拓扑图](/posts/linux/imgs/home-network-topology-diagram.png)
+![穷人版家庭网络拓扑图](/posts/linux/imgs/home-network-topology-diagram.svg)
 
 ### 准备`qcow2`镜像
 
