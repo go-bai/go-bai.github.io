@@ -198,7 +198,35 @@ root@OpenWrt:~# netstat -anp | grep :67
 udp        0      0 0.0.0.0:67              0.0.0.0:*                           27573/dnsmasq
 ```
 
+#### 修改br0的网关和dns
 
+为了小主机三层网络也路由到代理网关, 这里修改之前br0的netplan配置后执行`netplan apply`生效
+
+
+```diff
+network:
+  bridges:
+    br0:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 192.168.1.100/24
+      routes:
+        - to: default
+-         via: 192.168.1.1
++         via: 192.168.1.99
+      nameservers:
+        addresses: 
+-         - 192.168.1.1
+-         - 223.5.5.5
++         - 192.168.1.99
++       search:
++         - lan
+      interfaces:
+        - enp1s0
+      parameters:
+        stp: false
+```
 
 ### 参考
 
