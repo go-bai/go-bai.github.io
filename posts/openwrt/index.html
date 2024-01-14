@@ -67,4 +67,26 @@ chmod +x /etc/openclash/core/clash
         option leasetime '12h'
 </code></pre><p>修改之后重启 <code>service dnsmasq restart</code>, 配置之后有段时间dhcp server没正常运行, 可通过 <code>logread -e dnsmasq</code> 查看服务日志排查.</p><p>正常运行之后dhcp server会监听67端口</p><pre><code class=language-bash>root@OpenWrt:~# netstat -anp | grep :67
 udp        0      0 0.0.0.0:67              0.0.0.0:*                           27573/dnsmasq
+</code></pre><h4 id=修改br0的网关和dns>修改br0的网关和dns</h4><p>为了小主机三层网络也路由到代理网关, 这里修改之前br0的netplan配置后执行<code>netplan apply</code>生效</p><pre><code class=language-diff>network:
+  bridges:
+    br0:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 192.168.1.100/24
+      routes:
+        - to: default
+-         via: 192.168.1.1
++         via: 192.168.1.99
+      nameservers:
+        addresses: 
+-         - 192.168.1.1
+-         - 223.5.5.5
++         - 192.168.1.99
++       search:
++         - lan
+      interfaces:
+        - enp1s0
+      parameters:
+        stp: false
 </code></pre><h3 id=参考>参考</h3><ol><li><a href=https://openwrt.org/docs/guide-user/virtualization/qemu#virtualization_proper>OpenWrt in QEMU</a></li><li><a href=https://openwrt.org/docs/guide-user/advanced/expand_root>OpenWrt: Expanding root partition and filesystem</a></li><li><a href=https://openwrt.org/docs/guide-user/base-system/dhcp>OpenWrt: DHCP and DNS configuration /etc/config/dhcp</a></li><li><a href=https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85>OpenClash 安装</a></li></ol></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
