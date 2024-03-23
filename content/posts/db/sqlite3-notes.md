@@ -2,6 +2,7 @@
 title: "SQLite3 Note"
 date: 2021-12-14T10:33:14+08:00
 draft: false
+toc: true
 tags: ["sqlite3"]
 ---
 
@@ -99,7 +100,7 @@ ok      gocn/sqlite-test        38.372s
 
 可以看出来，写操作性能提升明显，写的单次操作(十次insert)时间直接下降了一个数量级，如果能将更多写操作放入一个事务里，性能提升也会越多，直至达到sqlite的写操作瓶颈(50,000 or more INSERT statements per second)。
 
-参考文档
+## 参考文档
 
 - [官方文档-五种锁状态介绍](https://www.sqlite.org/lockingv3.html)
 - [官方FAQ](https://www.sqlite.org/faq.html#q19)

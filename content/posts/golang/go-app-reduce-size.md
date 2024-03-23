@@ -2,6 +2,7 @@
 title: "减小go程序编译后的体积"
 date: 2021-11-22T10:29:02+08:00
 draft: false
+toc: true
 tags: ["golang"]
 ---
 
@@ -83,6 +84,6 @@ $ ls -lh helloword
 
 可以看出，压缩效果显著！
 
-参考链接
+## 参考链接
 
 - [How to reduce compiled file size?](https://stackoverflow.com/questions/3861634/how-to-reduce-compiled-file-size)

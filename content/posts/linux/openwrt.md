@@ -2,6 +2,7 @@
 title: "OpenWrt"
 date: 2024-01-06T17:38:38+08:00
 draft: false
+toc: true
 tags: [openwrt,linux,openclash,kvm,virt-install,network]
 ---
 
@@ -11,7 +12,7 @@ tags: [openwrt,linux,openclash,kvm,virt-install,network]
 
 ![穷人版家庭网络拓扑图](/posts/linux/imgs/home-network-topology-diagram.svg)
 
-### 准备`qcow2`镜像
+## 准备`qcow2`镜像
 
 首先下载最新的[镜像](https://mirror-01.infra.openwrt.org/releases/), 截止目前最新版为`23.05.2`, 我这里下载的是x86-64的镜像
 
@@ -25,7 +26,13 @@ qemu-img convert -f raw openwrt-23.05.2-x86-64-generic-ext4-combined.img -O qcow
 qemu-img resize openwrt.qcow2 +904M
 ```
 
-### 运行虚机
+## 运行虚机
+
+我是用`libvirt`来管理qemu/kvm虚拟机, 如果没安装要先安装
+
+```bash
+apt install virt-manager qemu bridge-utils -y
+```
 
 我这里将镜像复制到了`/var/lib/libvirt/disks/`目录下
 
@@ -40,7 +47,7 @@ cp openwrt.qcow2 /var/lib/libvirt/disks/
 virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=e1000 --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
 ```
 
-### 配置网络
+## 配置网络
 
 连接`console`配置网络
 
@@ -84,7 +91,7 @@ service network restart
 
 测试路由和DNS解析是否正常: `ping baidu.com`, 一切OK再继续下面的
 
-### 换源
+## 换源
 
 大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 `/etc/opkg/distfeeds.conf`
 
@@ -103,7 +110,7 @@ src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/pac
 opkg update
 ```
 
-### 扩容根分区和文件系统
+## 扩容根分区和文件系统
 
 如果觉得默认的100M左右就够用了可以跳过这步
 
@@ -119,7 +126,7 @@ Filesystem           Type            Size      Used Available Use% Mounted on
 /dev/root            ext4          994.8M     56.9M    921.9M   6% /
 ```
 
-### 安装`OpenClash`
+## 安装`OpenClash`
 
 主要是跟着[官方wiki](https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85)执行, 部分`Github`文件下载使用文件代理加速下载服务 https://mirror.ghproxy.com/
 
@@ -154,7 +161,7 @@ mv clash /etc/openclash/core/clash
 chmod +x /etc/openclash/core/clash
 ```
 
-### 打开登录 `OpenWrt` web界面配置
+## 打开登录 `OpenWrt` web界面配置
 
 默认密码为空, 第一次登录后可以修改一下
 
@@ -175,9 +182,9 @@ chmod +x /etc/openclash/core/clash
 
 ---
 
-### 其他小修改
+## 其他小修改
 
-#### 修改dhcp分配ip范围
+### 修改dhcp分配ip范围
 
 修改配置文件 `/etc/config/dhcp`
 
@@ -198,7 +205,7 @@ root@OpenWrt:~# netstat -anp | grep :67
 udp        0      0 0.0.0.0:67              0.0.0.0:*                           27573/dnsmasq
 ```
 
-#### 修改br0的网关和dns
+### 修改br0的网关和dns
 
 为了小主机三层网络也路由到代理网关, 这里修改之前br0的netplan配置后执行`netplan apply`生效
 
@@ -228,7 +235,7 @@ network:
         stp: false
 ```
 
-### 参考
+## 参考
 
 1. [OpenWrt in QEMU](https://openwrt.org/docs/guide-user/virtualization/qemu#virtualization_proper)
 2. [OpenWrt: Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root)

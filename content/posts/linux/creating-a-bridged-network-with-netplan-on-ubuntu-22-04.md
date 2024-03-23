@@ -2,6 +2,7 @@
 title: "Creating a bridged network with netplan on Ubuntu 22.04"
 date: 2023-10-04T13:01:59+08:00
 draft: false
+toc: true
 tags: [linux,bridged-network,netplan,ubuntu]
 ---
 
@@ -11,7 +12,7 @@ tags: [linux,bridged-network,netplan,ubuntu]
 2. 子网掩码 `255.255.255.0`
 2. DHCP范围 `192.168.1.2`-`192.168.32`
 
-### 创建一个`bridged network`
+## 创建一个`bridged network`
 
 创建一个网桥`br0`给虚机使用，使得虚机和其他设备都在一个LAN下
 
@@ -87,7 +88,7 @@ network:
         stp: false
 ```
 
-### 应用网络配置
+## 应用网络配置
 
 容易失联，如果是ssh远程操作请谨慎操作
 
@@ -95,7 +96,7 @@ network:
 netplan apply
 ```
 
-### 补充
+## 补充
 
 1. 如何没有安装`NetworkManager`需要先安装(通过`systemctl status NetworkManager`查看是否安装)
 

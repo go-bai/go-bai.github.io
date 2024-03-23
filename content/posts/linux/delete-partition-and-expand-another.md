@@ -2,12 +2,13 @@
 title: "删除分区并扩容另一个分区和根文件系统"
 date: 2023-10-02T16:54:05+08:00
 draft: false
+toc: true
 tags: [linux,fdisk,resize2fs,lsblk,partprobe,ext4,partition]
 ---
 
 > 现在要将 `/dev/sda3` 分区删掉并扩容到 `/dev/sda2`, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 `/` 挂载在 `/dev/sda2` 上, 并且 filesystem 是 `ext4`)
 
-### 磁盘初始分区和挂载情况
+## 磁盘初始分区和挂载情况
 
 ```bash
 ➜  ~ lsblk /dev/sda
@@ -36,7 +37,7 @@ Filesystem     Type  Size  Used Avail Use% Mounted on
 /dev/sda2      ext4   97G   28G   64G  31% /
 ```
 
-### 删除分区 `/dev/sda3`
+## 删除分区 `/dev/sda3`
 
 ```bash
 ➜  ~ fdisk /dev/sda
@@ -69,7 +70,7 @@ The partition table has been altered.
 Syncing disks.
 ```
 
-### 扩容分区 `/dev/sda2` 和 根文件系统
+## 扩容分区 `/dev/sda2` 和 根文件系统
 
 使用 `fdisk` 扩容 `/dev/sda2`, 前提是 `/dev/sda2` 后面没有其他分区了，可以这样扩容(先删除不退出并重建分区, 分区 `Start` 不变, `End` 增大)
 
@@ -163,7 +164,7 @@ Filesystem     Type  Size  Used Avail Use% Mounted on
 
 至此, 在不重启的情况下 `/` 目录的容量从最初的 `97G` 变成了 `98G` 👏
 
-#### 参考
+## 参考
 
 - [How can I resize an ext root partition at runtime?](https://askubuntu.com/questions/24027/how-can-i-resize-an-ext-root-partition-at-runtime)
 - [Re-read The Partition Table Without Rebooting Linux System](https://www.cyberciti.biz/tips/re-read-the-partition-table-without-rebooting-linux-system.html)
