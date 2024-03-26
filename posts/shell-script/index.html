@@ -1,7 +1,28 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Shell Script | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Shell Script</span></h1><h4 class=date>2024/03/23</h4><p class=terms>Tags: <a href=/tags/shell>shell</a> <a href=/tags/bash>bash</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a><ul><li><a href=#set>set</a></li></ul></li></ul></nav><main><p>最近写的shell脚本比较多，记录一些经典场景下的写法</p><h2 id=binbash><code>#!/bin/bash</code></h2><p>shell是</p><p>而<code>#!/bin/bash</code>表示在直接执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><pre><code class=language-bash># echo $SHELL
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Shell Script</span></h1><h4 class=date>2024/03/23</h4><p class=terms>Tags: <a href=/tags/shell>shell</a> <a href=/tags/bash>bash</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#sed><code>sed</code></a><ul><li><a href=#替换文件中的字符串>替换文件中的字符串</a></li><li><a href=#替换文件中以xxx开头的后面的内容>替换文件中以xxx开头的后面的内容</a></li></ul></li><li><a href=#cat-eof><code>cat &lt;&lt;EOF</code></a><ul><li><a href=#写入到文件>写入到文件</a></li></ul></li></ul></nav><main><p>最近写的shell脚本比较多，记录一些常用命令</p><h2 id=binbash><code>#!/bin/bash</code></h2><p><code>#!/bin/bash</code>表示在直接执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><pre><code class=language-bash># echo $SHELL
 /bin/bash
-</code></pre><h3 id=set>set</h3><pre><code class=language-bash>#!/bin/bash
+</code></pre><h2 id=set><code>set</code></h2><p><code>set</code>命令用来修改shell环境的运行参数, 完整的可定制的<a href=https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html>官方手册</a></p><p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:</p><pre><code class=language-bash>#!/bin/bash
+set -uxe
+set -o pipefail
+</code></pre><h3 id=set--u><code>set -u</code></h3><p>执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, <code>set -u</code>可以让脚本读到不存在变量时报错</p><h3 id=set--x><code>set -x</code></h3><p>命令执行前会先打印出来, 行首以<code>+</code>表示, 在调试脚本时非常有帮助</p><h3 id=set--e><code>set -e</code></h3><p>执行脚本时, Bash遇到错误默认会继续执行, <code>set -e</code>使得脚本只要发生错误, 就中止执行</p><h3 id=set--o-pipefail><code>set -o pipefail</code></h3><p><code>set -e</code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出</p><pre><code class=language-bash>#!/bin/bash
+set -e
 
-set -
+foo | echo a
+echo bar
+</code></pre><p>执行的结果为:</p><pre><code class=language-bash>a
+set.sh: line 4: foo: command not found
+bar
+</code></pre><p><code>set -o pipefail</code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</p><pre><code class=language-bash>#!/bin/bash
+set -eo pipefail
+
+foo | echo a
+echo bar
+</code></pre><p>执行的结果为:</p><pre><code class=language-bash>a
+set.sh: line 4: foo: command not found
+</code></pre><h2 id=sed><code>sed</code></h2><p>TODO</p><h3 id=替换文件中的字符串>替换文件中的字符串</h3><pre><code class=language-bash>sed -
+</code></pre><h3 id=替换文件中以xxx开头的后面的内容>替换文件中以xxx开头的后面的内容</h3><h2 id=cat-eof><code>cat &lt;&lt;EOF</code></h2><p><code>cat</code>一般用来查看文件内容, <code>cat &lt;&lt;EOF</code>可以用来将多行内容写入到文件里.</p><h3 id=写入到文件>写入到文件</h3><p>这里的<code>\$PWD</code>写入到脚本后将会是<code>$PWD</code>, <code>$PWD</code>将会解析为当前执行路径.</p><pre><code class=language-bash>cat &lt;&lt;EOF &gt; print.sh
+#!/bin/bash
+echo \$PWD
+echo &quot;$PWD&quot;
+EOF
 </code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

@@ -1,5 +1,11 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Bash on gobai's blog</title><link>/tags/bash/</link><description>Recent content in Bash on gobai's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/tags/bash/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些经典场景下的写法
-#!/bin/bash shell是
-而#!/bin/bash表示在直接执行此脚本文件时使用/bin/bash做为shell解释器程序
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Bash on gobai's blog</title><link>/tags/bash/</link><description>Recent content in Bash on gobai's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/tags/bash/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些常用命令
+#!/bin/bash #!/bin/bash表示在直接执行此脚本文件时使用/bin/bash做为shell解释器程序
 很多主流操作系统默认的shell解释器也是bash
-# echo $SHELL /bin/bash set #!/bin/bash set -</description></item></channel></rss>
+# echo $SHELL /bin/bash set set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
+下面是我常用的几个, 可以合并为如下内容写在脚本开头:
+#!/bin/bash set -uxe set -o pipefail set -u 执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, set -u可以让脚本读到不存在变量时报错
+set -x 命令执行前会先打印出来, 行首以+表示, 在调试脚本时非常有帮助
+set -e 执行脚本时, Bash遇到错误默认会继续执行, set -e使得脚本只要发生错误, 就中止执行
+set -o pipefail set -e有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出
+#!/bin/bash set -e foo | echo a echo bar 执行的结果为:
+a set.sh: line 4: foo: command not found bar set -o pipefail可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</description></item></channel></rss>
