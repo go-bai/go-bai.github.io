@@ -276,6 +276,31 @@ chmod +x app_${APP_NAME}.sh
 ln -nsf /opt/app_archives/\${APP_NAME}_archive/app_\${APP_NAME}.sh /usr/bin/\${APP_NAME}
 ```
 
+## `mc`(minio client)
+
+### 设置alias
+
+```bash
+mc alias set {NAME} http://minio.lan:9000 {USER} {PASSWORD}
+```
+
+### 设置匿名用户对某bucket权限
+
+权限有`download`, `upload` 和 `public(download+upload)`
+
+设置匿名用户可以下载某个bucket下的文件
+
+```bash
+# mc anonymous set download minio/app
+Access permission for `minio/app` is set to `download`
+```
+
+查看匿名用户对某bucket的权限
+
+```bash
+# mc anonymous get minio/app
+Access permission for `minio/app` is `download`
+```
 
 ## 参考
 
