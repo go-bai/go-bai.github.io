@@ -239,7 +239,8 @@ ldd $(which ${APP_NAME}) | awk '{print $3}' | xargs -i cp -L {} libs
 ```
 
 这样只需要再把可执行文件也离线, 就可以离线安装运行了
-不过还有最后一步, 这些lib文件不适合直接都放入`/lib/x86_64-linux-gnu/`下?, 感觉单独放一个地方比较好管理, 但是需要让可执行文件能找到, 就需要运行之前设置`LD_LIBRARY_PATH`
+
+不过还有最后一步, 这些lib文件不适合直接都放入`/lib/`目录下?, 因为有可能这些lib目录下有和当前程序冲突的版本, 所以直接把程序依赖的lib放在一个目录下然后启动时设置`LD_LIBRARY_PATH`目录让程序去找正确版本的lib库是更稳妥的.
 
 ```bash
 cp $(which ${APP_NAME}) .
@@ -247,7 +248,7 @@ cat <<EOF > app_${APP_NAME}.sh
 #!/bin/bash
 INSTALL_DIR="/opt/app_archives"
 APP_NAME="${APP_NAME}"
-export LD_LIBRARY_PATH="\${INSTALL_DIR}/\${APP_NAME}_archive"
+export LD_LIBRARY_PATH="\${INSTALL_DIR}/\${APP_NAME}_archive/libs"
 \${INSTALL_DIR}/\${APP_NAME}_archive/\${APP_NAME}  "\$@"
 EOF
 chmod +x app_${APP_NAME}.sh
