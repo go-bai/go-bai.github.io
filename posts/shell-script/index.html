@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Shell Script | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Shell Script</span></h1><h4 class=date>2024/03/23</h4><p class=terms>Tags: <a href=/tags/shell>shell</a> <a href=/tags/bash>bash</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#sed><code>sed</code></a><ul><li><a href=#替换文件中的字符串>替换文件中的字符串</a></li><li><a href=#替换文件中以xxx开头的后面的内容>替换文件中以xxx开头的后面的内容</a></li></ul></li><li><a href=#cat-eof><code>cat &lt;&lt;EOF</code></a><ul><li><a href=#写入到文件>写入到文件</a></li></ul></li></ul></nav><main><p>最近写的shell脚本比较多，记录一些常用命令</p><h2 id=binbash><code>#!/bin/bash</code></h2><p><code>#!/bin/bash</code>表示在直接执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><pre><code class=language-bash># echo $SHELL
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Shell Script</span></h1><h4 class=date>2024/03/23</h4><p class=terms>Tags: <a href=/tags/shell>shell</a> <a href=/tags/bash>bash</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#-here-document><code>&lt;&lt;</code> here document</a><ul><li><a href=#cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</a></li><li><a href=#kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></a></li></ul></li><li><a href=#sed-stream-editor><code>sed</code> (stream editor)</a><ul><li><a href=#s命令替换字符串><code>s</code>命令替换字符串</a></li><li><a href=#将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></a></li><li><a href=#只替换行中匹配到的某一个>只替换行中匹配到的某一个</a></li><li><a href=#只替换部分行字符串>只替换部分行字符串</a></li><li><a href=#圆括号匹配>圆括号匹配</a></li></ul></li><li><a href=#awk命令><code>awk</code>命令</a></li><li><a href=#ldd命令><code>ldd</code>命令</a><ul><li><a href=#离线有动态链接库的程序>离线有动态链接库的程序</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>最近写的shell脚本比较多，记录一些常用命令, 这些脚本直接让ChatGPT写很好使!!!, 不过还是了解这些基础命令更好, 问ChatGPT时知道怎么引导它写出更准确的脚本.</p></blockquote><h2 id=binbash><code>#!/bin/bash</code></h2><p><code>#!/bin/bash</code>被称为<code>shebang line</code>, 指定执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><pre><code class=language-bash># echo $SHELL
 /bin/bash
 </code></pre><h2 id=set><code>set</code></h2><p><code>set</code>命令用来修改shell环境的运行参数, 完整的可定制的<a href=https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html>官方手册</a></p><p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:</p><pre><code class=language-bash>#!/bin/bash
 set -uxe
@@ -19,10 +19,96 @@ foo | echo a
 echo bar
 </code></pre><p>执行的结果为:</p><pre><code class=language-bash>a
 set.sh: line 4: foo: command not found
-</code></pre><h2 id=sed><code>sed</code></h2><p>TODO</p><h3 id=替换文件中的字符串>替换文件中的字符串</h3><pre><code class=language-bash>sed -
-</code></pre><h3 id=替换文件中以xxx开头的后面的内容>替换文件中以xxx开头的后面的内容</h3><h2 id=cat-eof><code>cat &lt;&lt;EOF</code></h2><p><code>cat</code>一般用来查看文件内容, <code>cat &lt;&lt;EOF</code>可以用来将多行内容写入到文件里.</p><h3 id=写入到文件>写入到文件</h3><p>这里的<code>\$PWD</code>写入到脚本后将会是<code>$PWD</code>, <code>$PWD</code>将会解析为当前执行路径.</p><pre><code class=language-bash>cat &lt;&lt;EOF &gt; print.sh
-#!/bin/bash
-echo \$PWD
-echo &quot;$PWD&quot;
+</code></pre><h2 id=-here-document><code>&lt;&lt;</code> here document</h2><p>一般使用<code>Here Document</code>作为标准输入喂给<code>kubectl apply -f -</code>或者重定向到文件里.</p><pre><code class=language-bash>#!/bin/bash
+
+# 标识符或限定符IDENT一般使用EOF表示
+COMMAND &lt;&lt;IDENT
+this is ...
+IDENT
+</code></pre><h3 id=cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</h3><p><code>cat</code>一般用来查看文件内容, <code>cat &lt;&lt;EOF</code>可以用来将多行内容打印到标准输出重定向写入到文件里, 这里<code>限定符</code>使用<code>EOF</code>.</p><pre><code class=language-bash>cat &lt;&lt;EOF &gt; doc.md
+# this is ...
 EOF
-</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+</code></pre><h3 id=kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></h3><p>使用<code>kubectl</code>直接不创建文件去<code>apply</code>一个yaml</p><pre><code class=language-bash>kubectl apply -f - &lt;&lt;EOF
+apiVersion: &quot;k8s.cni.cncf.io/v1&quot;
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf-2
+EOF
+</code></pre><h2 id=sed-stream-editor><code>sed</code> (stream editor)</h2><p><code>sed</code>全名<code>stream editor</code>, 会流式的一行一行编辑文件, <a href=https://www.gnu.org/software/sed/manual/sed.html>sed手册</a></p><p>下面的修改都是打印到标准输出, 加上<code>-i</code>参数<code>sed -i 'xxx' filename</code>就可以直接更新到文件了</p><h3 id=s命令替换字符串><code>s</code>命令替换字符串</h3><p>结合上面的<code>here document</code>一起演示, 这样就不用再单独创建文件了</p><h3 id=将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></h3><pre><code class=language-bash>sed 's/latest/v1.1.1/g' - &lt;&lt;EOF
+ecr.gobai.top/example:latest
+EOF
+</code></pre><blockquote><p><code>s</code>表示替换命令, <code>/latest/</code>表示匹配<code>latest</code>, <code>/v1.1.1/</code>表示将匹配到的替换为<code>v1.1.1</code>, <code>/g</code>表示每一行中匹配到的全部替换, 没有<code>g</code>只会替换每一行中的第一个.</p></blockquote><h3 id=只替换行中匹配到的某一个>只替换行中匹配到的某一个</h3><pre><code class=language-bash># 替换第1个
+sed 's/latest/v1.1.1/1' - &lt;&lt;EOF
+ecr.gobai.top/example:latest latest latest
+EOF
+
+# 替换第2个
+sed 's/latest/v1.1.1/2' - &lt;&lt;EOF
+ecr.gobai.top/example:latest latest latest
+EOF
+
+# 替换第2个和之后的
+sed 's/latest/v1.1.1/2g' - &lt;&lt;EOF
+ecr.gobai.top/example:latest latest latest
+EOF
+</code></pre><h3 id=只替换部分行字符串>只替换部分行字符串</h3><pre><code class=language-bash># 只替换第2行
+sed '2s/latest/v1.1.1/g' - &lt;&lt;EOF
+ecr.gobai.top/example:latest
+ecr.gobai.top/example:latest
+ecr.gobai.top/example:latest
+EOF
+
+# 只替换2-3行
+sed '2,3s/latest/v1.1.1/g' - &lt;&lt;EOF
+ecr.gobai.top/example:latest
+ecr.gobai.top/example:latest
+ecr.gobai.top/example:latest
+EOF
+</code></pre><blockquote><p>更复杂的涉及很多正则的场景我一般直接丢给<code>ChatGPT</code>去写, 知道<code>sed</code>可以完成这些任务就可以了!!!</p></blockquote><h3 id=圆括号匹配>圆括号匹配</h3><p>圆括号括起来的正则表达式所匹配的字符串可以当成变量来使用, 通过<code>\1</code>或<code>\2</code>来引用</p><h4 id=将version后面的版本替换>将<code>VERSION</code>后面的版本替换</h4><pre><code class=language-bash>V=&quot;1.1.1&quot;
+sed &quot;s/\(^VERSION:\s*\)[0-9.]\+/\1$V/&quot; - &lt;&lt;EOF
+VERSION: 0.0.1
+EOF
+</code></pre><blockquote><p>圆括号<code>()</code>需要转义<code>\(\)</code>, 并且因为有变量<code>$V</code>, 单引号需要改为双引号, <code>^</code>代表行的开始, <code>VERSION:</code>匹配文本字符串, <code>\s*</code>匹配0或多个空白字符,
+<code>[0-9.]\+</code>匹配一个或多个数字或<code>.</code>, <code>\(^VERSION:\s*\)</code>匹配到了版本号前面的内容作为变量<code>1</code>, <code>\1$V</code>代表将匹配到的所有内容替换为版本好前面的内容+新的版本号<code>$V</code></p></blockquote><h2 id=awk命令><code>awk</code>命令</h2><p><code>awk</code>也是依次处理文件的每一行, 适合处理每一行格式相同的数据</p><p>基本用法</p><pre><code class=language-bash># 格式
+awk 动作 文件名
+
+# 示例
+awk '{print $0}' - &lt;&lt;EOF
+abc 123 666
+bcd 234 777
+EOF
+</code></pre><blockquote><p>大括号<code>{}</code>内部是处理当前行的动作, <code>$0</code>代表当前行, 最终效果就是原样打印所有行.
+<code>awk</code>会根据<code>空格</code>或<code>制表符</code>将每一行分成若干字段, 通过<code>$1</code> <code>$2</code> <code>$3</code>代表每一个字段, 也可以通过<code>awk -F ':' '{print $1}' xxx</code>手动指定每一列之间的分隔符为<code>:</code></p></blockquote><h2 id=ldd命令><code>ldd</code>命令</h2><p><code>ldd</code>可以查看一个可执行文件依赖哪些动态链接库</p><h3 id=离线有动态链接库的程序>离线有动态链接库的程序</h3><p>查看<code>jq</code>命令依赖哪些动态链接库,</p><pre><code class=language-bash># ldd $(which jq)
+        linux-vdso.so.1 (0x00007fff12b9f000)
+        libjq.so.1 =&gt; /lib/x86_64-linux-gnu/libjq.so.1 (0x00007fc42d080000)
+        libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fc42ce00000)
+        libm.so.6 =&gt; /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc42cd19000)
+        libonig.so.5 =&gt; /lib/x86_64-linux-gnu/libonig.so.5 (0x00007fc42cc86000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007fc42d0e9000)
+</code></pre><p>如果要离线一个脚本, 只需要将<code>=></code>后面的文件复制一份打包即可, 这时<code>awk</code>命令就能派上用场了</p><pre><code class=language-bash>APP_NAME=&quot;jq&quot;
+mkdir ${APP_NAME}_archive &amp;&amp; cd ${APP_NAME}_archive
+mkdir libs
+ldd $(which ${APP_NAME}) | awk '{print $3}' | xargs -i cp -L {} libs
+</code></pre><p>这样只需要再把可执行文件也离线, 就可以离线安装运行了
+不过还有最后一步, 这些lib文件不适合直接都放入<code>/lib/x86_64-linux-gnu/</code>下?, 感觉单独放一个地方比较好管理, 但是需要让可执行文件能找到, 就需要运行之前设置<code>LD_LIBRARY_PATH</code></p><pre><code class=language-bash>cp $(which ${APP_NAME}) .
+cat &lt;&lt;EOF &gt; app_${APP_NAME}.sh
+#!/bin/bash
+INSTALL_DIR=&quot;/opt/app_archives&quot;
+APP_NAME=&quot;${APP_NAME}&quot;
+export LD_LIBRARY_PATH=&quot;\${INSTALL_DIR}/\${APP_NAME}_archive&quot;
+\${INSTALL_DIR}/\${APP_NAME}_archive/\${APP_NAME}  &quot;\$@&quot;
+EOF
+chmod +x app_${APP_NAME}.sh
+</code></pre><p>最终的文件如下</p><pre><code class=language-bash># tree .                     
+.
+├── app_jq.sh
+├── jq
+└── libs
+    ├── libc.so.6
+    ├── libjq.so.1
+    ├── libm.so.6
+    └── libonig.so.5
+
+1 directory, 6 files
+</code></pre><p>安装时, 只需要将<code>${APP_NAME}_archive</code>目录放在<code>/opt/app_archives</code>目录下, 然后创建一个如下的软链即可</p><pre><code class=language-bash>ln -nsf /opt/app_archives/\${APP_NAME}_archive/app_\${APP_NAME}.sh /usr/bin/\${APP_NAME}
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://www.ruanyifeng.com/blog/2018/11/awk.html>awk</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

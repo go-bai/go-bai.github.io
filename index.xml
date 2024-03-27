@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些常用命令
-#!/bin/bash #!/bin/bash表示在直接执行此脚本文件时使用/bin/bash做为shell解释器程序
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些常用命令, 这些脚本直接让ChatGPT写很好使!!!, 不过还是了解这些基础命令更好, 问ChatGPT时知道怎么引导它写出更准确的脚本.
+#!/bin/bash #!/bin/bash被称为shebang line, 指定执行此脚本文件时使用/bin/bash做为shell解释器程序
 很多主流操作系统默认的shell解释器也是bash
 # echo $SHELL /bin/bash set set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
 下面是我常用的几个, 可以合并为如下内容写在脚本开头:
