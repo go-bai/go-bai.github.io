@@ -1,0 +1,71 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Multi-Bootable USB | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Multi-Bootable USB</span></h1><h4 class=date>2024/03/28</h4><p class=terms>Tags: <a href=/tags/ventoy>ventoy</a></p></div><nav id=TableOfContents><ul><li><a href=#下载并解压ventoy>下载并解压<code>ventoy</code></a></li><li><a href=#安装ventoy>安装ventoy</a></li><li><a href=#拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</a></li></ul></nav><main><blockquote><p>从一个USB设备(U盘)启动多个操作系统</p></blockquote><h2 id=下载并解压ventoy>下载并解压<code>ventoy</code></h2><pre><code class=language-bash>wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz
+tar -xvzf ventoy-1.0.97-linux.tar.gz
+cd ventoy-1.0.97/
+</code></pre><p><code>Ventoy2Disk.sh</code>用来安装<code>ventor</code>到U盘</p><pre><code class=language-bash>./Ventoy2Disk.sh -h
+
+**********************************************
+      Ventoy: 1.0.97  x86_64
+      longpanda admin@ventoy.net
+      https://www.ventoy.net
+**********************************************
+
+Usage:  Ventoy2Disk.sh CMD [ OPTION ] /dev/sdX
+  CMD:
+   -i  install Ventoy to sdX (fails if disk already installed with Ventoy)
+   -I  force install Ventoy to sdX (no matter if installed or not)
+   -u  update Ventoy in sdX
+   -l  list Ventoy information in sdX
+
+  OPTION: (optional)
+   -r SIZE_MB  preserve some space at the bottom of the disk (only for install)
+   -s/-S       enable/disable secure boot support (default is enabled)
+   -g          use GPT partition style, default is MBR (only for install)
+   -L          Label of the 1st exfat partition (default is Ventoy)
+   -n          try non-destructive installation (only for install)
+</code></pre><h2 id=安装ventoy>安装ventoy</h2><pre><code class=language-bash># ./Ventoy2Disk.sh -I /dev/sdb
+
+**********************************************
+      Ventoy: 1.0.97  x86_64
+      longpanda admin@ventoy.net
+      https://www.ventoy.net
+**********************************************
+
+Disk : /dev/sdb
+Model: Kingston DataTraveler 3.0 (scsi)
+Size : 115 GB
+Style: MBR
+
+
+Attention:
+You will install Ventoy to /dev/sdb.
+All the data on the disk /dev/sdb will be lost!!!
+
+Continue? (y/n) y
+
+All the data on the disk /dev/sdb will be lost!!!
+Double-check. Continue? (y/n) y
+
+Create partitions on /dev/sdb by parted in MBR style ...
+Done
+Wait for partitions ...
+partition exist OK
+create efi fat fs /dev/sdb2 ...
+mkfs.fat 4.2 (2021-01-31)
+success
+Wait for partitions ...
+/dev/sdb1 exist OK
+/dev/sdb2 exist OK
+partition exist OK
+Format partition 1 /dev/sdb1 ...
+mkexfatfs 1.3.0
+Creating... done.
+Flushing... done.
+File system created successfully.
+mkexfatfs success
+writing data to disk ...
+sync data ...
+esp partition processing ...
+
+Install Ventoy to /dev/sdb successfully finished.
+</code></pre><h2 id=拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</h2><p>将<code>/dev/sdb1</code> mount到目录上(如果是有桌面的Linux环境, 应该会自动mount), 然后就可以将iso文件拷贝过去了</p><p>之后就可以通过这一个<code>U盘</code>去启动多个系统的iso镜像了.</p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
