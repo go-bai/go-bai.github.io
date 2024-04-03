@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Multi-Bootable USB | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Multi-Bootable USB</span></h1><h4 class=date>2024/03/28</h4><p class=terms>Tags: <a href=/tags/ventoy>ventoy</a></p></div><nav id=TableOfContents><ul><li><a href=#下载并解压ventoy>下载并解压<code>ventoy</code></a></li><li><a href=#安装ventoy>安装ventoy</a></li><li><a href=#拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</a></li></ul></nav><main><blockquote><p>从一个USB设备(U盘)启动多个操作系统</p></blockquote><h2 id=下载并解压ventoy>下载并解压<code>ventoy</code></h2><pre><code class=language-bash>wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Multi-Bootable USB</span></h1><h4 class=date>2024/03/28</h4><p class=terms>Tags: <a href=/tags/ventoy>ventoy</a></p></div><nav id=TableOfContents><ul><li><a href=#下载并解压ventoy>下载并解压<code>ventoy</code></a></li><li><a href=#安装ventoy>安装ventoy</a></li><li><a href=#拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</a></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件</p></blockquote><h2 id=下载并解压ventoy>下载并解压<code>ventoy</code></h2><pre><code class=language-bash>wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz
 tar -xvzf ventoy-1.0.97-linux.tar.gz
 cd ventoy-1.0.97/
 </code></pre><p><code>Ventoy2Disk.sh</code>用来安装<code>ventor</code>到U盘</p><pre><code class=language-bash>./Ventoy2Disk.sh -h
@@ -68,4 +68,34 @@ sync data ...
 esp partition processing ...
 
 Install Ventoy to /dev/sdb successfully finished.
-</code></pre><h2 id=拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</h2><p>将<code>/dev/sdb1</code> mount到目录上(如果是有桌面的Linux环境, 应该会自动mount), 然后就可以将iso文件拷贝过去了</p><p>之后就可以通过这一个<code>U盘</code>去启动多个系统的iso镜像了.</p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+</code></pre><p>查看最终的U盘分区, <code>sdb1</code>分区是存放<code>iso</code>镜像的</p><pre><code class=language-bash># fdisk -l /dev/sdb
+Disk /dev/sdb: 115.5 GiB, 124017180672 bytes, 242221056 sectors
+Disk model: DataTraveler 3.0
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x7eda2ae4
+
+Device     Boot     Start       End   Sectors   Size Id Type
+/dev/sdb1  *         2048 242155519 242153472 115.5G  7 HPFS/NTFS/exFAT
+/dev/sdb2       242155520 242221055     65536    32M ef EFI (FAT-12/16/32)
+</code></pre><h2 id=拷贝iso镜像到u盘>拷贝<code>iso</code>镜像到U盘</h2><p>为了充分利用U盘的空间, 我这里会在U盘里既存iso镜像(在<code>image</code>目录)也存储普通文件(在<code>data</code>目录)</p><p>但是如果<code>data</code>下文件特别多，搜索过程就会非常慢，这里就需要指定搜索路径来解决了</p><pre><code class=language-bash># 如果操作系统没有自动将sdb1 mount到目录需要先手动mount, 否则跳过就好
+mkdir -p /mnt/Ventoy
+mount /dev/sdb1 /mnt/Ventoy
+
+# 创建文件夹
+cd /mnt/Ventoy
+mkdir -p image
+mkdir -p data
+mkdir -p ventoy
+
+# 编辑 ventoy/ventoy.json 文件
+cat &lt;&lt;EOF &gt; ventoy/ventoy.json
+{
+    &quot;control&quot;: [
+        { &quot;VTOY_DEFAULT_SEARCH_ROOT&quot;: &quot;/image&quot; }
+    ]
+}
+EOF
+</code></pre><p>最后拷贝就直接 <code>cp xx.iso /mnt/Ventoy/image/</code> 就行了</p><h2 id=参考>参考</h2><ol><li><a href=https://www.ventoy.net/en/plugin_control.html>Ventoy Global Control Plugin</a></li><li><a href=https://www.ventoy.net/en/doc_search_path.html>Ventoy Search Configuration</a></li><li><a href=https://github.com/ventoy/Ventoy>Ventoy Github</a></li></ol></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
