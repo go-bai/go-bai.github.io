@@ -1,0 +1,138 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Rclone | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Rclone</span></h1><h4 class=date>2024/04/04</h4><p class=terms>Tags: <a href=/tags/rclone>rclone</a></p></div><nav id=TableOfContents><ul><li><a href=#下载安装rclone>下载安装<code>rclone</code></a></li><li><a href=#配置rclone-config>配置<code>rclone config</code></a><ul><li><a href=#查看有哪些remote>查看有哪些remote</a></li><li><a href=#查看某个remote下的目录或文件>查看某个<code>remote</code>下的目录或文件</a></li></ul></li><li><a href=#将alist-mount-到目录>将<code>alist</code> mount 到目录</a></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>使用<code>rclone</code>和<code>alist</code>提供的<code>webdav</code>接口将阿里云盘<code>mount</code>到Ubuntu 22.04的目录上</p></blockquote><h2 id=下载安装rclone>下载安装<code>rclone</code></h2><pre><code class=language-bash>curl https://rclone.org/install.sh | bash
+</code></pre><h2 id=配置rclone-config>配置<code>rclone config</code></h2><pre><code class=language-bash># rclone config
+No remotes found, make a new one?
+n) New remote
+s) Set configuration password
+q) Quit config
+n/s/q&gt; n
+
+Enter name for new remote.
+name&gt; alist
+
+Option Storage.
+Type of storage to configure.
+Choose a number from below, or type in your own value.
+ 1 / 1Fichier
+   \ (fichier)
+...
+51 / WebDAV
+   \ (webdav)
+...
+Storage&gt; 51
+
+Option url.
+URL of http host to connect to.
+E.g. https://example.com.
+Enter a value.
+url&gt; http://alist.home.lan/dav/
+
+Option vendor.
+Name of the WebDAV site/service/software you are using.
+Choose a number from below, or type in your own value.
+Press Enter to leave empty.
+ 1 / Fastmail Files
+   \ (fastmail)
+ 2 / Nextcloud
+   \ (nextcloud)
+ 3 / Owncloud
+   \ (owncloud)
+ 4 / Sharepoint Online, authenticated by Microsoft account
+   \ (sharepoint)
+ 5 / Sharepoint with NTLM authentication, usually self-hosted or on-premises
+   \ (sharepoint-ntlm)
+ 6 / rclone WebDAV server to serve a remote over HTTP via the WebDAV protocol
+   \ (rclone)
+ 7 / Other site/service or software
+   \ (other)
+vendor&gt; 7
+
+Option user.
+User name.
+In case NTLM authentication is used, the username should be in the format 'Domain\User'.
+Enter a value. Press Enter to leave empty.
+user&gt; admin
+
+Option pass.
+Password.
+Choose an alternative below. Press Enter for the default (n).
+y) Yes, type in my own password
+g) Generate random password
+n) No, leave this optional password blank (default)
+y/g/n&gt; y
+Enter the password:
+password:
+Confirm the password:
+password:
+
+Option bearer_token.
+Bearer token instead of user/pass (e.g. a Macaroon).
+Enter a value. Press Enter to leave empty.
+bearer_token&gt;
+
+Edit advanced config?
+y) Yes
+n) No (default)
+y/n&gt; n
+
+Configuration complete.
+Options:
+- type: webdav
+- url: http://alist.home.lan/dav/
+- vendor: other
+- user: admin
+- pass: *** ENCRYPTED ***
+Keep this &quot;alist&quot; remote?
+y) Yes this is OK (default)
+e) Edit this remote
+d) Delete this remote
+y/e/d&gt; y
+
+Current remotes:
+
+Name                 Type
+====                 ====
+alist                webdav
+
+e) Edit existing remote
+n) New remote
+d) Delete remote
+r) Rename remote
+c) Copy remote
+s) Set configuration password
+q) Quit config
+e/n/d/r/c/s/q&gt; q
+</code></pre><h3 id=查看有哪些remote>查看有哪些remote</h3><pre><code class=language-bash># rclone listremotes
+alist:
+</code></pre><h3 id=查看某个remote下的目录或文件>查看某个<code>remote</code>下的目录或文件</h3><pre><code class=language-bash># rclone lsd alist:/ali/video/诛仙
+          -1 2024-04-02 12:27:23        -1 诛仙.第1季.2022-2023.4K.全26集
+          -1 2024-04-02 12:27:24        -1 诛仙.第2季.2024
+# rclone ls alist:/ali/video/诛仙/诛仙.第2季.2024
+959919343 第27集-Zhu.Xian-2024-03-29-4k-HEVC-H265.AAC-WEB-DL.mkv
+995844543 第28集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+1012470661 第29集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+</code></pre><h2 id=将alist-mount-到目录>将<code>alist</code> mount 到目录</h2><pre><code class=language-bash>sudo mkdir -p /mnt/alist
+sudo chmod 777 /mnt/alist
+# --header &quot;Referer:https://www.aliyundrive.com/&quot; 是必须要有的
+rclone mount --cache-dir=/tmp --vfs-cache-mode=writes --header &quot;Referer:https://www.aliyundrive.com/&quot; alist: /mnt/alist/
+</code></pre><p>配置开机自动挂载</p><pre><code class=language-bash>cat &lt;&lt;EOF &gt; /etc/systemd/system/mount-mnt-alist.service
+[Unit]
+Description=Mount alist
+After=network.target
+
+[Service]
+Type=simple
+# 因为我的桌面用户是gobai, 所以需要指定gobai, mount之后/mnt/alist目录的owner会变成执行用户
+User=gobai
+ExecStart=rclone mount --cache-dir=/tmp --vfs-cache-mode=writes --header &quot;Referer:https://www.aliyundrive.com/&quot; alist: /mnt/alist/
+ExecStop=umout /mnt/alist
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl start mount-mnt-alist
+systemctl enable mount-mnt-alist
+</code></pre><h2 id=参考>参考</h2><ol><li><a href=https://rclone.org/downloads/>https://rclone.org/downloads/</a></li><li><a href=https://alist.nn.ci/guide/webdav.html>https://alist.nn.ci/guide/webdav.html</a></li></ol></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
