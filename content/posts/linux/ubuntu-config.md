@@ -17,6 +17,31 @@ tags: [ubuntu]
 
 [ubuntu-22-04-chinese-simplified-pinyin-input-support](https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support)
 
+## 换`apt`源
+
+https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/
+
+```bash
+sudo su -
+
+cat <<EOF > /etc/apt/sources.list
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+
+# 预发布软件源，不建议启用
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
+deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
+EOF
+```
+
 ## 安装 oh my zsh
 
 ```bash
@@ -114,4 +139,28 @@ vim /etc/sysctl.conf
 
 ```diff
 + net.ipv6.conf.all.disable_ipv6 = 1
+```
+
+## 安装`VLC`媒体播放器
+
+https://www.videolan.org/vlc/download-ubuntu.html
+
+```bash
+sudo snap install vlc
+```
+
+## 安装 `docker`
+
+https://docs.docker.com/engine/install/ubuntu/
+https://github.com/docker/docker-install
+
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh ./get-docker.sh
+```
+
+## 安装`virt-manager`
+
+```bash
+sudo apt install virt-manager -y
 ```
