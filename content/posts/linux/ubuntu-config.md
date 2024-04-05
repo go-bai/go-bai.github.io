@@ -164,3 +164,20 @@ sudo sh ./get-docker.sh
 ```bash
 sudo apt install virt-manager -y
 ```
+
+## 删除用户密码
+
+> 危险操作, 具有`sudo`权限的普通用户就更是危险操作了, 不过自己在家用时, 每次解锁或登录不用输入一长串密码真的`很方便!!!`
+
+`passwd`有一个`-d`参数
+
+```bash
+# passwd -h | grep -e "-d"
+  -d, --delete                  delete the password for the named account
+```
+
+删除某个账户的密码
+
+```bash
+sudo passwd -d {username}
+```
