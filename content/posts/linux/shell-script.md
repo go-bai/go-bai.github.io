@@ -457,6 +457,42 @@ Access permission for `minio/app` is `download`
 c-image
 ```
 
+## `tar`命令
+
+### 压缩文件
+
+```bash
+tar -czvf name.tar.gz name
+```
+
+#### 使用`pigz`加速压缩
+
+如果没安装`pigz`需要先安装`apt install pigz -y`
+
+```bash
+tar -I pigz -czvf name.tar.gz name
+```
+
+### 解压文件
+
+```bash
+tar -xzvf name.tar.gz
+```
+
+## `docker`命令
+
+### 导出镜像到压缩包
+
+```bash
+docker save -o all.tar image-a:1.0.0 image-b:1.0.0 image-c:1.0.0
+```
+
+### 从压缩包导入镜像
+
+```bash
+docker load < all.tar
+```
+
 ## 参考
 
 - [awk](https://www.ruanyifeng.com/blog/2018/11/awk.html)
