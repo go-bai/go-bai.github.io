@@ -302,6 +302,19 @@ Access permission for `minio/app` is set to `download`
 Access permission for `minio/app` is `download`
 ```
 
+## `jq`命令
+
+> `jq`用来处理json数据还是超级强大的
+
+### `select`过滤数组
+
+下面的命令用到了`jq`中的管道操作`|`和过滤操作`select`
+
+```bash
+# echo '[{"name":"compute","image":"c-image"},{"name":"log"}]' | jq '.[] | select(.name == "compute") | .image'
+"c-image"
+```
+
 ## 参考
 
 - [awk](https://www.ruanyifeng.com/blog/2018/11/awk.html)
