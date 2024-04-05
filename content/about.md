@@ -28,4 +28,4 @@ author: gobai
 
 ### 联系方式: 
 
-- WeChat: `Z28tYmFp`
+- email: `NTk5NTAwNjg4QHFxLmNvbQ==`

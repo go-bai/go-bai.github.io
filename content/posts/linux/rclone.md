@@ -6,7 +6,7 @@ toc: true
 tags: [rclone]
 ---
 
-> 使用`rclone`和`alist`提供的`webdav`接口将阿里云盘`mount`到Ubuntu 22.04的目录上
+> 使用`rclone`和`alist`提供的`webdav`接口将阿里云盘`mount`到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件
 
 ## 下载安装`rclone`
 
