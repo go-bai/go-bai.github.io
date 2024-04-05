@@ -123,16 +123,6 @@ sudo systemctl restart ssh
 - 划词翻译插件(可选辞典web地址,我选择的bing) [Screen work translate](https://extensions.gnome.org/extension/1849/screen-word-translate/)
 - 在 top bar 上显示当前网络上下行速度和总流量 [Net speed Simplified](https://extensions.gnome.org/extension/3724/net-speed-simplified/)
 
-## 设置所有`sudo`组下的用户执行`sudo`命令不需要密码
-
-`EDITOR=vim visudo`
-
-```diff
-# Allow members of group sudo to execute any command
-- %sudo   ALL=(ALL:ALL) ALL
-+ %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
-```
-
 ## 所有网卡都禁用ipv6
 
 vim /etc/sysctl.conf
@@ -165,9 +155,19 @@ sudo sh ./get-docker.sh
 sudo apt install virt-manager -y
 ```
 
+## 设置所有`sudo`组下的用户执行`sudo`命令不需要密码
+
+`EDITOR=vim visudo`
+
+```diff
+# Allow members of group sudo to execute any command
+- %sudo   ALL=(ALL:ALL) ALL
++ %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
+```
+
 ## 删除用户密码
 
-> 危险操作, 具有`sudo`权限的普通用户就更是危险操作了, 不过自己在家用时, 每次解锁或登录不用输入一长串密码真的`很方便!!!`
+> 危险操作, 具有`sudo`权限的普通用户就更是危险操作了, 不过自己在家用时, 每次解锁或登录不用输入一长串密码真的`很方便!!!`, 这样就可以把`Screen Blank`的时间调短一点了😄
 
 `passwd`有一个`-d`参数
 
