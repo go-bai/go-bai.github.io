@@ -29,6 +29,10 @@ params:
   footer: "&copy; [gobai](https://blog.gocn.top) 2021 -- {Year} | [Github](https://github.com/go-bai)"
 
 markup:
+  tableOfContents:
+    endLevel: 5
+    ordered: false
+    startLevel: 2
   highlight:
     codeFences: false
   goldmark:

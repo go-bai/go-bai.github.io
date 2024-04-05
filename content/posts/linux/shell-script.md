@@ -6,7 +6,7 @@ toc: true
 tags: [shell,bash,linux]
 ---
 
-> 最近写的shell脚本比较多，记录一些常用命令, 这些脚本直接让ChatGPT写很好使!!!, 不过还是了解这些基础命令更好, 问ChatGPT时知道怎么引导它写出更准确的脚本.
+> 最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.
 
 ## `#!/bin/bash`
 
@@ -80,6 +80,18 @@ a
 set.sh: line 4: foo: command not found
 ```
 
+## 单引号`''`和双引号`""`
+
+双引号会将`$var`解析成本身的值, 单引号不会解析
+
+```bash
+# var=1
+# echo "$var"
+1
+# echo '$var'
+$var
+```
+
 ## `<<` here document
 
 一般使用`Here Document`作为标准输入喂给`kubectl apply -f -`或者重定向到文件里.
@@ -126,7 +138,7 @@ EOF
 
 结合上面的`here document`一起演示, 这样就不用再单独创建文件了
 
-### 将镜像tag`latest`改为`v1.1.1`
+#### 将镜像tag`latest`改为`v1.1.1`
 
 ```bash
 sed 's/latest/v1.1.1/g' - <<EOF
@@ -136,7 +148,7 @@ EOF
 
 > `s`表示替换命令, `/latest/`表示匹配`latest`, `/v1.1.1/`表示将匹配到的替换为`v1.1.1`, `/g`表示每一行中匹配到的全部替换, 没有`g`只会替换每一行中的第一个.
 
-### 只替换行中匹配到的某一个
+#### 只替换行中匹配到的某一个
 
 ```bash
 # 替换第1个
@@ -155,7 +167,7 @@ ecr.gobai.top/example:latest latest latest
 EOF
 ```
 
-### 只替换部分行字符串
+#### 只替换部分行字符串
 
 ```bash
 # 只替换第2行
@@ -175,6 +187,37 @@ EOF
 
 > 更复杂的涉及很多正则的场景我一般直接丢给`ChatGPT`去写, 知道`sed`可以完成这些任务就可以了!!!
 
+### 一些`sed`中常用的正则的语法
+
+大部分都是通用的, 在其他需要正则匹配的地方也可以使用, 如在`grep -e`或`grep -E`中也可以使用
+
+https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html
+
+|字符|含义|
+|:--|:--|
+||单个普通字符匹配自身|
+|`*`|匹配`*`前面正则表达式的零个或多个匹配项|
+|`\+`|类似`*`, 但是匹配至少一个|
+|`\?`|类似`*`, 但是匹配零个或一个|
+|`\{i\}`|类似`*`, 但是匹配`i`个|
+|`\{i,\}`|类似`*`, 匹配至少`i`个|
+|`\(regexp\)`|将内部的`regexp`作为一个整体分组|
+|`.`|匹配任意单个字符, 包括换行|
+|`^`|匹配开始处的`null`字符串|
+|`$`|匹配结尾处的`null`字符串|
+|`[list]`|匹配方括号中的字符列表中的任意一个|
+|`[^list]`|匹配`非`方括号中的字符列表中的任意一个|
+|`regexp1\|regexp2`|匹配`regexp1`或`regexp2`|
+|`regexp1regexp2`|匹配`regexp1`和`regexp2`的连接结果|
+|`\digit`|匹配正则表达式中第`digit`个圆括号`\(...\)`子表达式|
+|`\n`|匹配换行符|
+|`\char`|匹配`char`字符, `char`可以是`$` `*` `.` `[` `\` 或者 `^`|
+
+
+一些注意点:
+
+1. 虽然`.`可以匹配换行符, 但是有的命令是一行一行处理, 所以正则匹配不到换行, 如`sed`命令
+
 ### 圆括号匹配
 
 圆括号括起来的正则表达式所匹配的字符串可以当成变量来使用, 通过`\1`或`\2`来引用
@@ -190,6 +233,97 @@ EOF
 
 > 圆括号`()`需要转义`\(\)`, 并且因为有变量`$V`, 单引号需要改为双引号, `^`代表行的开始, `VERSION:`匹配文本字符串, `\s*`匹配0或多个空白字符, 
 `[0-9.]\+`匹配一个或多个数字或`.`, `\(^VERSION:\s*\)`匹配到了版本号前面的内容作为变量`1`, `\1$V`代表将匹配到的所有内容替换为版本好前面的内容+新的版本号`$V`
+
+## `echo`命令
+
+### `echo -n`
+
+```bash
+-n     do not output the trailing newline
+```
+
+在结尾处不自动添加换行符
+
+### `echo -e`和`echo -E`
+
+```bash
+-e     enable interpretation of backslash escapes # 激活转义字符
+-E     disable interpretation of backslash escapes (default)
+```
+
+## `grep`命令
+
+`grep`应该是特别常见的命令了, `grep`支持从标准输入`stdin`作为参数, 如`echo 'abc' | grep abc`, 也可以从命令行输入参数, 如`grep abc demo.md`
+
+### `grep -E`
+
+正则匹配
+
+```bash
+# str=$(echo '1. aaa\n2. bbb')
+# echo $str | grep -E 'a|b'
+1. aaa
+2. bbb
+```
+
+### `grep -i`
+
+忽略大小写
+
+```bash
+# str=$(echo '1. aaa\n2. bbb')
+# echo $str | grep -i -E 'A|B'
+1. aaa
+2. bbb
+```
+
+### `grep -v`
+
+```bash
+-v, --invert-match # 反向匹配, 选择不匹配的行
+    Invert the sense of matching, to select non-matching lines.
+```
+
+获取不包含`a`的行
+
+```bash
+# str=$(echo '1. aaa\n2. bbb')
+# echo $str | grep -v a    
+2. bbb
+```
+
+### `grep -n`
+
+```bash
+-n, --line-number # 打印匹配到的行在输入中的行号
+    Prefix each line of output with the 1-based line number within its input file.
+```
+
+打印匹配到的行的行号
+
+```bash
+# echo $str | grep -n -E 'a|b'
+1:1. aaa
+2:2. bbb
+```
+
+### `grep -r`
+
+```bash
+-r, --recursive # 递归读取目录下的文件
+    Read all files under each directory, recursively, following symbolic links only if they are on the command line.  Note that if no file operand is
+    given, B<grep> searches the working directory.  This is equivalent to the -d recurse option.
+```
+
+#### 在当前目录递归遍历匹配字符串并打印行号
+
+```bash
+grep -rn "string" .
+```
+
+## `xargs`命令
+
+TODO
 
 ## `awk`命令
 
@@ -313,6 +447,14 @@ Access permission for `minio/app` is `download`
 ```bash
 # echo '[{"name":"compute","image":"c-image"},{"name":"log"}]' | jq '.[] | select(.name == "compute") | .image'
 "c-image"
+```
+
+有时不想要字符串两边的双引号, 这时就需要用到上面用到的`sed`命令了, 思路是正则匹配整个字符串, 然后双引号中间的使用圆括号匹配作为变量`\1`, 最后将整个字符串替换为`\1`即可
+
+```bash
+# str=$(echo '[{"name":"compute","image":"c-image"},{"name":"log"}]' | jq '.[] | select(.name == "compute") | .image')
+# echo $str | sed 's/^"\(.*\)"$/\1/'
+c-image
 ```
 
 ## 参考

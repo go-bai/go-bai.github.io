@@ -40,3 +40,18 @@ hugo server
 ```bash
 bash push.sh
 ```
+
+## 其他
+
+### 自定义hugo `toc`的目录
+
+https://gohugo.io/getting-started/configuration-markup/#table-of-contents
+https://gohugo.io/content-management/toc/
+
+```yaml
+markup:
+  tableOfContents:
+    endLevel: 3
+    ordered: false
+    startLevel: 2
+```
