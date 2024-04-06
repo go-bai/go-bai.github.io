@@ -120,8 +120,16 @@ sudo systemctl restart ssh
 
 ## 安装 gnome 插件
 
+需要先安装有`GNOME Shell extension`
+
+```bash
+sudo apt install gnome-shell-extension-manager
+```
+
 - 划词翻译插件(可选辞典web地址,我选择的bing) [Screen work translate](https://extensions.gnome.org/extension/1849/screen-word-translate/)
 - 在 top bar 上显示当前网络上下行速度和总流量 [Net speed Simplified](https://extensions.gnome.org/extension/3724/net-speed-simplified/)
+- 允许连接锁着的远程桌面[Allow Locked Remote Desktop](https://extensions.gnome.org/extension/4338/allow-locked-remote-desktop/)
+  - 默认情况下不允许连接已经锁屏的终端`tty0` [askubuntu](https://askubuntu.com/questions/1411504/connect-when-remote-desktop-is-on-login-screen-or-screen-locked-without-autolog)
 
 ## 所有网卡都禁用ipv6
 
@@ -138,6 +146,12 @@ https://www.videolan.org/vlc/download-ubuntu.html
 ```bash
 sudo snap install vlc
 ```
+
+### 快捷键
+
+|快捷键|功能|
+|:--|:--|
+|`v`|切换字幕|
 
 ## 安装 `docker`
 
