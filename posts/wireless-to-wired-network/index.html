@@ -1,0 +1,36 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>无线转有线网络 | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>无线转有线网络</span></h1><h4 class=date>2024/04/09</h4><p class=terms>Tags: <a href=/tags/network>network</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#准备一个ubuntu虚拟机router>准备一个ubuntu虚拟机<code>router</code></a></li><li><a href=#配置网络>配置网络</a><ul><li><a href=#将无线网卡透传进虚拟机>将无线网卡透传进虚拟机</a></li><li><a href=#使用netplan配置网卡>使用<code>netplan</code>配置网卡</a></li><li><a href=#配置nat网络>配置<code>NAT</code>网络</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>通过无线网卡连接网络<code>A(192.168.31.0/24)</code>, 无线网卡相当于<code>WAN</code>口，通过有线网卡接入网络<code>B(192.168.1.0/24)</code>, 有线网卡相当于<code>LAN</code>口</p></blockquote><h2 id=准备一个ubuntu虚拟机router>准备一个ubuntu虚拟机<code>router</code></h2><pre><code class=language-bash># 准备qcow2基础镜像
+wget https://down.idc.wiki/Image/realServer-Template/current/qcow2/ubuntu22.qcow2 -O /var/lib/libvirt/images/ubuntu.qcow2
+# 创建虚拟机以基础镜像为backing file的增量盘
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/router.qcow2
+# 创建并启动虚拟机
+virt-install --name router --memory 512 --vcpus 1 --disk /var/lib/libvirt/disks/router.qcow2,bus=sata --import --os-variant ubuntu22.10 --network bridge=br0 --noautoconsole
+# 设置自动启动
+virsh autostart router
+</code></pre><h2 id=配置网络>配置网络</h2><h3 id=将无线网卡透传进虚拟机>将无线网卡透传进虚拟机</h3><p>打开 <code>virt-manager</code> -> 双击 <code>router domain</code> -> 点击 <code>Show virtual hardware details</code> -> 点击 <code>Add Hardware</code> -> 点击 <code>PCI Host Device</code> -> 选择 <code>Intel Corporation Wi-Fi 6 AX200</code> -> 点击 <code>Finish</code></p><p><code>virsh console router</code>进虚拟机里检查发现已存在一个有线网卡<code>enp1s0</code>和无线网卡<code>wlp6s0</code></p><h3 id=使用netplan配置网卡>使用<code>netplan</code>配置网卡</h3><pre><code class=language-yaml>network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    enp1s0:
+      dhcp4: false
+      dhcp6: false
+      addresses: [192.168.1.110/24]
+  wifis:
+    wlp6s0:
+      dhcp4: no
+      access-points:
+        &quot;wifi名称&quot;:
+          password: &quot;wifi密码&quot;
+      addresses: [192.168.31.88/24]
+      nameservers:
+        addresses: [223.5.5.5, 114.114.114.114]
+      routes:
+        - to: default
+          via: 192.168.31.1
+</code></pre><h3 id=配置nat网络>配置<code>NAT</code>网络</h3><p>开启<code>ipv4 forward</code></p><ol><li><code>vim /etc/sysctl.conf</code></li></ol><pre><code class=language-diff>- #net.ipv4.ip_forward=1
++ net.ipv4.ip_forward=1
+</code></pre><ol start=2><li><code>sysctl -p</code></li></ol><p>设置<code>SNAT</code>和伪装</p><pre><code class=language-bash>iptables -t nat -A POSTROUTING -s '192.168.1.0/24' -o wlp6s0 -j MASQUERADE
+# 持久化规则
+DEBIAN_FRONTEND=noninteractive apt install iptables-persistent -y
+iptables-save -c &gt; /etc/iptables/rules.v4
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://askubuntu.com/questions/1452706/problem-with-my-iptables-configuration-on-reboot>Problem with my iptables configuration on reboot</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

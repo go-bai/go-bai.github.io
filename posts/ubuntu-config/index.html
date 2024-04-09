@@ -17,6 +17,8 @@ deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted univer
 deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 EOF
+
+apt update -y
 </code></pre><h2 id=安装-oh-my-zsh>安装 oh my zsh</h2><pre><code class=language-bash>sudo apt install zsh curl -y
 sh -c &quot;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;
 </code></pre><p><a href=https://ohmyz.sh/>ohmyz.sh</a></p><h2 id=安装-golang>安装 golang</h2><p>下载并解压到 <code>/usr/local/go</code>目录下</p><pre><code class=language-bash>sudo apt install wget -y
@@ -39,7 +41,7 @@ hugo v0.118.2+extended linux/amd64 BuildDate=unknown
 </code></pre><pre><code class=language-bash>sudo systemctl restart ssh
 </code></pre><h2 id=安装-gnome-插件>安装 gnome 插件</h2><p>需要先安装有<code>GNOME Shell extension</code></p><pre><code class=language-bash>sudo apt install gnome-shell-extension-manager
 </code></pre><ul><li>划词翻译插件(可选辞典web地址,我选择的bing) <a href=https://extensions.gnome.org/extension/1849/screen-word-translate/>Screen work translate</a></li><li>在 top bar 上显示当前网络上下行速度和总流量 <a href=https://extensions.gnome.org/extension/3724/net-speed-simplified/>Net speed Simplified</a></li><li>允许连接锁着的远程桌面<a href=https://extensions.gnome.org/extension/4338/allow-locked-remote-desktop/>Allow Locked Remote Desktop</a><ul><li>默认情况下不允许连接已经锁屏的终端<code>tty0</code> <a href=https://askubuntu.com/questions/1411504/connect-when-remote-desktop-is-on-login-screen-or-screen-locked-without-autolog>askubuntu</a></li></ul></li></ul><h2 id=所有网卡都禁用ipv6>所有网卡都禁用ipv6</h2><p>vim /etc/sysctl.conf</p><pre><code class=language-diff>+ net.ipv6.conf.all.disable_ipv6 = 1
-</code></pre><h2 id=安装vlc媒体播放器>安装<code>VLC</code>媒体播放器</h2><p><a href=https://www.videolan.org/vlc/download-ubuntu.html>https://www.videolan.org/vlc/download-ubuntu.html</a></p><pre><code class=language-bash>sudo snap install vlc
+</code></pre><h2 id=安装vlc媒体播放器>安装<code>VLC</code>媒体播放器</h2><p><a href=https://www.videolan.org/vlc/download-ubuntu.html>https://www.videolan.org/vlc/download-ubuntu.html</a></p><pre><code class=language-bash>sudo apt install vlc
 </code></pre><h3 id=快捷键>快捷键</h3><table><thead><tr><th style=text-align:left>快捷键</th><th style=text-align:left>功能</th></tr></thead><tbody><tr><td style=text-align:left><code>v</code></td><td style=text-align:left>切换字幕</td></tr></tbody></table><h2 id=安装-docker>安装 <code>docker</code></h2><p><a href=https://docs.docker.com/engine/install/ubuntu/>https://docs.docker.com/engine/install/ubuntu/</a>
 <a href=https://github.com/docker/docker-install>https://github.com/docker/docker-install</a></p><pre><code class=language-bash>curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh ./get-docker.sh
