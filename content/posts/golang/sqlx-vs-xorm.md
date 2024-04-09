@@ -135,15 +135,35 @@ INSERT INTO "vps" (user_id, host_id, name, sys_disk) VALUES
 
 ## 关于 `xorm`
 
-## 使用场景
+## 使用场景对比
 
 ### 前情提要
 
 使用
 
-### 场景一
+### 场景一: upsert/inster/update
 
-### 场景二
+插入结构体时, `nil`值类型字段会被怎么处理?
+
+如何指定只插入某些字段
+
+### 场景二: get/select
+
+#### 分页查询并获取总行数`SelectAndCount`
+
+### 场景三: 获取插入行的id
+
+### 场景四: 连表查询
+
+### 场景五: sql日志和trace
+
+### 场景六: 
+
+### 一些注意点
+
+1. xorm
+
+#### 
 
 ## 对比总结
 

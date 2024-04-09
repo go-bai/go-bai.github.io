@@ -40,6 +40,8 @@ deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted univer
 deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 EOF
+
+apt update -y
 ```
 
 ## 安装 oh my zsh
@@ -144,7 +146,7 @@ vim /etc/sysctl.conf
 https://www.videolan.org/vlc/download-ubuntu.html
 
 ```bash
-sudo snap install vlc
+sudo apt install vlc
 ```
 
 ### 快捷键
