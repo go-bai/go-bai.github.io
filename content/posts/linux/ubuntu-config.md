@@ -44,6 +44,17 @@ EOF
 apt update -y
 ```
 
+## 使用`X11`替换`Wayland`
+
+`Wayland`目前在我的`AMD 5700U`小机器上还是不太好用, 鼠标指针会有卡顿
+
+编辑 `/etc/gdm3/custom.conf`
+
+```diff
+- #WaylandEnable=false
++ WaylandEnable=false
+```
+
 ## 安装 oh my zsh
 
 ```bash
