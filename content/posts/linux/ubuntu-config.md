@@ -55,6 +55,23 @@ apt update -y
 + WaylandEnable=false
 ```
 
+## 合上盖子不暂停系统(笔记本)
+
+[Make Ubuntu Not Go in Suspend When Laptop Lid is Closed](https://itsfoss.com/laptop-lid-suspend-ubuntu/)
+
+如果是在笔记本上安装的, 那么这个设置可以防止合上盖子`Lid`后`Suspend`系统
+
+编辑`/etc/systemd/logind.conf`文件
+
+```diff
+- #HandleLidSwitch=suspend
++ HandleLidSwitch=ignore
+- #HandleLidSwitchExternalPower=suspend
++ HandleLidSwitchExternalPower=ignore
+- #HandleLidSwitchDocked=ignore
++ HandleLidSwitchDocked=ignore
+```
+
 ## 安装 oh my zsh
 
 ```bash
