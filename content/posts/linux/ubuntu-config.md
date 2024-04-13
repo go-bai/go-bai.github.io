@@ -72,6 +72,12 @@ apt update -y
 + HandleLidSwitchDocked=ignore
 ```
 
+然后重启 `systemd-logind` 生效
+
+```bash
+systemctl restart systemd-logind
+```
+
 ## 安装 oh my zsh
 
 ```bash
