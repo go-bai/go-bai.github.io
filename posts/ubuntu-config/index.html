@@ -27,6 +27,7 @@ apt update -y
 + HandleLidSwitchExternalPower=ignore
 - #HandleLidSwitchDocked=ignore
 + HandleLidSwitchDocked=ignore
+</code></pre><p>然后重启 <code>systemd-logind</code> 生效</p><pre><code class=language-bash>systemctl restart systemd-logind
 </code></pre><h2 id=安装-oh-my-zsh>安装 oh my zsh</h2><pre><code class=language-bash>sudo apt install zsh curl -y
 sh -c &quot;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;
 </code></pre><p><a href=https://ohmyz.sh/>ohmyz.sh</a></p><h2 id=安装-golang>安装 golang</h2><p>下载并解压到 <code>/usr/local/go</code>目录下</p><pre><code class=language-bash>sudo apt install wget -y
