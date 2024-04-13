@@ -6,6 +6,8 @@ toc: true
 tags: [ubuntu]
 ---
 
+> 以下配置都是在 `Ubuntu 22.04` 系统配置
+
 ## 配置中文输入法
 
 1. Open Settings, go to `Region & Language` -> `Manage Installed Languages` -> `Install / Remove languages`.
@@ -169,11 +171,22 @@ sudo apt install gnome-shell-extension-manager
 
 ## 所有网卡都禁用ipv6
 
-vim /etc/sysctl.conf
+### 修改`/etc/sysctl.conf`
 
 ```diff
 + net.ipv6.conf.all.disable_ipv6 = 1
 ```
+
+然后执行`sysctl -p`加载新的配置生效
+
+### 修改`/etc/default/grub`
+
+```diff
+- GRUB_CMDLINE_LINUX="..."
++ GRUB_CMDLINE_LINUX="... ipv6.disable=1"
+```
+
+然后执行`update-grub`更新`GRUB`, 这种指定`传递给内核命令行的参数`的方式需要`重启`系统之后才能生效 
 
 ## 安装`VLC`媒体播放器
 
