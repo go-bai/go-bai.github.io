@@ -162,7 +162,9 @@ After=network.target
 Type=simple
 # 因为我的桌面用户是gobai, 所以需要指定gobai, mount之后/mnt/alist目录的owner会变成执行用户
 User=gobai
-ExecStart=rclone mount --cache-dir=/tmp --vfs-cache-mode=writes --header "Referer:https://www.aliyundrive.com/" alist: /mnt/alist/
+# --cache-dir 指定 cache目录
+# --dir-cache-time=10s 指定对目录的cache时间, 因为我主要是用来读取远端云盘的文件, 希望可以尽快刷新目录看到新的文件
+ExecStart=rclone mount --cache-dir=/tmp/rclone --dir-cache-time=10s --vfs-cache-mode=full --fs-cache-expire-duration=2m --header "Referer:https://www.aliyundrive.com/" alist: /mnt/alist/
 ExecStop=umout /mnt/alist
 Restart=on-failure
 RestartSec=15
