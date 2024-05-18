@@ -1,0 +1,112 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Kubevirt Hook Sidecar | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Kubevirt Hook Sidecar</span></h1><h4 class=date>2024/05/12</h4><p class=terms>Tags: <a href=/tags/kubevirt>kubevirt</a> <a href=/tags/sidecar>sidecar</a> <a href=/tags/grpc>grpc</a></p></div><nav id=TableOfContents><ul><li><a href=#简介>简介</a><ul><li><a href=#背景>背景</a></li><li><a href=#功能介绍>功能介绍</a></li></ul></li><li><a href=#源码分析>源码分析</a><ul><li><a href=#kubevirt-boot-sidecar介绍><code>kubevirt-boot-sidecar</code>介绍</a></li><li><a href=#sidecar工作流程>sidecar工作流程</a></li><li><a href=#sidecar-shim介绍>sidecar-shim介绍</a></li></ul></li><li><a href=#注意点>注意点</a></li><li><a href=#参考>参考</a></li></ul></nav><main><h2 id=简介>简介</h2><h3 id=背景>背景</h3><blockquote><p>在kubevirt中, 通过vmi的spec没办法涵盖所有的<a href=https://libvirt.org/formatdomain.html>libvirt domain xml</a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML</p></blockquote><h3 id=功能介绍>功能介绍</h3><p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.</p><p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks</p><ol><li><code>OnDefineDomain</code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm</li><li><code>preCloudInitIso</code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data</li><li><code>Shutdown</code>: 这个是<code>v1alpha3</code>版本才支持的</li></ol><p>使用hook sidecar功能需要在<code>kv.spec.configuration.developerConfiguration.featureGates</code>中开启<code>Sidecar</code>功能</p><h2 id=源码分析>源码分析</h2><h3 id=kubevirt-boot-sidecar介绍><code>kubevirt-boot-sidecar</code>介绍</h3><p>以下以<a href=https://github.com/go-bai/kubevirt-boot-sidecar>kubevirt-boot-sidecar</a>为例讲述sidecar的工作流程, 这个sidecar支持修改<code>引导设备顺序(boot)</code>和<code>开启交互式引导菜单(bootmenu)</code></p><p><code>kubevirt-boot-sidecar</code>只实现了<code>OnDefineDomain</code>, 下面也是主要串一下OnDefineDomain相关的</p><h3 id=sidecar工作流程>sidecar工作流程</h3><ol><li><code>virt-launcher</code>刚启动时收集所有sidecar信息<pre><code class=language-golang>// cmd/virt-launcher/virt-launcher.go
+func main() {
+    hookSidecars := pflag.Uint(&quot;hook-sidecars&quot;, 0, &quot;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&quot;)
+    // 收集所有sidecar的信息
+    err := hookManager.Collect(*hookSidecars, *qemuTimeout)
+
+    // 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI
+    // virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain
+    // SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.OnDefineDomain执行所有的sidecar的OnDefineDomain方法
+    // 最终用OnDefineDomain编辑后的domainSpec创建domain
+    cmdServerDone := startCmdServer(cmdclient.UninitializedSocketOnGuest(), domainManager, stopChan, options)
+}
+
+// pkg/hooks/manager.go
+// numberOfRequestedHookSidecars为vmi注解 hooks.kubevirt.io/hookSidecars 的数组长度, 在virt-controller生成pod manifest的逻辑中计算得出
+func (m *hookManager) Collect(numberOfRequestedHookSidecars uint, timeout time.Duration) error {
+    // callbacksPerHookPoint
+    callbacksPerHookPoint, err := m.collectSideCarSockets(numberOfRequestedHookSidecars, timeout)
+    m.CallbacksPerHookPoint = callbacksPerHookPoint
+}
+
+// pkg/hooks/manager.go
+func (m *hookManager) collectSideCarSockets(numberOfRequestedHookSidecars uint, timeout time.Duration) (map[string][]*callBackClient, error) {
+    callbacksPerHookPoint := make(map[string][]*callBackClient)
+    processedSockets := make(map[string]bool)
+    timeoutCh := time.After(timeout)
+
+    for uint(len(processedSockets)) &lt; numberOfRequestedHookSidecars {
+        sockets, err := os.ReadDir(m.hookSocketSharedDirectory)
+        // 遍历 /var/run/kubevirt-hooks/ 目录下的 unix socket 文件
+        for _, socket := range sockets {
+            select {
+            case &lt;-timeoutCh:
+                return nil, fmt.Errorf(&quot;Failed to collect all expected sidecar hook sockets within given timeout&quot;)
+            default:
+                if _, processed := processedSockets[socket.Name()]; processed {
+                    continue
+                }
+
+                // 连接 sock 文件对应的 sidecar server 的 Info 函数获取 server 实现了哪些 hook(onDefineDomain或preCloudInitIso)
+                callBackClient, notReady, err := processSideCarSocket(filepath.Join(m.hookSocketSharedDirectory, socket.Name()))
+                if notReady {
+                    log.Log.Info(&quot;Sidecar server might not be ready yet, retrying in the next iteration&quot;)
+                    continue
+                } else if err != nil {
+                    return nil, err
+                }
+
+                // callbacksPerHookPoint[onDefineDomain|preCloudInitIso][]*callBackClient{}
+                // 聚合出 onDefineDomain:[&quot;aaaa.sock&quot;,&quot;bbbb.sock&quot;]
+                for _, subscribedHookPoint := range callBackClient.subscribedHookPoints {
+                    callbacksPerHookPoint[subscribedHookPoint.GetName()] = append(callbacksPerHookPoint[subscribedHookPoint.GetName()], callBackClient)
+                }
+
+                processedSockets[socket.Name()] = true
+            }
+        }
+        time.Sleep(time.Second)
+    }
+    // {&quot;onDefineDomain&quot;:[{&quot;SocketPath&quot;:&quot;/var/run/kubevirt-hooks/shim-xxxx.sock&quot;, &quot;Version&quot;:&quot;v1alpha3&quot;, &quot;subscribedHookPoints&quot;: [{&quot;name&quot;: &quot;onDefineDomain&quot;, &quot;priority&quot;: 0}]}]}
+    return callbacksPerHookPoint, nil
+}
+</code></pre></li><li><code>virt-launcher</code>启动之后, <code>virt-handler</code>会执行一些本地盘等相关初始化配置后通过gRPC调用<code>virt-launcher</code>的<code>SyncVirtualMachine</code>方法开始创建domain<ol><li><code>SyncVMI</code><ol><li><code>Convert_v1_VirtualMachineInstance_To_api_Domain</code> 将 vmi 转换为 domainSpec</li><li><code>lookupOrCreateVirDomain</code> 先<code>LookupDomainByName</code>, 如果已存在则直接退出<ol><li><code>preStartHook</code><pre><code class=language-golang>hooksManager := hooks.GetManager()
+// 执行所有的 PreCloudInitIso sidecar
+cloudInitData, err = hooksManager.PreCloudInitIso(vmi, cloudInitData)
+</code></pre></li><li><code>setDomainSpecWithHooks</code><pre><code class=language-golang>// pkg/virt-launcher/virtwarp/util/libvirt-helper.go
+func SetDomainSpecStrWithHooks(virConn cli.Connection, vmi *v1.VirtualMachineInstance, wantedSpec *api.DomainSpec) (cli.VirDomain, error) {
+    hooksManager := getHookManager()
+    // 执行所有的 OnDefineDomain sidecar
+    domainSpec, err := hooksManager.OnDefineDomain(wantedSpec, vmi)
+    // 调用 virConn.DomainDefineXML 创建 domain
+    return SetDomainSpecStr(virConn, vmi, domainSpec)
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) OnDefineDomain(domainSpec *virtwrapApi.DomainSpec, vmi *v1.VirtualMachineInstance) (string, error) {
+    domainSpecXML, err := xml.MarshalIndent(domainSpec, &quot;&quot;, &quot;\t&quot;)
+
+    callbacks, found := m.CallbacksPerHookPoint[hooksInfo.OnDefineDomainHookPointName]
+    if !found {
+        return string(domainSpecXML), nil
+    }
+
+    vmiJSON, err := json.Marshal(vmi)
+
+    for _, callback := range callbacks {
+        domainSpecXML, err = m.onDefineDomainCallback(callback, domainSpecXML, vmiJSON)
+    }
+
+    return string(domainSpecXML), nil
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) onDefineDomainCallback(callback *callBackClient, domainSpecXML, vmiJSON []byte) ([]byte, error) {
+    // dial /var/run/kubevirt-hooks/shim-xxxx.sock
+    conn, err := grpcutil.DialSocketWithTimeout(callback.SocketPath, 1)
+
+    switch callback.Version {
+    case hooksV1alpha3.Version:
+        client := hooksV1alpha3.NewCallbacksClient(conn)
+        // 调用sidecar server 的 OnDefineDomain 方法
+        result, err := client.OnDefineDomain(ctx, &amp;hooksV1alpha3.OnDefineDomainParams{
+            DomainXML: domainSpecXML,
+            Vmi:       vmiJSON,
+        })
+        domainSpecXML = result.GetDomainXML()
+    }
+
+    return domainSpecXML, nil
+}
+</code></pre></li></ol></li></ol></li></ol></li></ol><p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配<code>sidecar-shim</code>, 下面开始介绍</p><h3 id=sidecar-shim介绍>sidecar-shim介绍</h3><p>为了简化sidecar的开发, kubevirt提供了<a href=https://github.com/kubevirt/kubevirt/blob/main/cmd/sidecars/sidecar_shim.go>sidecar-shim</a>镜像完成和主容器的通信, 我们只需要实现<code>OnDefineDomain</code>的可执行程序即可, 接收<code>vmi</code>和<code>domain</code>两个参数.</p><p><code>virt-launcher</code> pod内所有容器共享 <code>/var/run/kubevirt-hooks</code>目录, <code>sidecar-shim</code>在<code>/var/run/kubevirt-hooks</code>目录下创建sock文件实现Info和OnDefineDomain方法然后监听gRPC远程调用, 然后主容器会连接<code>/var/run/kubevirt-hooks</code>目录下的sock文件调用函数</p><h2 id=注意点>注意点</h2><ul><li><code>OnDefineDomain</code>可能会被<a href=https://github.com/kubevirt/kubevirt/pull/11324#issuecomment-1963766377>调用超过一次</a>, 所以要保证函数幂等</li></ul><h2 id=参考>参考</h2><ul><li><a href=https://kubevirt.io/user-guide/operations/hook-sidecar/>[offical user guide] hook-sidecar</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
