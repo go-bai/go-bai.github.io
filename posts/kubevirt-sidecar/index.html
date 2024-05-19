@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Kubevirt Hook Sidecar | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Kubevirt Hook Sidecar</span></h1><h4 class=date>2024/05/12</h4><p class=terms>Tags: <a href=/tags/kubevirt>kubevirt</a> <a href=/tags/sidecar>sidecar</a> <a href=/tags/grpc>grpc</a></p></div><nav id=TableOfContents><ul><li><a href=#简介>简介</a><ul><li><a href=#背景>背景</a></li><li><a href=#功能介绍>功能介绍</a></li></ul></li><li><a href=#源码分析>源码分析</a><ul><li><a href=#kubevirt-boot-sidecar介绍><code>kubevirt-boot-sidecar</code>介绍</a></li><li><a href=#sidecar工作流程>sidecar工作流程</a></li><li><a href=#sidecar-shim介绍>sidecar-shim介绍</a></li></ul></li><li><a href=#注意点>注意点</a></li><li><a href=#参考>参考</a></li></ul></nav><main><h2 id=简介>简介</h2><h3 id=背景>背景</h3><blockquote><p>在kubevirt中, 通过vmi的spec没办法涵盖所有的<a href=https://libvirt.org/formatdomain.html>libvirt domain xml</a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML</p></blockquote><h3 id=功能介绍>功能介绍</h3><p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.</p><p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks</p><ol><li><code>OnDefineDomain</code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm</li><li><code>preCloudInitIso</code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data</li><li><code>Shutdown</code>: 这个是<code>v1alpha3</code>版本才支持的</li></ol><p>使用hook sidecar功能需要在<code>kv.spec.configuration.developerConfiguration.featureGates</code>中开启<code>Sidecar</code>功能</p><h2 id=源码分析>源码分析</h2><h3 id=kubevirt-boot-sidecar介绍><code>kubevirt-boot-sidecar</code>介绍</h3><p>以下以<a href=https://github.com/go-bai/kubevirt-boot-sidecar>kubevirt-boot-sidecar</a>为例讲述sidecar的工作流程, 这个sidecar支持修改<code>引导设备顺序(boot)</code>和<code>开启交互式引导菜单(bootmenu)</code></p><p><code>kubevirt-boot-sidecar</code>只实现了<code>OnDefineDomain</code>, 下面也是主要串一下OnDefineDomain相关的</p><h3 id=sidecar工作流程>sidecar工作流程</h3><ol><li><code>virt-launcher</code>刚启动时收集所有sidecar信息<pre><code class=language-golang>// cmd/virt-launcher/virt-launcher.go
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Kubevirt Hook Sidecar</span></h1><h4 class=date>2024/05/12</h4><p class=terms>Tags: <a href=/tags/kubevirt>kubevirt</a> <a href=/tags/sidecar>sidecar</a> <a href=/tags/grpc>grpc</a></p></div><nav id=TableOfContents><ul><li><a href=#简介>简介</a><ul><li><a href=#背景>背景</a></li><li><a href=#功能介绍>功能介绍</a></li></ul></li><li><a href=#源码分析>源码分析</a><ul><li><a href=#kubevirt-boot-sidecar-介绍>kubevirt-boot-sidecar 介绍</a></li><li><a href=#sidecar工作流程>sidecar工作流程</a></li><li><a href=#sidecar-shim介绍>sidecar-shim介绍</a></li><li><a href=#使用-kubevirt-boot-sidecar>使用 kubevirt-boot-sidecar</a></li></ul></li><li><a href=#注意点>注意点</a></li><li><a href=#参考>参考</a></li></ul></nav><main><h2 id=简介>简介</h2><h3 id=背景>背景</h3><blockquote><p>在kubevirt中, 通过vmi的spec没办法涵盖所有的<a href=https://libvirt.org/formatdomain.html>libvirt domain xml</a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML</p></blockquote><h3 id=功能介绍>功能介绍</h3><p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.</p><p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks</p><ol><li><code>OnDefineDomain</code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm</li><li><code>preCloudInitIso</code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data</li><li><code>Shutdown</code>: 这个是<code>v1alpha3</code>版本才支持的</li></ol><p>使用hook sidecar功能需要在<code>kv.spec.configuration.developerConfiguration.featureGates</code>中开启<code>Sidecar</code>功能</p><h2 id=源码分析>源码分析</h2><h3 id=kubevirt-boot-sidecar-介绍>kubevirt-boot-sidecar 介绍</h3><p>以下以<a href=https://github.com/go-bai/kubevirt-boot-sidecar>kubevirt-boot-sidecar</a>为例讲述sidecar的工作流程, 这个sidecar支持修改<code>引导设备顺序(boot)</code>和<code>开启交互式引导菜单(bootmenu)</code></p><p><code>kubevirt-boot-sidecar</code>只实现了<code>OnDefineDomain</code>, 下面也是主要串一下OnDefineDomain相关的</p><h3 id=sidecar工作流程>sidecar工作流程</h3><ol><li><code>virt-launcher</code>刚启动时收集所有sidecar信息<pre><code class=language-golang>// cmd/virt-launcher/virt-launcher.go
 func main() {
     hookSidecars := pflag.Uint(&quot;hook-sidecars&quot;, 0, &quot;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&quot;)
     // 收集所有sidecar的信息
@@ -85,6 +85,7 @@ func (m *hookManager) OnDefineDomain(domainSpec *virtwrapApi.DomainSpec, vmi *v1
     vmiJSON, err := json.Marshal(vmi)
 
     for _, callback := range callbacks {
+        // 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML
         domainSpecXML, err = m.onDefineDomainCallback(callback, domainSpecXML, vmiJSON)
     }
 
@@ -109,4 +110,39 @@ func (m *hookManager) onDefineDomainCallback(callback *callBackClient, domainSpe
 
     return domainSpecXML, nil
 }
-</code></pre></li></ol></li></ol></li></ol></li></ol><p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配<code>sidecar-shim</code>, 下面开始介绍</p><h3 id=sidecar-shim介绍>sidecar-shim介绍</h3><p>为了简化sidecar的开发, kubevirt提供了<a href=https://github.com/kubevirt/kubevirt/blob/main/cmd/sidecars/sidecar_shim.go>sidecar-shim</a>镜像完成和主容器的通信, 我们只需要实现<code>OnDefineDomain</code>的可执行程序即可, 接收<code>vmi</code>和<code>domain</code>两个参数.</p><p><code>virt-launcher</code> pod内所有容器共享 <code>/var/run/kubevirt-hooks</code>目录, <code>sidecar-shim</code>在<code>/var/run/kubevirt-hooks</code>目录下创建sock文件实现Info和OnDefineDomain方法然后监听gRPC远程调用, 然后主容器会连接<code>/var/run/kubevirt-hooks</code>目录下的sock文件调用函数</p><h2 id=注意点>注意点</h2><ul><li><code>OnDefineDomain</code>可能会被<a href=https://github.com/kubevirt/kubevirt/pull/11324#issuecomment-1963766377>调用超过一次</a>, 所以要保证函数幂等</li></ul><h2 id=参考>参考</h2><ul><li><a href=https://kubevirt.io/user-guide/operations/hook-sidecar/>[offical user guide] hook-sidecar</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+</code></pre></li></ol></li></ol></li></ol></li></ol><p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配<code>sidecar-shim</code>, 下面开始介绍</p><h3 id=sidecar-shim介绍>sidecar-shim介绍</h3><p>为了简化sidecar的开发, kubevirt提供了<a href=https://github.com/kubevirt/kubevirt/blob/main/cmd/sidecars/sidecar_shim.go>sidecar-shim</a>镜像完成和主容器的通信, 我们只需要开发一个程序接收<code>vmi</code>和<code>domain</code>两个参数, 然后编译成名为<code>onDefineDomain</code>的可执行程序放到sidecar-shim镜像的<code>/usr/bin/</code>目录即可, sidecar-shim在执行时会执行我们开发的可执行程序.</p><pre><code class=language-go>// /cmd/sidecars/sidecar_shim.go
+func runOnDefineDomain(vmiJSON []byte, domainXML []byte) ([]byte, error) {
+    // 检查是否存在 onDefineDomainBin 可执行程序
+    if _, err := exec.LookPath(onDefineDomainBin); err != nil {
+        return nil, fmt.Errorf(&quot;Failed in finding %s in $PATH due %v&quot;, onDefineDomainBin, err)
+    }
+
+    vmiSpec := virtv1.VirtualMachineInstance{}
+    if err := json.Unmarshal(vmiJSON, &amp;vmiSpec); err != nil {
+        return nil, fmt.Errorf(&quot;Failed to unmarshal given VMI spec: %s due %v&quot;, vmiJSON, err)
+    }
+
+    args := append([]string{},
+        &quot;--vmi&quot;, string(vmiJSON),
+        &quot;--domain&quot;, string(domainXML))
+
+    command := exec.Command(onDefineDomainBin, args...)
+    // 只有将开发的可执行程序错误日志写入到stderr中才会在hook-sidecar-x容器日志中打印出来
+    // stdout只用来输出新的domainSpecXML, 如果程序exit code非0, 则不会打印stdout中的内容
+    if reader, err := command.StderrPipe(); err != nil {
+        log.Log.Reason(err).Infof(&quot;Could not pipe stderr&quot;)
+    } else {
+        go logStderr(reader, &quot;onDefineDomain&quot;)
+    }
+    // command.Output()返回的error信息只有exit code
+    return command.Output()
+}
+</code></pre><p><code>virt-launcher</code> pod内所有容器共享 <code>/var/run/kubevirt-hooks</code>目录, <code>sidecar-shim</code>在<code>/var/run/kubevirt-hooks</code>目录下创建sock文件实现Info和OnDefineDomain方法然后监听gRPC远程调用, 然后主容器会连接<code>/var/run/kubevirt-hooks</code>目录下的sock文件调用函数</p><h3 id=使用-kubevirt-boot-sidecar>使用 kubevirt-boot-sidecar</h3><p>只需在vmi的模版中增加两个注解</p><ul><li><code>hooks.kubevirt.io/hookSidecars</code>会被<code>virt-controller</code>读取并生成virt-launcher 的 pod manifest时增加一个hook-sidecar-x的容器</li><li><code>os.vm.kubevirt.io/boot</code>会被<code>ghcr.io/go-bai/kubevirt-boot-sidecar</code>镜像中的<code>/usr/bin/onDefineDomain</code>程序读取并用来设置在domainSpecXML中返回给<code>virt-launcher</code>, 最终用来define domain</li></ul><pre><code class=language-diff>apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+spec:
+  template:
+    metadata:
+      annotations:
++       hooks.kubevirt.io/hookSidecars: '[{&quot;args&quot;: [&quot;--version&quot;, &quot;v1alpha3&quot;],&quot;image&quot;: &quot;ghcr.io/go-bai/kubevirt-boot-sidecar:v1.2.0&quot;}]'
++       os.vm.kubevirt.io/boot: '{&quot;boot&quot;:[{&quot;dev&quot;:&quot;hd&quot;},{&quot;dev&quot;:&quot;cdrom&quot;}]}'
+</code></pre><h2 id=注意点>注意点</h2><ul><li><code>OnDefineDomain</code>可能会被<a href=https://github.com/kubevirt/kubevirt/pull/11324#issuecomment-1963766377>调用超过一次</a>, 所以要保证函数幂等</li></ul><h2 id=参考>参考</h2><ul><li><a href=https://kubevirt.io/user-guide/operations/hook-sidecar/>[offical user guide] hook-sidecar</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
