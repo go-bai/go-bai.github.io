@@ -26,7 +26,7 @@ sidecar container与main container(compute)通过gRPC通讯, 有两种主要的s
 
 ## 源码分析
 
-### `kubevirt-boot-sidecar`介绍
+### kubevirt-boot-sidecar 介绍
 
 以下以[kubevirt-boot-sidecar](https://github.com/go-bai/kubevirt-boot-sidecar)为例讲述sidecar的工作流程, 这个sidecar支持修改`引导设备顺序(boot)`和`开启交互式引导菜单(bootmenu)`
 
@@ -132,6 +132,7 @@ sidecar container与main container(compute)通过gRPC通讯, 有两种主要的s
                     vmiJSON, err := json.Marshal(vmi)
 
                     for _, callback := range callbacks {
+                        // 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML
                         domainSpecXML, err = m.onDefineDomainCallback(callback, domainSpecXML, vmiJSON)
                     }
 
@@ -162,10 +163,55 @@ sidecar container与main container(compute)通过gRPC通讯, 有两种主要的s
 
 ### sidecar-shim介绍
 
-为了简化sidecar的开发, kubevirt提供了[sidecar-shim](https://github.com/kubevirt/kubevirt/blob/main/cmd/sidecars/sidecar_shim.go)镜像完成和主容器的通信, 我们只需要实现`OnDefineDomain`的可执行程序即可, 接收`vmi`和`domain`两个参数.
+为了简化sidecar的开发, kubevirt提供了[sidecar-shim](https://github.com/kubevirt/kubevirt/blob/main/cmd/sidecars/sidecar_shim.go)镜像完成和主容器的通信, 我们只需要开发一个程序接收`vmi`和`domain`两个参数, 然后编译成名为`onDefineDomain`的可执行程序放到sidecar-shim镜像的`/usr/bin/`目录即可, sidecar-shim在执行时会执行我们开发的可执行程序.
+```go
+// /cmd/sidecars/sidecar_shim.go
+func runOnDefineDomain(vmiJSON []byte, domainXML []byte) ([]byte, error) {
+    // 检查是否存在 onDefineDomainBin 可执行程序
+    if _, err := exec.LookPath(onDefineDomainBin); err != nil {
+        return nil, fmt.Errorf("Failed in finding %s in $PATH due %v", onDefineDomainBin, err)
+    }
+
+    vmiSpec := virtv1.VirtualMachineInstance{}
+    if err := json.Unmarshal(vmiJSON, &vmiSpec); err != nil {
+        return nil, fmt.Errorf("Failed to unmarshal given VMI spec: %s due %v", vmiJSON, err)
+    }
+
+    args := append([]string{},
+        "--vmi", string(vmiJSON),
+        "--domain", string(domainXML))
+
+    command := exec.Command(onDefineDomainBin, args...)
+    // 只有将开发的可执行程序错误日志写入到stderr中才会在hook-sidecar-x容器日志中打印出来
+    // stdout只用来输出新的domainSpecXML, 如果程序exit code非0, 则不会打印stdout中的内容
+    if reader, err := command.StderrPipe(); err != nil {
+        log.Log.Reason(err).Infof("Could not pipe stderr")
+    } else {
+        go logStderr(reader, "onDefineDomain")
+    }
+    // command.Output()返回的error信息只有exit code
+    return command.Output()
+}
+```
 
 `virt-launcher` pod内所有容器共享 `/var/run/kubevirt-hooks`目录, `sidecar-shim`在`/var/run/kubevirt-hooks`目录下创建sock文件实现Info和OnDefineDomain方法然后监听gRPC远程调用, 然后主容器会连接`/var/run/kubevirt-hooks`目录下的sock文件调用函数
 
+### 使用 kubevirt-boot-sidecar
+
+只需在vmi的模版中增加两个注解
+- `hooks.kubevirt.io/hookSidecars`会被`virt-controller`读取并生成virt-launcher 的 pod manifest时增加一个hook-sidecar-x的容器
+- `os.vm.kubevirt.io/boot`会被`ghcr.io/go-bai/kubevirt-boot-sidecar`镜像中的`/usr/bin/onDefineDomain`程序读取并用来设置在domainSpecXML中返回给`virt-launcher`, 最终用来define domain
+
+```diff
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+spec:
+  template:
+    metadata:
+      annotations:
++       hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha3"],"image": "ghcr.io/go-bai/kubevirt-boot-sidecar:v1.2.0"}]'
++       os.vm.kubevirt.io/boot: '{"boot":[{"dev":"hd"},{"dev":"cdrom"}]}'
+```
 
 ## 注意点
 
