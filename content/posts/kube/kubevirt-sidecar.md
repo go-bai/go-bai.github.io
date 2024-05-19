@@ -19,7 +19,7 @@ tags: [kubevirt,sidecar,grpc]
 sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks
 
 1. `OnDefineDomain`: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm
-2. `preCloudInitIso`: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data
+2. `PreCloudInitIso`: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data
 3. `Shutdown`: 这个是`v1alpha3`版本才支持的
 
 使用hook sidecar功能需要在`kv.spec.configuration.developerConfiguration.featureGates`中开启`Sidecar`功能
