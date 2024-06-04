@@ -14,7 +14,7 @@ tags: [network,linux]
 # 准备qcow2基础镜像
 wget https://down.idc.wiki/Image/realServer-Template/current/qcow2/ubuntu22.qcow2 -O /var/lib/libvirt/images/ubuntu.qcow2
 # 创建虚拟机以基础镜像为backing file的增量盘
-qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/router.qcow2
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/router.qcow2 20G
 # 创建并启动虚拟机
 virt-install --name router --memory 512 --vcpus 1 --disk /var/lib/libvirt/disks/router.qcow2,bus=sata --import --os-variant ubuntu22.10 --network bridge=br0 --noautoconsole
 # 设置自动启动

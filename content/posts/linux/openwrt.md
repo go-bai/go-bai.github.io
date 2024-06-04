@@ -14,16 +14,14 @@ tags: [openwrt,linux,openclash,kvm,virt-install,network]
 
 ## 准备`qcow2`镜像
 
-首先下载最新的[镜像](https://mirror-01.infra.openwrt.org/releases/), 截止目前最新版为`23.05.2`, 我这里下载的是x86-64的镜像
+首先下载最新的[镜像](https://downloads.openwrt.org/releases), 截止目前最新版为`23.05.3`, 我这里下载的是x86-64的镜像
 
 ```bash
-wget https://downloads.openwrt.org/releases/23.05.2/targets/x86/64/openwrt-23.05.2-x86-64-generic-ext4-combined.img.gz
+wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 解压
-gunzip openwrt-23.05.2-x86-64-generic-ext4-combined.img.gz
+gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 这里因为我要作为KVM虚拟机的镜像, 所以转换为qcow2格式. 如果是在物理机上部署, 可以直接直接刷到U盘上.
-qemu-img convert -f raw openwrt-23.05.2-x86-64-generic-ext4-combined.img -O qcow2 openwrt.qcow2
-# 默认virtual size只有120 MiB, 担心不够用所以增加到1GiB
-qemu-img resize openwrt.qcow2 +904M
+qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
 ```
 
 ## 运行虚机
@@ -37,14 +35,14 @@ apt install virt-manager qemu bridge-utils -y
 我这里将镜像复制到了`/var/lib/libvirt/disks/`目录下
 
 ```bash
-cp openwrt.qcow2 /var/lib/libvirt/disks/
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
 ```
 
 使用`virt-install`运行, 
 
 ```bash
 # 运行, 这里网络指定的之前文章中创建的网桥网络br0
-virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=e1000 --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
+virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=virtio --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
 ```
 
 ## 配置网络
@@ -96,12 +94,12 @@ service network restart
 大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 `/etc/opkg/distfeeds.conf`
 
 ```bash
-src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/targets/x86/64/packages
-src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/base
-src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/luci
-src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/packages
-src/gz openwrt_routing http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/routing
-src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/telephony
+src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/targets/x86/64/packages
+src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/base
+src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/luci
+src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/packages
+src/gz openwrt_routing http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/routing
+src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/telephony
 ```
 
 然后更新一下
@@ -133,7 +131,7 @@ Filesystem           Type            Size      Used Available Use% Mounted on
 先卸载`dnsmasq`, 否则会和`dnsmasq-full`冲突, `openclash`依赖`dnsmasq-full`
 
 ```bash
-# 如果提示dhcp配置文件(/etc/config/dhcp)没修改, 可以手动删了, 将新的(/etc/config/dhcp.bak)覆盖过去
+# 如果提示dhcp配置文件(/etc/config/dhcp)没修改, 可以手动删了, 将新的(/etc/config/dhcp-opkg)覆盖过去
 opkg remove dnsmasq && opkg install dnsmasq-full
 ```
 
@@ -141,11 +139,11 @@ opkg remove dnsmasq && opkg install dnsmasq-full
 
 ```bash
 # 下载安装包
-cd /tmp && wget https://mirror.ghproxy.com/https://github.com/vernesong/OpenClash/releases/download/v0.45.157-beta/luci-app-openclash_0.45.157-beta_all.ipk
+cd /tmp && wget https://mirror.ghproxy.com/https://github.com/vernesong/OpenClash/releases/download/v0.46.011-beta/luci-app-openclash_0.46.011-beta_all.ipk
 # 安装所有依赖
 opkg install coreutils-nohup bash iptables dnsmasq-full curl ca-certificates ipset ip-full iptables-mod-tproxy iptables-mod-extra libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip luci-compat luci luci-base
 # 安装
-opkg install /tmp/luci-app-openclash_0.33.7-beta_all.ipk
+opkg install /tmp/luci-app-openclash_0.46.011-beta_all.ipk
 ```
 
 下载clash内核
