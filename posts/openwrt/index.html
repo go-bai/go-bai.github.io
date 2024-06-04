@@ -1,15 +1,13 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>OpenWrt | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>OpenWrt</span></h1><h4 class=date>2024/01/06</h4><p class=terms>Tags: <a href=/tags/openwrt>openwrt</a> <a href=/tags/linux>linux</a> <a href=/tags/openclash>openclash</a> <a href=/tags/kvm>kvm</a> <a href=/tags/virt-install>virt-install</a> <a href=/tags/network>network</a></p></div><nav id=TableOfContents><ul><li><a href=#准备qcow2镜像>准备<code>qcow2</code>镜像</a></li><li><a href=#运行虚机>运行虚机</a></li><li><a href=#配置网络>配置网络</a></li><li><a href=#换源>换源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</a></li><li><a href=#其他小修改>其他小修改</a><ul><li><a href=#修改dhcp分配ip范围>修改dhcp分配ip范围</a></li><li><a href=#修改br0的网关和dns>修改br0的网关和dns</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>很久没折腾<code>OpenWrt</code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(<code>ALL IN BOOM!</code>)</p><p>先亮个当前的穷人版家庭网络拓扑图</p><p><img src=/posts/linux/imgs/home-network-topology-diagram.svg alt=穷人版家庭网络拓扑图></p><h2 id=准备qcow2镜像>准备<code>qcow2</code>镜像</h2><p>首先下载最新的<a href=https://mirror-01.infra.openwrt.org/releases/>镜像</a>, 截止目前最新版为<code>23.05.2</code>, 我这里下载的是x86-64的镜像</p><pre><code class=language-bash>wget https://downloads.openwrt.org/releases/23.05.2/targets/x86/64/openwrt-23.05.2-x86-64-generic-ext4-combined.img.gz
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>OpenWrt</span></h1><h4 class=date>2024/01/06</h4><p class=terms>Tags: <a href=/tags/openwrt>openwrt</a> <a href=/tags/linux>linux</a> <a href=/tags/openclash>openclash</a> <a href=/tags/kvm>kvm</a> <a href=/tags/virt-install>virt-install</a> <a href=/tags/network>network</a></p></div><nav id=TableOfContents><ul><li><a href=#准备qcow2镜像>准备<code>qcow2</code>镜像</a></li><li><a href=#运行虚机>运行虚机</a></li><li><a href=#配置网络>配置网络</a></li><li><a href=#换源>换源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</a></li><li><a href=#其他小修改>其他小修改</a><ul><li><a href=#修改dhcp分配ip范围>修改dhcp分配ip范围</a></li><li><a href=#修改br0的网关和dns>修改br0的网关和dns</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>很久没折腾<code>OpenWrt</code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(<code>ALL IN BOOM!</code>)</p><p>先亮个当前的穷人版家庭网络拓扑图</p><p><img src=/posts/linux/imgs/home-network-topology-diagram.svg alt=穷人版家庭网络拓扑图></p><h2 id=准备qcow2镜像>准备<code>qcow2</code>镜像</h2><p>首先下载最新的<a href=https://downloads.openwrt.org/releases>镜像</a>, 截止目前最新版为<code>23.05.3</code>, 我这里下载的是x86-64的镜像</p><pre><code class=language-bash>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 解压
-gunzip openwrt-23.05.2-x86-64-generic-ext4-combined.img.gz
+gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 这里因为我要作为KVM虚拟机的镜像, 所以转换为qcow2格式. 如果是在物理机上部署, 可以直接直接刷到U盘上.
-qemu-img convert -f raw openwrt-23.05.2-x86-64-generic-ext4-combined.img -O qcow2 openwrt.qcow2
-# 默认virtual size只有120 MiB, 担心不够用所以增加到1GiB
-qemu-img resize openwrt.qcow2 +904M
+qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
 </code></pre><h2 id=运行虚机>运行虚机</h2><p>我是用<code>libvirt</code>来管理qemu/kvm虚拟机, 如果没安装要先安装</p><pre><code class=language-bash>apt install virt-manager qemu bridge-utils -y
-</code></pre><p>我这里将镜像复制到了<code>/var/lib/libvirt/disks/</code>目录下</p><pre><code class=language-bash>cp openwrt.qcow2 /var/lib/libvirt/disks/
+</code></pre><p>我这里将镜像复制到了<code>/var/lib/libvirt/disks/</code>目录下</p><pre><code class=language-bash>qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
 </code></pre><p>使用<code>virt-install</code>运行,</p><pre><code class=language-bash># 运行, 这里网络指定的之前文章中创建的网桥网络br0
-virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=e1000 --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
+virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=virtio --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
 </code></pre><h2 id=配置网络>配置网络</h2><p>连接<code>console</code>配置网络</p><pre><code class=language-bash>virsh console openwrt
 </code></pre><p>修改网络配置文件 <code>/etc/config/network</code>
 只修改了<code>lan</code>配置, 其他都是默认的
@@ -35,24 +33,24 @@ config interface 'lan'
 	option gateway '192.168.1.1'
 	option dns '223.5.5.5'
 </code></pre><p>修改之后重启网络</p><pre><code class=language-bash>service network restart
-</code></pre><p>测试路由和DNS解析是否正常: <code>ping baidu.com</code>, 一切OK再继续下面的</p><h2 id=换源>换源</h2><p>大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><pre><code class=language-bash>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/targets/x86/64/packages
-src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/base
-src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/luci
-src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/packages
-src/gz openwrt_routing http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/routing
-src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.2/packages/x86_64/telephony
+</code></pre><p>测试路由和DNS解析是否正常: <code>ping baidu.com</code>, 一切OK再继续下面的</p><h2 id=换源>换源</h2><p>大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><pre><code class=language-bash>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/targets/x86/64/packages
+src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/base
+src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/luci
+src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/packages
+src/gz openwrt_routing http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/routing
+src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/telephony
 </code></pre><p>然后更新一下</p><pre><code class=language-bash>opkg update
 </code></pre><h2 id=扩容根分区和文件系统>扩容根分区和文件系统</h2><p>如果觉得默认的100M左右就够用了可以跳过这步</p><p>这个文档里的脚本只支持x86的ext4和squashfs镜像创建的虚机, 自动检测根分区和文件系统, 将空闲空间分给根分区和文件系统</p><p><a href=https://openwrt.org/docs/guide-user/advanced/expand_root>https://openwrt.org/docs/guide-user/advanced/expand_root</a></p><p>扩容之后就使用起来就不用扣扣搜搜的了</p><pre><code class=language-bash>root@OpenWrt:~# df -hT /
 Filesystem           Type            Size      Used Available Use% Mounted on
 /dev/root            ext4          994.8M     56.9M    921.9M   6% /
-</code></pre><h2 id=安装openclash>安装<code>OpenClash</code></h2><p>主要是跟着<a href=https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85>官方wiki</a>执行, 部分<code>Github</code>文件下载使用文件代理加速下载服务 <a href=https://mirror.ghproxy.com/>https://mirror.ghproxy.com/</a></p><p>先卸载<code>dnsmasq</code>, 否则会和<code>dnsmasq-full</code>冲突, <code>openclash</code>依赖<code>dnsmasq-full</code></p><pre><code class=language-bash># 如果提示dhcp配置文件(/etc/config/dhcp)没修改, 可以手动删了, 将新的(/etc/config/dhcp.bak)覆盖过去
+</code></pre><h2 id=安装openclash>安装<code>OpenClash</code></h2><p>主要是跟着<a href=https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85>官方wiki</a>执行, 部分<code>Github</code>文件下载使用文件代理加速下载服务 <a href=https://mirror.ghproxy.com/>https://mirror.ghproxy.com/</a></p><p>先卸载<code>dnsmasq</code>, 否则会和<code>dnsmasq-full</code>冲突, <code>openclash</code>依赖<code>dnsmasq-full</code></p><pre><code class=language-bash># 如果提示dhcp配置文件(/etc/config/dhcp)没修改, 可以手动删了, 将新的(/etc/config/dhcp-opkg)覆盖过去
 opkg remove dnsmasq &amp;&amp; opkg install dnsmasq-full
 </code></pre><p>下载安装安装包和各依赖</p><pre><code class=language-bash># 下载安装包
-cd /tmp &amp;&amp; wget https://mirror.ghproxy.com/https://github.com/vernesong/OpenClash/releases/download/v0.45.157-beta/luci-app-openclash_0.45.157-beta_all.ipk
+cd /tmp &amp;&amp; wget https://mirror.ghproxy.com/https://github.com/vernesong/OpenClash/releases/download/v0.46.011-beta/luci-app-openclash_0.46.011-beta_all.ipk
 # 安装所有依赖
 opkg install coreutils-nohup bash iptables dnsmasq-full curl ca-certificates ipset ip-full iptables-mod-tproxy iptables-mod-extra libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip luci-compat luci luci-base
 # 安装
-opkg install /tmp/luci-app-openclash_0.33.7-beta_all.ipk
+opkg install /tmp/luci-app-openclash_0.46.011-beta_all.ipk
 </code></pre><p>下载clash内核</p><pre><code class=language-bash># 下载
 wget https://mirror.ghproxy.com/https://github.com/vernesong/OpenClash/releases/download/Clash/clash-linux-amd64.tar.gz
 # 解压
