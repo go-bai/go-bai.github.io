@@ -76,6 +76,56 @@ DEBIAN_FRONTEND=noninteractive apt install iptables-persistent -y
 iptables-save -c > /etc/iptables/rules.v4
 ```
 
+### 查看无线网卡信息
+
+#### 安装
+
+```bash
+apt install wireless-tools -y
+```
+
+#### 查看无线网卡频率
+
+有些wifi配置2.4G和5G网络合并显示, 所以如果信号不好时会连上2.4GHz的频段, 使用`iwlist`命令查看无线网卡的频率
+
+```bash
+# iwlist wlp6s0 freq
+wlp6s0    32 channels in total; available frequencies :
+          Channel 01 : 2.412 GHz
+          Channel 02 : 2.417 GHz
+          Channel 03 : 2.422 GHz
+          Channel 04 : 2.427 GHz
+          Channel 05 : 2.432 GHz
+          Channel 06 : 2.437 GHz
+          Channel 07 : 2.442 GHz
+          Channel 08 : 2.447 GHz
+          Channel 09 : 2.452 GHz
+          Channel 10 : 2.457 GHz
+          Channel 11 : 2.462 GHz
+          Channel 12 : 2.467 GHz
+          Channel 13 : 2.472 GHz
+          Channel 36 : 5.18 GHz
+          Channel 40 : 5.2 GHz
+          Channel 44 : 5.22 GHz
+          Channel 48 : 5.24 GHz
+          Channel 52 : 5.26 GHz
+          Channel 56 : 5.28 GHz
+          Channel 60 : 5.3 GHz
+          Channel 64 : 5.32 GHz
+          Channel 100 : 5.5 GHz
+          Channel 104 : 5.52 GHz
+          Channel 108 : 5.54 GHz
+          Channel 112 : 5.56 GHz
+          Channel 116 : 5.58 GHz
+          Channel 120 : 5.6 GHz
+          Channel 124 : 5.62 GHz
+          Channel 128 : 5.64 GHz
+          Channel 132 : 5.66 GHz
+          Channel 136 : 5.68 GHz
+          Channel 140 : 5.7 GHz
+          Current Frequency:5.18 GHz (Channel 36)
+```
+
 ## 参考
 
 - [Problem with my iptables configuration on reboot](https://askubuntu.com/questions/1452706/problem-with-my-iptables-configuration-on-reboot)
