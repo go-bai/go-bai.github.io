@@ -1,0 +1,46 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Cloudinit | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Cloudinit</span></h1><h4 class=date>2024/06/30</h4><p class=terms>Tags: <a href=/tags/cloudinit>cloudinit</a></p></div><nav id=TableOfContents><ul><li><a href=#cloudinit-介绍>cloudinit 介绍</a></li><li><a href=#cloudinit-iso-镜像制作>cloudinit iso 镜像制作</a><ul><li><a href=#创建脚本>创建脚本</a></li><li><a href=#生成-cloudinit-iso>生成 cloudinit iso</a></li><li><a href=#使用>使用</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><h2 id=cloudinit-介绍>cloudinit 介绍</h2><blockquote><p>用于初始化网络, 主机名, 根文件系统, 用户名密码</p></blockquote><h2 id=cloudinit-iso-镜像制作>cloudinit iso 镜像制作</h2><h3 id=创建脚本>创建脚本</h3><pre><code class=language-bash>cat &lt;&lt;EOFALL &gt; gen-cloudinit-iso.sh
+#!/bin/bash
+
+set -eux
+
+CLOUD_INIT_DIR=&quot;/var/lib/libvirt/disks/\${VM}/cloudinit&quot;
+FILENAME=&quot;\${CLOUD_INIT_DIR}/init.iso&quot;
+
+mkdir -p \${CLOUD_INIT_DIR}
+
+cat &lt;&lt;EOF &gt; \${CLOUD_INIT_DIR}/meta-data
+instance-id: \${VM}
+local-hostname: \${VM}
+EOF
+
+# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
+cat &lt;&lt;EOF &gt; \${CLOUD_INIT_DIR}/user-data
+#cloud-config
+EOF
+
+# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
+xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
+EOFALL
+</code></pre><h3 id=生成-cloudinit-iso>生成 cloudinit iso</h3><pre><code class=language-bash>VM=k8s-node01 bash gen-cloudinit-iso.sh
+</code></pre><h3 id=使用>使用</h3><p>创建一个k8s节点虚拟机</p><pre><code class=language-bash>VM=k8s-node01
+mkdir -p /var/lib/libvirt/disks/${VM}
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk03.qcow2 500G
+
+virt-install \
+  --name ${VM} \
+  --memory 16384 \
+  --vcpus 8 \
+  --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+  --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+  --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+  --disk /var/lib/libvirt/disks/${VM}/datadisk03.qcow2,device=disk,bus=scsi \
+  --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+  --network bridge=br0 \
+  --import \
+  --os-variant ubuntu22.10 \
+  --noautoconsole
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://cloudinit.readthedocs.io/en/latest/explanation/format.html>https://cloudinit.readthedocs.io/en/latest/explanation/format.html</a></li><li><a href=https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go>https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
