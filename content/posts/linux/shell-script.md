@@ -493,6 +493,12 @@ docker save -o all.tar image-a:1.0.0 image-b:1.0.0 image-c:1.0.0
 docker load < all.tar
 ```
 
+## TODO
+
+- 看一下 [the art of command line](https://github.com/jlevy/the-art-of-command-line) 然后融入进这片文档
+- 增加 shell 常用的控制循环和条件判断语法
+
 ## 参考
 
 - [awk](https://www.ruanyifeng.com/blog/2018/11/awk.html)
+- [the art of command line](https://github.com/jlevy/the-art-of-command-line)
