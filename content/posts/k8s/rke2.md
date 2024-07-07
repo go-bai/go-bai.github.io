@@ -105,6 +105,10 @@ grep "$CONFIG" ~/.bashrc || echo "$CONFIG" >> ~/.bashrc && source ~/.bashrc
 CONFIG="export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml"
 grep "$CONFIG" ~/.bashrc || echo "$CONFIG" >> ~/.bashrc && source ~/.bashrc
 
+# alias ctr="ctr --address /run/k3s/containerd/containerd.sock --namespace k8s.io"
+CONFIG="alias ctr=\"ctr --address /run/k3s/containerd/containerd.sock --namespace k8s.io\""
+grep "$CONFIG" ~/.bashrc || echo "$CONFIG" >> ~/.bashrc && source ~/.bashrc
+
 # install helm
 HELM_LATEST_VERSION=v3.15.2
 wget https://get.helm.sh/helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
