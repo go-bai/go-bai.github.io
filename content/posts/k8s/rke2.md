@@ -14,12 +14,14 @@ tags: [k8s,rke2]
 2. 准备ubuntu 22.04 server qcow2镜像
 3. 准备libvirt环境
 
-## 创建虚拟机
+### 准备bridge网络
 
-### 准备 cloudinit 镜像
+[Creating a bridged network with netplan on Ubuntu 22.04](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/)
+
+### 配置 gen-cloudinit-iso 脚本
 
 ```bash
-cat <<EOFALL > gen-cloudinit-iso.sh
+cat <<EOFALL > /usr/bin/gen-cloudinit-iso
 #!/bin/bash
 
 set -eux
@@ -43,32 +45,34 @@ EOF
 xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
 EOFALL
 
-VM=k8s-node01 bash gen-cloudinit-iso.sh
+chmod +x /usr/bin/gen-cloudinit-iso
 ```
 
-### 准备系统盘并创建虚拟机
+## 创建虚拟机
 
 ```bash
-VM=k8s-node01
-mkdir -p /var/lib/libvirt/disks/${VM}
-qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
-qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
-qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
-qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk03.qcow2 500G
+for vm in "k8s-node01" "k8s-node02"; do
+  export VM=${vm}
+  # prepare cloudinit iso
+  gen-cloudinit-iso
+  # prepare sysdisk and datadisk 
+  qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
 
-virt-install \
-  --name ${VM} \
-  --memory 16384 \
-  --vcpus 8 \
-  --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
-  --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
-  --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
-  --disk /var/lib/libvirt/disks/${VM}/datadisk03.qcow2,device=disk,bus=scsi \
-  --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
-  --network bridge=br0 \
-  --import \
-  --os-variant ubuntu22.10 \
-  --noautoconsole
+  virt-install \
+    --name ${VM} \
+    --memory 16384 \
+    --vcpus 8 \
+    --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+    --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+    --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+    --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+    --network bridge=br0 \
+    --import \
+    --os-variant ubuntu22.10 \
+    --noautoconsole
+done
 ```
 
 ## 安装 RKE2
