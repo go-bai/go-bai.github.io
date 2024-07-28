@@ -8,15 +8,17 @@ author: gobai
 
 ### 目前在学的内容
 
-- golang
-- kubernetes
-- kubevirt
+- **golang**
+- **kubernetes**
+- **kubevirt**
 - ceph
+- linux
 - openstack
 - terraform
 - postgresql
+- mysql
+- redis
 - sqlite
-- linux
 
 ### 我的设备
 
@@ -24,8 +26,11 @@ author: gobai
 - 零刻 SER5 Pro AMD Ryzen7-5700U
     - Ubuntu 22.04 + QEMU/KVM
 - 5G CPE VN009
+- iPad mini6
 - OnePlus 9R
 
 ### 联系方式: 
 
-- email: `NTk5NTAwNjg4QHFxLmNvbQ==`
+```bash
+echo -n NTk5NTAwNjg4QHFxLmNvbQ== | base64 -d
+```

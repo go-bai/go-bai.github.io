@@ -121,6 +121,42 @@ mv linux-amd64/helm /usr/local/bin/helm
 rm -f helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz && rm -rf linux-amd64/
 ```
 
+## RKE2架构
+
+RKE2 Server 和 Agent 有利用 k3s 的 agent
+
+### 进程生命周期
+
+rke2进程使用systemd守护运行, rke2生成containerd进程和kubelet进程, 然后apiserver controller-manager scheduler etcd kube-proxy以static pod的形式被kubelet启动
+
+containerd进程退出时rke2也会重启, kubelet进程退出时rke2会再拉起一个kubelet进程
+
+```bash
+# ps -e --forest
+    899 ?        01:32:51 rke2
+   1101 ?        01:58:12  \_ containerd
+   1123 ?        05:23:44  \_ kubelet
+   1227 ?        00:02:15 containerd-shim
+   1344 ?        00:00:00  \_ pause
+   1500 ?        05:12:21  \_ etcd
+   1228 ?        00:02:22 containerd-shim
+   1353 ?        00:00:00  \_ pause
+   2516 ?        06:26:44  \_ kube-controller
+   1229 ?        00:02:16 containerd-shim
+   1342 ?        00:00:00  \_ pause
+   2614 ?        00:44:00  \_ cloud-controlle
+   1267 ?        00:02:18 containerd-shim
+   1363 ?        00:00:00  \_ pause
+   1452 ?        00:08:46  \_ kube-proxy
+   1920 ?        00:00:00      \_ timeout <defunct>
+   1283 ?        00:02:19 containerd-shim
+   1341 ?        00:00:00  \_ pause
+   1541 ?        00:51:47  \_ kube-scheduler
+   1801 ?        00:20:15 containerd-shim
+   1821 ?        00:00:00  \_ pause
+   1852 ?        15:16:04  \_ kube-apiserver
+```
+
 ## 安装 rook ceph
 
 https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/
