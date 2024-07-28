@@ -1,0 +1,20 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Libvirt | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Libvirt</span></h1><h4 class=date>2024/07/27</h4><p class=terms>Tags: <a href=/tags/libvirt>libvirt</a> <a href=/tags/virsh>virsh</a></p></div><nav id=TableOfContents><ul><li><a href=#virsh-命令><code>virsh</code> 命令</a><ul><li><a href=#virsh-domifaddr-查看虚拟机网卡ip><code>virsh domifaddr</code> 查看虚拟机网卡ip</a></li></ul></li></ul></nav><main><h2 id=virsh-命令><code>virsh</code> 命令</h2><h3 id=virsh-domifaddr-查看虚拟机网卡ip><code>virsh domifaddr</code> 查看虚拟机网卡ip</h3><pre><code class=language-bash># virsh domifaddr k3s-node01 --source lease
+ Name       MAC address          Protocol     Address
+-------------------------------------------------------------------------------
+</code></pre><p>通过arp获取网卡ip</p><pre><code class=language-bash># virsh domifaddr k3s-node01 --source arp
+ Name       MAC address          Protocol     Address
+-------------------------------------------------------------------------------
+ vnet18     52:54:00:0e:08:02    ipv4         192.168.1.248/0
+</code></pre><p>通过qemu guest agent获取网卡ip</p><pre><code class=language-bash># virsh domifaddr k3s-node01 --source agent
+ Name       MAC address          Protocol     Address
+-------------------------------------------------------------------------------
+ lo         00:00:00:00:00:00    ipv4         127.0.0.1/8
+ enp1s0     52:54:00:0e:08:02    ipv4         192.168.1.248/24
+ flannel.1  92:61:59:0c:29:90    ipv4         10.42.0.0/32
+ cni0       42:fb:8d:3e:c1:a4    ipv4         10.42.0.1/24
+ vethde547696 da:18:a8:b2:ed:f0    N/A          N/A
+ vethe1841f6e ce:79:fc:e1:1e:0b    N/A          N/A
+ veth464995dc 82:a9:3b:a6:b5:49    N/A          N/A
+ veth2370e2ac 4a:c8:32:5c:fb:34    N/A          N/A
+</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
