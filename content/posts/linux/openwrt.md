@@ -38,11 +38,20 @@ apt install virt-manager qemu bridge-utils -y
 qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
 ```
 
-使用`virt-install`运行, 
+使用`virt-install`运行
 
 ```bash
 # 运行, 这里网络指定的之前文章中创建的网桥网络br0
-virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=virtio --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
+virt-install \
+  --name openwrt \
+  --memory 256 \
+  --vcpus 1 \
+  --network bridge=br0,model=virtio \
+  --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide \
+  --import \
+  --autostart \
+  --osinfo detect=on,require=off \
+  --noautoconsole
 ```
 
 ## 配置网络
@@ -54,7 +63,7 @@ virsh console openwrt
 ```
 
 修改网络配置文件 `/etc/config/network`
-只修改了`lan`配置, 其他都是默认的
+只修改了`lan`配置和删除了`br-lan`网桥, 其他都是默认的, 因为我的使用场景比较简单, 虚拟机只有一个网卡, 直接使用`eth0`作为`lan`口连接器的物理网卡设备
 具体修改了`lan`配置的`ipaddr`, 增加`gateway`和`dns`
 
 ```bash
@@ -67,18 +76,15 @@ config interface 'loopback'
 config globals 'globals'
 	option ula_prefix 'fd5d:6ea2:93e4::/48'
 
-config device
-	option name 'br-lan'
-	option type 'bridge'
-	list ports 'eth0'
-
+# config interface is not the configuration of a physical interface, but rather the specification of a connector to some network.
 config interface 'lan'
-	option device 'br-lan'
+	# device is usually not the name of something configured with config interface, but the name of a physical interface.
+	option device 'eth0'
 	option proto 'static'
 	option ipaddr '192.168.1.99'
 	option netmask '255.255.255.0'
 	option gateway '192.168.1.1'
-	option dns '223.5.5.5'
+	list dns '223.5.5.5'
 ```
 
 修改之后重启网络
