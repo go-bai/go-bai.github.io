@@ -6,11 +6,20 @@ gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
 </code></pre><h2 id=运行虚机>运行虚机</h2><p>我是用<code>libvirt</code>来管理qemu/kvm虚拟机, 如果没安装要先安装</p><pre><code class=language-bash>apt install virt-manager qemu bridge-utils -y
 </code></pre><p>我这里将镜像复制到了<code>/var/lib/libvirt/disks/</code>目录下</p><pre><code class=language-bash>qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
-</code></pre><p>使用<code>virt-install</code>运行,</p><pre><code class=language-bash># 运行, 这里网络指定的之前文章中创建的网桥网络br0
-virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=virtio --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide --import --autostart --osinfo detect=on,require=off --graphics vnc,listen=0.0.0.0 --noautoconsole
+</code></pre><p>使用<code>virt-install</code>运行</p><pre><code class=language-bash># 运行, 这里网络指定的之前文章中创建的网桥网络br0
+virt-install \
+  --name openwrt \
+  --memory 256 \
+  --vcpus 1 \
+  --network bridge=br0,model=virtio \
+  --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide \
+  --import \
+  --autostart \
+  --osinfo detect=on,require=off \
+  --noautoconsole
 </code></pre><h2 id=配置网络>配置网络</h2><p>连接<code>console</code>配置网络</p><pre><code class=language-bash>virsh console openwrt
 </code></pre><p>修改网络配置文件 <code>/etc/config/network</code>
-只修改了<code>lan</code>配置, 其他都是默认的
+只修改了<code>lan</code>配置和删除了<code>br-lan</code>网桥, 其他都是默认的, 因为我的使用场景比较简单, 虚拟机只有一个网卡, 直接使用<code>eth0</code>作为<code>lan</code>口连接器的物理网卡设备
 具体修改了<code>lan</code>配置的<code>ipaddr</code>, 增加<code>gateway</code>和<code>dns</code></p><pre><code class=language-bash>config interface 'loopback'
 	option device 'lo'
 	option proto 'static'
@@ -20,18 +29,15 @@ virt-install --name openwrt --memory 256 --vcpus 1 --network bridge=br0,model=vi
 config globals 'globals'
 	option ula_prefix 'fd5d:6ea2:93e4::/48'
 
-config device
-	option name 'br-lan'
-	option type 'bridge'
-	list ports 'eth0'
-
+# config interface is not the configuration of a physical interface, but rather the specification of a connector to some network.
 config interface 'lan'
-	option device 'br-lan'
+	# device is usually not the name of something configured with config interface, but the name of a physical interface.
+	option device 'eth0'
 	option proto 'static'
 	option ipaddr '192.168.1.99'
 	option netmask '255.255.255.0'
 	option gateway '192.168.1.1'
-	option dns '223.5.5.5'
+	list dns '223.5.5.5'
 </code></pre><p>修改之后重启网络</p><pre><code class=language-bash>service network restart
 </code></pre><p>测试路由和DNS解析是否正常: <code>ping baidu.com</code>, 一切OK再继续下面的</p><h2 id=换源>换源</h2><p>大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><pre><code class=language-bash>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/targets/x86/64/packages
 src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/base
