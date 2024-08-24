@@ -244,4 +244,5 @@ network:
 1. [OpenWrt in QEMU](https://openwrt.org/docs/guide-user/virtualization/qemu#virtualization_proper)
 2. [OpenWrt: Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root)
 3. [OpenWrt: DHCP and DNS configuration /etc/config/dhcp](https://openwrt.org/docs/guide-user/base-system/dhcp)
+4. [OpenWrt: Clarifying the term "Interface"](https://openwrt.org/docs/guide-user/base-system/clarifying_interface_usage)
 4. [OpenClash 安装](https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85)
