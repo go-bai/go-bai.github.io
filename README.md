@@ -51,7 +51,7 @@ https://gohugo.io/content-management/toc/
 ```yaml
 markup:
   tableOfContents:
-    endLevel: 3
+    endLevel: 5
     ordered: false
     startLevel: 2
 ```

@@ -23,7 +23,7 @@ author: gobai
 ### 我的设备
 
 - Macbook Pro 2018 15 inch 16+256
-- 零刻 SER5 Pro AMD Ryzen7-5700U
+- 零刻 SER5 Pro AMD Ryzen7-5700U 32+512
     - Ubuntu 22.04 + QEMU/KVM
 - 5G CPE VN009
 - iPad mini6
