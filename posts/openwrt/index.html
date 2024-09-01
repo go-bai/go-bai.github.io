@@ -1,12 +1,13 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>OpenWrt | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>OpenWrt</span></h1><h4 class=date>2024/01/06</h4><p class=terms>Tags: <a href=/tags/openwrt>openwrt</a> <a href=/tags/linux>linux</a> <a href=/tags/openclash>openclash</a> <a href=/tags/kvm>kvm</a> <a href=/tags/virt-install>virt-install</a> <a href=/tags/network>network</a></p></div><nav id=TableOfContents><ul><li><a href=#准备qcow2镜像>准备<code>qcow2</code>镜像</a></li><li><a href=#运行虚机>运行虚机</a></li><li><a href=#配置网络>配置网络</a></li><li><a href=#换源>换源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</a></li><li><a href=#其他小修改>其他小修改</a><ul><li><a href=#修改dhcp分配ip范围>修改dhcp分配ip范围</a></li><li><a href=#修改br0的网关和dns>修改br0的网关和dns</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>很久没折腾<code>OpenWrt</code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(<code>ALL IN BOOM!</code>)</p><p>先亮个当前的穷人版家庭网络拓扑图</p><p><img src=/posts/linux/imgs/home-network-topology-diagram.svg alt=穷人版家庭网络拓扑图></p><h2 id=准备qcow2镜像>准备<code>qcow2</code>镜像</h2><p>首先下载最新的<a href=https://downloads.openwrt.org/releases>镜像</a>, 截止目前最新版为<code>23.05.3</code>, 我这里下载的是x86-64的镜像</p><pre><code class=language-bash>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>OpenWrt</span></h1><h4 class=date>2024/01/06</h4><p class=terms>Tags: <a href=/tags/openwrt>openwrt</a> <a href=/tags/linux>linux</a> <a href=/tags/openclash>openclash</a> <a href=/tags/kvm>kvm</a> <a href=/tags/virt-install>virt-install</a> <a href=/tags/network>network</a></p></div><nav id=TableOfContents><ul><li><a href=#准备qcow2镜像>准备<code>qcow2</code>镜像</a></li><li><a href=#运行虚机>运行虚机</a></li><li><a href=#配置网络>配置网络</a></li><li><a href=#换源>换源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#打开登录-openwrt-web界面配置>打开登录 <code>OpenWrt</code> web界面配置</a></li><li><a href=#其他小修改>其他小修改</a><ul><li><a href=#修改dhcp分配ip范围>修改dhcp分配ip范围</a></li><li><a href=#修改br0的网关和dns>修改br0的网关和dns</a></li><li><a href=#支持流量优先走主网关>支持流量优先走主网关</a><ul><li><a href=#设置crontab>设置crontab</a></li></ul></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>很久没折腾<code>OpenWrt</code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(<code>ALL IN BOOM!</code>)</p><p>先亮个当前的穷人版家庭网络拓扑图</p><p><img src=/posts/linux/imgs/home-network-topology-diagram.svg alt=穷人版家庭网络拓扑图></p><h2 id=准备qcow2镜像>准备<code>qcow2</code>镜像</h2><p>首先下载最新的<a href=https://downloads.openwrt.org/releases>镜像</a>, 截止目前最新版为<code>23.05.3</code>, 我这里下载的是x86-64的镜像</p><pre><code class=language-bash>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 解压
 gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
 # 这里因为我要作为KVM虚拟机的镜像, 所以转换为qcow2格式. 如果是在物理机上部署, 可以直接直接刷到U盘上.
 qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
 </code></pre><h2 id=运行虚机>运行虚机</h2><p>我是用<code>libvirt</code>来管理qemu/kvm虚拟机, 如果没安装要先安装</p><pre><code class=language-bash>apt install virt-manager qemu bridge-utils -y
 </code></pre><p>我这里将镜像复制到了<code>/var/lib/libvirt/disks/</code>目录下</p><pre><code class=language-bash>qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
-</code></pre><p>使用<code>virt-install</code>运行</p><pre><code class=language-bash># 运行, 这里网络指定的之前文章中创建的网桥网络br0
+</code></pre><p>使用<code>virt-install</code>运行虚拟机, 这里网卡使用<code>virtio</code>类型并桥接到之前文档里创建的<code>br0</code>上,
+选择<code>virtio</code>是因为性能最好, 可以达到<code>10Gbps</code>以上</p><pre><code class=language-bash># 运行, 这里网络指定的之前文章中创建的网桥网络br0
 virt-install \
   --name openwrt \
   --memory 256 \
@@ -94,4 +95,42 @@ udp        0      0 0.0.0.0:67              0.0.0.0:*                           
         - enp1s0
       parameters:
         stp: false
+</code></pre><h3 id=支持流量优先走主网关>支持流量优先走主网关</h3><blockquote><p>因为 <code>192.168.1.1</code> 的网关是使用的我的流量卡的5G流量, 所以是做为备用网关, 主网关是 <a href=../wireless-to-wired-network>无线转有线网络</a> 配置的 <code>192.168.1.110</code></p></blockquote><p>下面脚本实现优先使用主网关, 主网关不能访问互联网时再切换到备用网关</p><p>下面脚本放在 <code>/root/gateway-switch.sh</code></p><pre><code class=language-bash>#!/bin/bash
+
+PRIMARY_GATEWAY=&quot;192.168.1.110&quot;
+SECONDARY_GATEWAY=&quot;192.168.1.1&quot;
+
+EXTERNAL_IP=&quot;223.6.6.6&quot;
+
+echo_with_time() {
+    echo &quot;[$(date '+%Y-%m-%d %H:%M:%S')] $1&quot;
+}
+
+test_gateway() {
+    local gateway=$1
+    # Add a temporary route
+    ip r add $EXTERNAL_IP via $gateway
+    # Test connectivity
+    ping -c 2 -W 1 $EXTERNAL_IP &gt; /dev/null 2&gt;&amp;1
+    local result=$?
+    # Remove the temporary route
+    ip r del $EXTERNAL_IP via $gateway
+    return $result
+}
+
+while true; do
+    if test_gateway $PRIMARY_GATEWAY; then
+        echo_with_time &quot;Internet is accessible via primary gateway $PRIMARY_GATEWAY. Setting it as default.&quot;
+        ip r replace default via $PRIMARY_GATEWAY
+    else
+        echo_with_time &quot;Internet is not accessible via primary gateway $PRIMARY_GATEWAY. Using secondary gateway $SECONDARY_GATEWAY.&quot;
+        ip r replace default via $SECONDARY_GATEWAY
+    fi
+    sleep 2s
+done
+</code></pre><h4 id=设置crontab>设置crontab</h4><p>openwrt的crontab不支持<code>@reboot</code>, 这里使用flock实现类似效果</p><pre><code class=language-bash># 设置crontab
+echo &quot;* * * * * flock -n /root/gateway-switch.lock /root/gateway-switch.sh &gt;&gt; /root/gateway-switch.log 2&gt;&amp;1&quot; &gt;&gt; /etc/crontabs/root
+# 运行cron并设置开机自启
+/etc/init.d/cron start
+/etc/init.d/cron enable
 </code></pre><h2 id=参考>参考</h2><ol><li><a href=https://openwrt.org/docs/guide-user/virtualization/qemu#virtualization_proper>OpenWrt in QEMU</a></li><li><a href=https://openwrt.org/docs/guide-user/advanced/expand_root>OpenWrt: Expanding root partition and filesystem</a></li><li><a href=https://openwrt.org/docs/guide-user/base-system/dhcp>OpenWrt: DHCP and DNS configuration /etc/config/dhcp</a></li><li><a href=https://openwrt.org/docs/guide-user/base-system/clarifying_interface_usage>OpenWrt: Clarifying the term &ldquo;Interface&rdquo;</a></li><li><a href=https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85>OpenClash 安装</a></li></ol></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
