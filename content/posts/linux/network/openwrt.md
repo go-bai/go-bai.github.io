@@ -38,7 +38,8 @@ apt install virt-manager qemu bridge-utils -y
 qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
 ```
 
-使用`virt-install`运行
+使用`virt-install`运行虚拟机, 这里网卡使用`virtio`类型并桥接到之前文档里创建的`br0`上, 
+选择`virtio`是因为性能最好, 可以达到`10Gbps`以上
 
 ```bash
 # 运行, 这里网络指定的之前文章中创建的网桥网络br0
@@ -237,6 +238,62 @@ network:
         - enp1s0
       parameters:
         stp: false
+```
+
+### 支持流量优先走主网关
+
+> 因为 `192.168.1.1` 的网关是使用的我的流量卡的5G流量, 所以是做为备用网关, 主网关是 [无线转有线网络](../wireless-to-wired-network) 配置的 `192.168.1.110`
+
+下面脚本实现优先使用主网关, 主网关不能访问互联网时再切换到备用网关
+
+下面脚本放在 `/root/gateway-switch.sh`
+
+```bash
+#!/bin/bash
+
+PRIMARY_GATEWAY="192.168.1.110"
+SECONDARY_GATEWAY="192.168.1.1"
+
+EXTERNAL_IP="223.6.6.6"
+
+echo_with_time() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+test_gateway() {
+    local gateway=$1
+    # Add a temporary route
+    ip r add $EXTERNAL_IP via $gateway
+    # Test connectivity
+    ping -c 2 -W 1 $EXTERNAL_IP > /dev/null 2>&1
+    local result=$?
+    # Remove the temporary route
+    ip r del $EXTERNAL_IP via $gateway
+    return $result
+}
+
+while true; do
+    if test_gateway $PRIMARY_GATEWAY; then
+        echo_with_time "Internet is accessible via primary gateway $PRIMARY_GATEWAY. Setting it as default."
+        ip r replace default via $PRIMARY_GATEWAY
+    else
+        echo_with_time "Internet is not accessible via primary gateway $PRIMARY_GATEWAY. Using secondary gateway $SECONDARY_GATEWAY."
+        ip r replace default via $SECONDARY_GATEWAY
+    fi
+    sleep 2s
+done
+```
+
+#### 设置crontab
+
+openwrt的crontab不支持`@reboot`, 这里使用flock实现类似效果
+
+```bash
+# 设置crontab
+echo "* * * * * flock -n /root/gateway-switch.lock /root/gateway-switch.sh >> /root/gateway-switch.log 2>&1" >> /etc/crontabs/root
+# 运行cron并设置开机自启
+/etc/init.d/cron start
+/etc/init.d/cron enable
 ```
 
 ## 参考
