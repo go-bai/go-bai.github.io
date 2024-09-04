@@ -1,3 +1,38 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>K8s on gobai's blog</title><link>/tags/k8s/</link><description>Recent content in K8s on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 01 Jul 2024 21:24:49 +0800</lastBuildDate><atom:link href="/tags/k8s/index.xml" rel="self" type="application/rss+xml"/><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>通过RKE2快速搭建测试使用的k8s集群环境
-环境准备 准备bridge网络br0 准备ubuntu 22.04 server qcow2镜像 准备libvirt环境 准备bridge网络 Creating a bridged network with netplan on Ubuntu 22.04
-配置 gen-cloudinit-iso 脚本 cat &amp;lt;&amp;lt;EOFALL &amp;gt; /usr/bin/gen-cloudinit-iso #!/bin/bash set -eux CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot; FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot; mkdir -p \${CLOUD_INIT_DIR} cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data instance-id: \${VM} local-hostname: \${VM} EOF # 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data #cloud-config EOF # 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data EOFALL chmod +x /usr/bin/gen-cloudinit-iso 创建虚拟机 for vm in &amp;quot;k8s-node01&amp;quot; &amp;quot;k8s-node02&amp;quot;; do export VM=${vm} # prepare cloudinit iso gen-cloudinit-iso # prepare sysdisk and datadisk qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>K8s on gobai's blog</title><link>/tags/k8s/</link><description>Recent content in K8s on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 01 Jul 2024 21:24:49 +0800</lastBuildDate><atom:link href="/tags/k8s/index.xml" rel="self" type="application/rss+xml"/><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;blockquote>
+&lt;p>通过RKE2快速搭建测试使用的k8s集群环境&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="环境准备">环境准备&lt;/h2>
+&lt;ol>
+&lt;li>准备bridge网络br0&lt;/li>
+&lt;li>准备ubuntu 22.04 server qcow2镜像&lt;/li>
+&lt;li>准备libvirt环境&lt;/li>
+&lt;/ol>
+&lt;h3 id="准备bridge网络">准备bridge网络&lt;/h3>
+&lt;p>&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">Creating a bridged network with netplan on Ubuntu 22.04&lt;/a>&lt;/p>
+&lt;h3 id="配置-gen-cloudinit-iso-脚本">配置 gen-cloudinit-iso 脚本&lt;/h3>
+&lt;pre>&lt;code class="language-bash">cat &amp;lt;&amp;lt;EOFALL &amp;gt; /usr/bin/gen-cloudinit-iso
+#!/bin/bash
+
+set -eux
+
+CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot;
+FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot;
+
+mkdir -p \${CLOUD_INIT_DIR}
+
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data
+instance-id: \${VM}
+local-hostname: \${VM}
+EOF
+
+# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data
+#cloud-config
+EOF
+
+# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
+xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
+EOFALL
+
+chmod +x /usr/bin/gen-cloudinit-iso
+&lt;/code>&lt;/pr</description></item></channel></rss>

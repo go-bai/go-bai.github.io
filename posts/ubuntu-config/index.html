@@ -1,5 +1,45 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Ubuntu Config | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Ubuntu Config</span></h1><h4 class=date>2023/09/24</h4><p class=terms>Tags: <a href=/tags/ubuntu>ubuntu</a></p></div><nav id=TableOfContents><ul><li><a href=#配置中文输入法>配置中文输入法</a></li><li><a href=#换apt源>换<code>apt</code>源</a></li><li><a href=#使用x11替换wayland>使用<code>X11</code>替换<code>Wayland</code></a></li><li><a href=#合上盖子不暂停系统笔记本>合上盖子不暂停系统(笔记本)</a></li><li><a href=#安装-oh-my-zsh>安装 oh my zsh</a></li><li><a href=#安装-golang>安装 golang</a></li><li><a href=#安装-hugo>安装 hugo</a></li><li><a href=#安装-openssh-server>安装 openssh-server</a></li><li><a href=#安装-gnome-插件>安装 gnome 插件</a></li><li><a href=#所有网卡都禁用ipv6>所有网卡都禁用ipv6</a><ul><li><a href=#修改etcsysctlconf>修改<code>/etc/sysctl.conf</code></a></li><li><a href=#修改etcdefaultgrub>修改<code>/etc/default/grub</code></a></li></ul></li><li><a href=#安装vlc媒体播放器>安装<code>VLC</code>媒体播放器</a><ul><li><a href=#快捷键>快捷键</a></li></ul></li><li><a href=#安装-docker>安装 <code>docker</code></a></li><li><a href=#安装virt-manager>安装<code>virt-manager</code></a></li><li><a href=#设置所有sudo组下的用户执行sudo命令不需要密码>设置所有<code>sudo</code>组下的用户执行<code>sudo</code>命令不需要密码</a></li><li><a href=#删除用户密码>删除用户密码</a></li></ul></nav><main><blockquote><p>以下配置都是在 <code>Ubuntu 22.04</code> 系统配置</p></blockquote><h2 id=配置中文输入法>配置中文输入法</h2><ol><li>Open Settings, go to <code>Region & Language</code> -> <code>Manage Installed Languages</code> -> <code>Install / Remove languages</code>.</li><li>Select <code>Chinese (Simplified)</code>. Make sure <code>Keyboard Input method system</code> has <code>Ibus</code> selected. Apply.</li><li>Reboot</li><li>Log back in, reopen Settings, go to <code>Keyboard</code>.</li><li>Click on the &ldquo;+&rdquo; sign under <code>Input sources</code>.</li><li>Select <code>Chinese (China)</code> and then <code>Chinese (Intelligent Pinyin)</code>.</li></ol><p><a href=https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support>ubuntu-22-04-chinese-simplified-pinyin-input-support</a></p><h2 id=换apt源>换<code>apt</code>源</h2><p><a href=https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/>https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/</a></p><pre><code class=language-bash>sudo su -
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Ubuntu Config</span></h1><h4 class=date>2023/09/24</h4><p class=terms>Tags: <a href=/tags/ubuntu>ubuntu</a></p></div><nav id=TableOfContents><ul><li><a href=#配置中文输入法>配置中文输入法</a></li><li><a href=#修正简体中文显示为异体日文字形>修正简体中文显示为异体(日文)字形</a></li><li><a href=#换apt源>换<code>apt</code>源</a></li><li><a href=#使用x11替换wayland>使用<code>X11</code>替换<code>Wayland</code></a></li><li><a href=#合上盖子不暂停系统笔记本>合上盖子不暂停系统(笔记本)</a></li><li><a href=#安装-oh-my-zsh>安装 oh my zsh</a></li><li><a href=#安装-golang>安装 golang</a></li><li><a href=#安装-hugo>安装 hugo</a></li><li><a href=#安装-openssh-server>安装 openssh-server</a></li><li><a href=#安装-gnome-插件>安装 gnome 插件</a></li><li><a href=#所有网卡都禁用ipv6>所有网卡都禁用ipv6</a><ul><li><a href=#修改etcsysctlconf>修改<code>/etc/sysctl.conf</code></a></li><li><a href=#修改etcdefaultgrub>修改<code>/etc/default/grub</code></a></li></ul></li><li><a href=#安装vlc媒体播放器>安装<code>VLC</code>媒体播放器</a><ul><li><a href=#快捷键>快捷键</a></li></ul></li><li><a href=#安装-docker>安装 <code>docker</code></a></li><li><a href=#安装virt-manager>安装<code>virt-manager</code></a></li><li><a href=#设置所有sudo组下的用户执行sudo命令不需要密码>设置所有<code>sudo</code>组下的用户执行<code>sudo</code>命令不需要密码</a></li><li><a href=#删除用户密码>删除用户密码</a></li></ul></nav><main><blockquote><p>以下配置都是在 <code>Ubuntu 22.04</code> 系统配置</p></blockquote><h2 id=配置中文输入法>配置中文输入法</h2><ol><li>Open Settings, go to <code>Region & Language</code> -> <code>Manage Installed Languages</code> -> <code>Install / Remove languages</code>.</li><li>Select <code>Chinese (Simplified)</code>. Make sure <code>Keyboard Input method system</code> has <code>Ibus</code> selected. Apply.</li><li>Reboot</li><li>Log back in, reopen Settings, go to <code>Keyboard</code>.</li><li>Click on the &ldquo;+&rdquo; sign under <code>Input sources</code>.</li><li>Select <code>Chinese (China)</code> and then <code>Chinese (Intelligent Pinyin)</code>.</li></ol><p><a href=https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support>ubuntu-22-04-chinese-simplified-pinyin-input-support</a></p><h2 id=修正简体中文显示为异体日文字形>修正简体中文显示为异体(日文)字形</h2><blockquote><p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决</p></blockquote><p>root权限编辑 <code>/etc/fonts/conf.avail/64-language-selector-prefer.conf</code> 配置文件</p><pre><code class=language-diff>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE fontconfig SYSTEM &quot;fonts.dtd&quot;&gt;
+&lt;fontconfig&gt;
+        &lt;alias&gt;
+                &lt;family&gt;sans-serif&lt;/family&gt;
+                &lt;prefer&gt;
++                       &lt;family&gt;Noto Sans CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans CJK JP&lt;/family&gt;
+                        &lt;family&gt;Noto Sans CJK KR&lt;/family&gt;
+-                       &lt;family&gt;Noto Sans CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans CJK TC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans CJK HK&lt;/family&gt;
+                        &lt;family&gt;Lohit Devanagari&lt;/family&gt;
+                        &lt;family&gt;Noto Sans Sinhala&lt;/family&gt;
+                &lt;/prefer&gt;
+        &lt;/alias&gt;
+        &lt;alias&gt;
+                &lt;family&gt;serif&lt;/family&gt;
+                &lt;prefer&gt;
++                       &lt;family&gt;Noto Serif CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Serif CJK JP&lt;/family&gt;
+                        &lt;family&gt;Noto Serif CJK KR&lt;/family&gt;
+-                       &lt;family&gt;Noto Serif CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Serif CJK TC&lt;/family&gt;
+                        &lt;family&gt;Lohit Devanagari&lt;/family&gt;
+                        &lt;family&gt;Noto Serif Sinhala&lt;/family&gt;
+                &lt;/prefer&gt;
+        &lt;/alias&gt;
+        &lt;alias&gt;
+                &lt;family&gt;monospace&lt;/family&gt;
+                &lt;prefer&gt;
++                       &lt;family&gt;Noto Sans Mono CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans Mono CJK JP&lt;/family&gt;
+                        &lt;family&gt;Noto Sans Mono CJK KR&lt;/family&gt;
+-                       &lt;family&gt;Noto Sans Mono CJK SC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans Mono CJK TC&lt;/family&gt;
+                        &lt;family&gt;Noto Sans Mono CJK HK&lt;/family&gt;
+                &lt;/prefer&gt;
+        &lt;/alias&gt;
+&lt;/fontconfig&gt;
+</code></pre><h2 id=换apt源>换<code>apt</code>源</h2><p><a href=https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/>https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/</a></p><pre><code class=language-bash>sudo su -
 
 cat &lt;&lt;EOF &gt; /etc/apt/sources.list
 # 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释

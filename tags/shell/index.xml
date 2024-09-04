@@ -1,11 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on gobai's blog</title><link>/tags/shell/</link><description>Recent content in Shell on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.
-#!/bin/bash #!/bin/bash被称为shebang line, 指定执行此脚本文件时使用/bin/bash做为shell解释器程序
-很多主流操作系统默认的shell解释器也是bash
-# echo $SHELL /bin/bash set set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
-下面是我常用的几个, 可以合并为如下内容写在脚本开头:
-#!/bin/bash set -uxe set -o pipefail set -u 执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, set -u可以让脚本读到不存在变量时报错
-set -x 命令执行前会先打印出来, 行首以+表示, 在调试脚本时非常有帮助
-set -e 执行脚本时, Bash遇到错误默认会继续执行, set -e使得脚本只要发生错误, 就中止执行
-set -o pipefail set -e有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出
-#!/bin/bash set -e foo | echo a echo bar 执行的结果为:
-a set.sh: line 4: foo: command not found bar set -o pipefail可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell on gobai's blog</title><link>/tags/shell/</link><description>Recent content in Shell on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 23 Mar 2024 09:43:34 +0800</lastBuildDate><atom:link href="/tags/shell/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
+&lt;p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="binbash">&lt;code>#!/bin/bash&lt;/code>&lt;/h2>
+&lt;p>&lt;code>#!/bin/bash&lt;/code>被称为&lt;code>shebang line&lt;/code>, 指定执行此脚本文件时使用&lt;code>/bin/bash&lt;/code>做为shell解释器程序&lt;/p>
+&lt;p>很多主流操作系统默认的shell解释器也是bash&lt;/p>
+&lt;pre>&lt;code class="language-bash"># echo $SHELL
+/bin/bash
+&lt;/code>&lt;/pre>
+&lt;h2 id="set">&lt;code>set&lt;/code>&lt;/h2>
+&lt;p>&lt;code>set&lt;/code>命令用来修改shell环境的运行参数, 完整的可定制的&lt;a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">官方手册&lt;/a>&lt;/p>
+&lt;p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+set -uxe
+set -o pipefail
+&lt;/code>&lt;/pre>
+&lt;h3 id="set--u">&lt;code>set -u&lt;/code>&lt;/h3>
+&lt;p>执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, &lt;code>set -u&lt;/code>可以让脚本读到不存在变量时报错&lt;/p>
+&lt;h3 id="set--x">&lt;code>set -x&lt;/code>&lt;/h3>
+&lt;p>命令执行前会先打印出来, 行首以&lt;code>+&lt;/code>表示, 在调试脚本时非常有帮助&lt;/p>
+&lt;h3 id="set--e">&lt;code>set -e&lt;/code>&lt;/h3>
+&lt;p>执行脚本时, Bash遇到错误默认会继续执行, &lt;code>set -e&lt;/code>使得脚本只要发生错误, 就中止执行&lt;/p>
+&lt;h3 id="set--o-pipefail">&lt;code>set -o pipefail&lt;/code>&lt;/h3>
+&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p></description></item></channel></rss>

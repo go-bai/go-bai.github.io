@@ -1,5 +1,33 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Netplan on gobai's blog</title><link>/tags/netplan/</link><description>Recent content in Netplan on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 04 Oct 2023 13:01:59 +0800</lastBuildDate><atom:link href="/tags/netplan/index.xml" rel="self" type="application/rss+xml"/><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>本地LAN环境
-LAN网关 192.168.1.1 子网掩码 255.255.255.0 DHCP范围 192.168.1.2-192.168.32 创建一个bridged network 创建一个网桥br0给虚机使用，使得虚机和其他设备都在一个LAN下
-总配置(netplan get)如下:
-network: version: 2 renderer: NetworkManager ethernets: enp1s0: dhcp4: false dhcp6: false bridges: br0: addresses: - &amp;quot;192.168.1.100/24&amp;quot; nameservers: addresses: - 192.168.1.1 dhcp4: false dhcp6: false interfaces: - enp1s0 parameters: stp: false routes: - to: &amp;quot;default&amp;quot; via: &amp;quot;192.168.1.1&amp;quot; 由三个文件组成:
-/etc/netplan/01-network-manager-all.yaml # Let NetworkManager manage all devices on this system network: version: 2 renderer: NetworkManager /etc/netplan/10-ethernet-enp1s0.yaml network: ethernets: enp1s0: dhcp4: false dhcp6: false /etc/netplan/99-bridged-network-br0.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Netplan on gobai's blog</title><link>/tags/netplan/</link><description>Recent content in Netplan on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 04 Oct 2023 13:01:59 +0800</lastBuildDate><atom:link href="/tags/netplan/index.xml" rel="self" type="application/rss+xml"/><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
+&lt;ol>
+&lt;li>LAN网关 &lt;code>192.168.1.1&lt;/code>&lt;/li>
+&lt;li>子网掩码 &lt;code>255.255.255.0&lt;/code>&lt;/li>
+&lt;li>DHCP范围 &lt;code>192.168.1.2&lt;/code>-&lt;code>192.168.32&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="创建一个bridged-network">创建一个&lt;code>bridged network&lt;/code>&lt;/h2>
+&lt;p>创建一个网桥&lt;code>br0&lt;/code>给虚机使用，使得虚机和其他设备都在一个LAN下&lt;/p>
+&lt;p>总配置(&lt;code>netplan get&lt;/code>)如下:&lt;/p>
+&lt;pre>&lt;code class="language-yaml">network:
+ version: 2
+ renderer: NetworkManager
+ ethernets:
+ enp1s0:
+ dhcp4: false
+ dhcp6: false
+ bridges:
+ br0:
+ addresses:
+ - &amp;quot;192.168.1.100/24&amp;quot;
+ nameservers:
+ addresses:
+ - 192.168.1.1
+ dhcp4: false
+ dhcp6: false
+ interfaces:
+ - enp1s0
+ parameters:
+ stp: false
+ routes:
+ - to: &amp;quot;default&amp;quot;
+ via: &amp;quot;192.168.1.1&amp;quot;
+&lt;/code>&lt;/pr</description></item></channel></rss>

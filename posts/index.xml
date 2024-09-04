@@ -1,71 +1,762 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on gobai's blog</title><link>/posts/</link><description>Recent content in Posts on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 27 Jul 2024 22:57:08 +0800</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Libvirt</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>virsh 命令 virsh domifaddr 查看虚拟机网卡ip # virsh domifaddr k3s-node01 --source lease Name MAC address Protocol Address ------------------------------------------------------------------------------- 通过arp获取网卡ip
-# virsh domifaddr k3s-node01 --source arp Name MAC address Protocol Address ------------------------------------------------------------------------------- vnet18 52:54:00:0e:08:02 ipv4 192.168.1.248/0 通过qemu guest agent获取网卡ip
-# virsh domifaddr k3s-node01 --source agent Name MAC address Protocol Address ------------------------------------------------------------------------------- lo 00:00:00:00:00:00 ipv4 127.0.0.1/8 enp1s0 52:54:00:0e:08:02 ipv4 192.168.1.248/24 flannel.1 92:61:59:0c:29:90 ipv4 10.42.0.0/32 cni0 42:fb:8d:3e:c1:a4 ipv4 10.42.0.1/24 vethde547696 da:18:a8:b2:ed:f0 N/A N/A vethe1841f6e ce:79:fc:e1:1e:0b N/A N/A veth464995dc 82:a9:3b:a6:b5:49 N/A N/A veth2370e2ac 4a:c8:32:5c:fb:34 N/A N/A</description></item><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>通过RKE2快速搭建测试使用的k8s集群环境
-环境准备 准备bridge网络br0 准备ubuntu 22.04 server qcow2镜像 准备libvirt环境 准备bridge网络 Creating a bridged network with netplan on Ubuntu 22.04
-配置 gen-cloudinit-iso 脚本 cat &amp;lt;&amp;lt;EOFALL &amp;gt; /usr/bin/gen-cloudinit-iso #!/bin/bash set -eux CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot; FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot; mkdir -p \${CLOUD_INIT_DIR} cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data instance-id: \${VM} local-hostname: \${VM} EOF # 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data #cloud-config EOF # 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data EOFALL chmod +x /usr/bin/gen-cloudinit-iso 创建虚拟机 for vm in &amp;quot;k8s-node01&amp;quot; &amp;quot;k8s-node02&amp;quot;; do export VM=${vm} # prepare cloudinit iso gen-cloudinit-iso # prepare sysdisk and datadisk qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.</description></item><item><title>Cloudinit</title><link>/posts/cloudinit/</link><pubDate>Sun, 30 Jun 2024 23:56:57 +0800</pubDate><guid>/posts/cloudinit/</guid><description>cloudinit 介绍 用于在新建的虚拟机中进行时间设置、密码设置、扩展根文件系统所在分区、设置主机名、运行脚本、安装软件包等初始化设置
-cloudinit iso 镜像制作 创建脚本 cat &amp;lt;&amp;lt;EOFALL &amp;gt; gen-cloudinit-iso.sh #!/bin/bash set -eux CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot; FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot; mkdir -p \${CLOUD_INIT_DIR} cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data instance-id: \${VM} local-hostname: \${VM} EOF # 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data #cloud-config EOF # 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data EOFALL 生成 cloudinit iso VM=k8s-node01 bash gen-cloudinit-iso.sh 使用 创建一个k8s节点虚拟机
-VM=k8s-node01 mkdir -p /var/lib/libvirt/disks/${VM} qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.</description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>controller-runtime是在client-go/tools/cache和client-go/util/workqueue的基础上实现的, 了解client-go/tools/cache和client-go/util/workqueue对理解controller-runtime很有帮助
-介绍informer 带着问题看
-开发CRD时想到的一些问题 更新local store缓存和触发reconcile是否有先后顺序 同一个crd object会不会同时被reconcile 这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object
-向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中 https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue
-有几种队列，Queue，DelayingQueue，RateLimitingQueue
-如何解决进入reconcile之后读到的是旧数据的问题 读到旧数据是否说明是先出发reconcile再更新local store的
-My cache might be stale if I read from a cache! How should I deal with that?
-在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新
-https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that
-https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520</description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>简介 背景 在kubevirt中, 通过vmi的spec没办法涵盖所有的libvirt domain xml元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML
-功能介绍 在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.
-sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks
-OnDefineDomain: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm PreCloudInitIso: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data Shutdown: 这个是v1alpha3版本才支持的 使用hook sidecar功能需要在kv.spec.configuration.developerConfiguration.featureGates中开启Sidecar功能
-源码分析 kubevirt-boot-sidecar 介绍 以下以kubevirt-boot-sidecar为例讲述sidecar的工作流程, 这个sidecar支持修改引导设备顺序(boot)和开启交互式引导菜单(bootmenu)
-kubevirt-boot-sidecar只实现了OnDefineDomain, 下面也是主要串一下OnDefineDomain相关的
-sidecar工作流程 virt-launcher刚启动时收集所有sidecar信息 // cmd/virt-launcher/virt-launcher.go func main() { hookSidecars := pflag.Uint(&amp;quot;hook-sidecars&amp;quot;, 0, &amp;quot;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&amp;quot;) // 收集所有sidecar的信息 err := hookManager.Collect(*hookSidecars, *qemuTimeout) // 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI // virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain // SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.</description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>通过无线网卡连接网络A(192.168.31.0/24), 无线网卡相当于WAN口，通过有线网卡接入网络B(192.168.1.0/24), 有线网卡相当于LAN口
-准备一个ubuntu虚拟机router # 准备qcow2基础镜像 wget https://down.idc.wiki/Image/realServer-Template/current/qcow2/ubuntu22.qcow2 -O /var/lib/libvirt/images/ubuntu.qcow2 # 创建虚拟机以基础镜像为backing file的增量盘 qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/router.qcow2 20G # 创建并启动虚拟机 virt-install --name router --memory 512 --vcpus 1 --disk /var/lib/libvirt/disks/router.qcow2,bus=sata --import --os-variant ubuntu22.10 --network bridge=br0 --noautoconsole # 设置自动启动 virsh autostart router 配置网络 将无线网卡透传进虚拟机 打开 virt-manager -&amp;gt; 双击 router domain -&amp;gt; 点击 Show virtual hardware details -&amp;gt; 点击 Add Hardware -&amp;gt; 点击 PCI Host Device -&amp;gt; 选择 Intel Corporation Wi-Fi 6 AX200 -&amp;gt; 点击 Finish</description></item><item><title>Rclone</title><link>/posts/rclone/</link><pubDate>Thu, 04 Apr 2024 15:56:58 +0800</pubDate><guid>/posts/rclone/</guid><description>使用rclone和alist提供的webdav接口将阿里云盘mount到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件
-下载安装rclone curl https://rclone.org/install.sh | bash 配置rclone config # rclone config No remotes found, make a new one? n) New remote s) Set configuration password q) Quit config n/s/q&amp;gt; n Enter name for new remote. name&amp;gt; alist Option Storage. Type of storage to configure. Choose a number from below, or type in your own value. 1 / 1Fichier \ (fichier) ... 51 / WebDAV \ (webdav) ... Storage&amp;gt; 51 Option url.</description></item><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件
-下载并解压ventoy wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz tar -xvzf ventoy-1.0.97-linux.tar.gz cd ventoy-1.0.97/ Ventoy2Disk.sh用来安装ventor到U盘
-./Ventoy2Disk.sh -h ********************************************** Ventoy: 1.0.97 x86_64 longpanda admin@ventoy.net https://www.ventoy.net ********************************************** Usage: Ventoy2Disk.sh CMD [ OPTION ] /dev/sdX CMD: -i install Ventoy to sdX (fails if disk already installed with Ventoy) -I force install Ventoy to sdX (no matter if installed or not) -u update Ventoy in sdX -l list Ventoy information in sdX OPTION: (optional) -r SIZE_MB preserve some space at the bottom of the disk (only for install) -s/-S enable/disable secure boot support (default is enabled) -g use GPT partition style, default is MBR (only for install) -L Label of the 1st exfat partition (default is Ventoy) -n try non-destructive installation (only for install) 安装ventoy # .</description></item><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.
-#!/bin/bash #!/bin/bash被称为shebang line, 指定执行此脚本文件时使用/bin/bash做为shell解释器程序
-很多主流操作系统默认的shell解释器也是bash
-# echo $SHELL /bin/bash set set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
-下面是我常用的几个, 可以合并为如下内容写在脚本开头:
-#!/bin/bash set -uxe set -o pipefail set -u 执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, set -u可以让脚本读到不存在变量时报错
-set -x 命令执行前会先打印出来, 行首以+表示, 在调试脚本时非常有帮助
-set -e 执行脚本时, Bash遇到错误默认会继续执行, set -e使得脚本只要发生错误, 就中止执行
-set -o pipefail set -e有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出
-#!/bin/bash set -e foo | echo a echo bar 执行的结果为:
-a set.sh: line 4: foo: command not found bar set -o pipefail可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</description></item><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>初始化演示环境 使用docker部署 部署的当前时间最新版本postgres:16.2
-docker run -d --name pgsql \ -e POSTGRES_USER=admin \ -e POSTGRES_PASSWORD=passwd \ -e POSTGRES_DB=testdb \ -p 15432:5432 \ postgres:16.2 使用psql连接 docker exec -it pgsql psql -U admin -d testdb 初始化user,vps和host表 CREATE TABLE &amp;quot;user&amp;quot; ( id bigserial PRIMARY KEY, username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL ); CREATE TABLE &amp;quot;host&amp;quot; ( id bigserial PRIMARY KEY, hostname VARCHAR(255) NOT NULL ); CREATE TABLE &amp;quot;vps&amp;quot; ( id bigserial PRIMARY KEY, user_id bigint NOT NULL, host_id bigint NOT NULL, name VARCHAR(255) NOT NULL, sys_disk jsonb NOT NULL DEFAULT '{}' ); 查看创建出的表 testdb=# \z Access privileges Schema | Name | Type | Access privileges | Column privileges | Policies --------+-------------+----------+-------------------+-------------------+---------- public | host | table | | | public | host_id_seq | sequence | | | public | user | table | | | public | user_id_seq | sequence | | | public | vps | table | | | public | vps_id_seq | sequence | | | (6 rows) testdb=# \d user Table &amp;quot;public.</description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>很久没折腾OpenWrt了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(ALL IN BOOM!)
-先亮个当前的穷人版家庭网络拓扑图
-准备qcow2镜像 首先下载最新的镜像, 截止目前最新版为23.05.3, 我这里下载的是x86-64的镜像
-wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz # 解压 gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz # 这里因为我要作为KVM虚拟机的镜像, 所以转换为qcow2格式. 如果是在物理机上部署, 可以直接直接刷到U盘上. qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2 运行虚机 我是用libvirt来管理qemu/kvm虚拟机, 如果没安装要先安装
-apt install virt-manager qemu bridge-utils -y 我这里将镜像复制到了/var/lib/libvirt/disks/目录下
-qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G 使用virt-install运行虚拟机, 这里网卡使用virtio类型并桥接到之前文档里创建的br0上, 选择virtio是因为性能最好, 可以达到10Gbps以上
-# 运行, 这里网络指定的之前文章中创建的网桥网络br0 virt-install \ --name openwrt \ --memory 256 \ --vcpus 1 \ --network bridge=br0,model=virtio \ --disk path=/var/lib/libvirt/disks/openwrt.</description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>在机器上使用netplan+NetworkManager配置bridged network之后
-最近经常电脑用着用着就不能联网了，发现enp1s0总是偶尔冒出一个ipv4地址，并且路由表会多出一个从enp1s0出去的default路由。后来看journalctl日志发现是dhclient搞的事情(学艺不精, 没第一时间联系起来)。
-下面是部分日志：
-➜ ~ journalctl -n 1000000 | grep '192.168.1.22\|enp1s0' ... 10月 09 20:14:25 gobai-SER dhclient[107299]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x4745a8ce) 10月 09 20:14:26 gobai-SER dhclient[73666]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x2cfc74b3) 10月 09 20:14:26 gobai-SER dhclient[157839]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x453b8549) 10月 09 20:14:28 gobai-SER dhclient[170251]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.</description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>本地LAN环境
-LAN网关 192.168.1.1 子网掩码 255.255.255.0 DHCP范围 192.168.1.2-192.168.32 创建一个bridged network 创建一个网桥br0给虚机使用，使得虚机和其他设备都在一个LAN下
-总配置(netplan get)如下:
-network: version: 2 renderer: NetworkManager ethernets: enp1s0: dhcp4: false dhcp6: false bridges: br0: addresses: - &amp;quot;192.168.1.100/24&amp;quot; nameservers: addresses: - 192.168.1.1 dhcp4: false dhcp6: false interfaces: - enp1s0 parameters: stp: false routes: - to: &amp;quot;default&amp;quot; via: &amp;quot;192.168.1.1&amp;quot; 由三个文件组成:
-/etc/netplan/01-network-manager-all.yaml # Let NetworkManager manage all devices on this system network: version: 2 renderer: NetworkManager /etc/netplan/10-ethernet-enp1s0.yaml network: ethernets: enp1s0: dhcp4: false dhcp6: false /etc/netplan/99-bridged-network-br0.</description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>现在要将 /dev/sda3 分区删掉并扩容到 /dev/sda2, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 / 挂载在 /dev/sda2 上, 并且 filesystem 是 ext4)
-磁盘初始分区和挂载情况 ➜ ~ lsblk /dev/sda NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT sda 8:0 0 100G 0 disk ├─sda1 8:1 0 512M 0 part /boot/efi ├─sda2 8:2 0 98.5G 0 part / └─sda3 8:3 0 976M 0 part ➜ ~ fdisk -l /dev/sda Disk /dev/sda: 100 GiB, 107374182400 bytes, 209715200 sectors Disk model: BlockVolume Units: sectors of 1 * 512 = 512 bytes Sector size (logical/physical): 512 bytes / 4096 bytes I/O size (minimum/optimal): 4096 bytes / 1048576 bytes Disklabel type: gpt Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039 Device Start End Sectors Size Type /dev/sda1 2048 1050623 1048576 512M EFI System /dev/sda2 1050624 207714303 206663680 98.</description></item><item><title>Vscode Extensions</title><link>/posts/vscode-extensions/</link><pubDate>Mon, 25 Sep 2023 21:27:06 +0800</pubDate><guid>/posts/vscode-extensions/</guid><description>记录我的vscode使用的扩展插件 持续补充中
-vscode-icons-mac GitLens Go Remote - SSH shellman REST Client Todo Tree 一些配置 &amp;quot;workbench.tree.indent&amp;quot;: 16</description></item><item><title>MacOS Config</title><link>/posts/macos-config/</link><pubDate>Sun, 24 Sep 2023 10:56:13 +0800</pubDate><guid>/posts/macos-config/</guid><description>安装iproute2mac 可以和在linux操作系统一样使用ip命令查看和管理网络, 赞!!!
-brew install iproute2mac ssh配置alive 配置ServerAliveInterval, 防止长时间没有数据交互后连接断掉
-# cat ~/.ssh/config Host * ServerAliveInterval 30 Host home HostName 192.168.1.100 User root ...</description></item><item><title>Ubuntu Config</title><link>/posts/ubuntu-config/</link><pubDate>Sun, 24 Sep 2023 10:56:12 +0800</pubDate><guid>/posts/ubuntu-config/</guid><description>以下配置都是在 Ubuntu 22.04 系统配置
-配置中文输入法 Open Settings, go to Region &amp;amp; Language -&amp;gt; Manage Installed Languages -&amp;gt; Install / Remove languages. Select Chinese (Simplified). Make sure Keyboard Input method system has Ibus selected. Apply. Reboot Log back in, reopen Settings, go to Keyboard. Click on the &amp;ldquo;+&amp;rdquo; sign under Input sources. Select Chinese (China) and then Chinese (Intelligent Pinyin). ubuntu-22-04-chinese-simplified-pinyin-input-support
-换apt源 https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/
-sudo su - cat &amp;lt;&amp;lt;EOF &amp;gt; /etc/apt/sources.list # 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释 deb https://mirrors.</description></item><item><title>解决Go应用在容器中的时区问题</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>容器中的时区问题 应用直接运行在服务器上需要设置服务器时区为东八区，现在很多应用都是部署在容器中了，同样也是要设置容器镜像的时区。
-许多容器镜像默认时区为 UTC (Coordinated Universal Time 协调世界时)，比东八区慢八个小时，当程序涉及数据库写入操作或者日志记录等功能时就会有时间差。
-常规解决方案一般两大类
-build docker镜像时就把镜像内的时区设置为 Asia/Shanghai 运行容器时把本地时区正常的主机的时区配置文件挂载到容器。 看一下 Go 是如何读取时区文件并设置 time.Time 的时区的 Go 源码 src/time/zoneinfo_unix.go 中代码和注释都很清晰👍
-package time import ( &amp;quot;syscall&amp;quot; ) // Many systems use /usr/share/zoneinfo, Solaris 2 has // /usr/share/lib/zoneinfo, IRIX 6 has /usr/lib/locale/TZ, // NixOS has /etc/zoneinfo. var platformZoneSources = []string{ &amp;quot;/usr/share/zoneinfo/&amp;quot;, &amp;quot;/usr/share/lib/zoneinfo/&amp;quot;, &amp;quot;/usr/lib/locale/TZ/&amp;quot;, &amp;quot;/etc/zoneinfo&amp;quot;, } func initLocal() { // consult $TZ to find the time zone to use. // no $TZ means use the system default /etc/localtime.</description></item><item><title>SQLite3</title><link>/posts/sqlite3/</link><pubDate>Tue, 14 Dec 2021 10:33:14 +0800</pubDate><guid>/posts/sqlite3/</guid><description>rollback日志模式下的五种锁状态介绍 UNLOCKED 没锁状态 SHARED 获取SHARED锁才能执行读操作，一个数据库可同时存在多个SHARED锁 RESERVED 获取RESERVED锁才能在未来写数据库，一个数据库同一时间只能存在一个RESERVED锁 有RESERVED锁时说明还没开始写，所以有RESERVED锁时可以获取新的SHARED锁 PENDING 有PENDING锁意味着要开始写了，但是此时有其他连接拥有SHARED锁在读数据，此时写操作只能等待所有SHARED释放。 PENDING阻塞其他连接获取新的SHARED锁，当SHARED锁释放完时转为EXCLUSIVE锁开始写操作。 EXCLUSIVE 同一时间只能存在一个EXCLUSIVE锁，并且有EXCLUSIVE锁存在时不允许其他任何锁类型存在。 所以总结一下就是读读可并发，读写不可并发，写写不可并发。
-优化篇 SQLITE_BUSY 问题 看到上面这么多锁不能共存的情况应该会想到，冲突会很频繁，如 EXCLUSIVE 锁存在时不允许其他连接获取任何锁，当其他进程需要读写操作时就会获取锁失败，立即报 SQLITE_BUSY 错误。
-设置 busy_timeout 就不会立即返回 SQLITE_BUSY，会定时retry失败的操作，如果在设置的 busy_timeout 时间内还没执行成功，依然会返回 SQLITE_BUSY。
-使用不同sqlite驱动，设置 busy_timeout 的方式不同
-modernc.org/sqlite database.db?_pragma=busy_timeout%3d50000 github.com/mattn/go-sqlite3 database.db?_busy_timeout=50000 Shared cache mode 支持 table level locks，暂时还没研究。
-针对写操作慢的问题 解决方案：将多个写操作放入一个事务里执行。sqlite官方FAQ对其解释如下
-(19) INSERT is really slow - I can only do few dozen INSERTs per second Actually, SQLite will easily do 50,000 or more INSERT statements per second on an average desktop computer.</description></item><item><title>Vim Tricks</title><link>/posts/vim-tricks/</link><pubDate>Wed, 24 Nov 2021 21:45:54 +0800</pubDate><guid>/posts/vim-tricks/</guid><description>批量替换 批量替换 v1.6.1 为 v2.7.0
-:%s/v1.6.1/v2.7.0/g 两行合为一行 NORMAL 模式下按 shift + j 就会将光标下一行合并到当前行行尾</description></item><item><title>减小go程序编译后的体积</title><link>/posts/go-app-reduce-size/</link><pubDate>Mon, 22 Nov 2021 10:29:02 +0800</pubDate><guid>/posts/go-app-reduce-size/</guid><description>编译经典程序 程序代码 package main import &amp;quot;fmt&amp;quot; func main() { fmt.Println(&amp;quot;Hello World.&amp;quot;) } 编译环境 $ go version go version go1.16.7 linux/amd64 0. 直接编译 $ go build -o helloword main.go $ ls -lh helloword -rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword 1. 修改编译选项 除去编译时带的符号表和调试信息
-$ go build -ldflags=&amp;quot;-s -w&amp;quot; -o helloword main.go $ ls -lh helloword -rwxrwxr-x 1 gobai gobai 1.3M Nov 23 09:38 helloword 2. 使用 UPX 对直接编译出的二进制使用 upx 进一步压缩</description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>记录一下查看和操作 systemd 日志的几个常用命令
-常用过滤日志日志的命令 根据时间约束过滤日志 获取 2023-01-15 00:00:00 之后的日志 journalctl --since '2023-01-15 00:00:00' 获取 2023-01-15 00:00:00 之后, 2023-01-15 12:00:00 之前的日志 journalctl --since '2023-01-15 00:00:00' --until '2023-01-15 12:00:00' 只查看一个服务(Unit)的日志 journalctl -u nginx 自由组合约束条件 journalctl -u nginx --since '2023-01-15 00:00:00' --until '2023-01-15 12:00:00' 查看日志占用磁盘量 journalctl --disk-usage Output Archived and active journals take up 3.9G in the file system. 删除旧的日志 只保留最近 一个月 的日志 journalctl --vacuum-time=1month 只保留最近 1G 的日志 journalctl --vacuum-size=1G 列出所有systemd服务 systemctl list-units --type=service --all</description></item><item><title>Git Tricks</title><link>/posts/git-tricks/</link><pubDate>Fri, 12 Nov 2021 15:36:19 +0800</pubDate><guid>/posts/git-tricks/</guid><description>暂存当前代码改动 场景是在一个git branch写了不少代码以后发现写错分支了，总不能删了再重新写吧，可以使用 git stash 命令解决。
-# 将当前改动的代码暂存 git stash # git checkout 到你要工作的分支 git checkout your_workspace_branch # 把暂存的代码从堆栈弹出到当前分支 git stash pop</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on gobai's blog</title><link>/posts/</link><description>Recent content in Posts on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 27 Jul 2024 22:57:08 +0800</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Libvirt</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">&lt;code>virsh&lt;/code> 命令&lt;/h2>
+&lt;h3 id="virsh-domifaddr-查看虚拟机网卡ip">&lt;code>virsh domifaddr&lt;/code> 查看虚拟机网卡ip&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># virsh domifaddr k3s-node01 --source lease
+ Name MAC address Protocol Address
+-------------------------------------------------------------------------------
+&lt;/code>&lt;/pre>
+&lt;p>通过arp获取网卡ip&lt;/p>
+&lt;pre>&lt;code class="language-bash"># virsh domifaddr k3s-node01 --source arp
+ Name MAC address Protocol Address
+-------------------------------------------------------------------------------
+ vnet18 52:54:00:0e:08:02 ipv4 192.168.1.248/0
+&lt;/code>&lt;/pr</description></item><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;blockquote>
+&lt;p>通过RKE2快速搭建测试使用的k8s集群环境&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="环境准备">环境准备&lt;/h2>
+&lt;ol>
+&lt;li>准备bridge网络br0&lt;/li>
+&lt;li>准备ubuntu 22.04 server qcow2镜像&lt;/li>
+&lt;li>准备libvirt环境&lt;/li>
+&lt;/ol>
+&lt;h3 id="准备bridge网络">准备bridge网络&lt;/h3>
+&lt;p>&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">Creating a bridged network with netplan on Ubuntu 22.04&lt;/a>&lt;/p>
+&lt;h3 id="配置-gen-cloudinit-iso-脚本">配置 gen-cloudinit-iso 脚本&lt;/h3>
+&lt;pre>&lt;code class="language-bash">cat &amp;lt;&amp;lt;EOFALL &amp;gt; /usr/bin/gen-cloudinit-iso
+#!/bin/bash
+
+set -eux
+
+CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot;
+FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot;
+
+mkdir -p \${CLOUD_INIT_DIR}
+
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data
+instance-id: \${VM}
+local-hostname: \${VM}
+EOF
+
+# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data
+#cloud-config
+EOF
+
+# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
+xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
+EOFALL
+
+chmod +x /usr/bin/gen-cloudinit-iso
+&lt;/code>&lt;/pr</description></item><item><title>Cloudinit</title><link>/posts/cloudinit/</link><pubDate>Sun, 30 Jun 2024 23:56:57 +0800</pubDate><guid>/posts/cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">cloudinit 介绍&lt;/h2>
+&lt;blockquote>
+&lt;p>用于在新建的虚拟机中进行时间设置、密码设置、扩展根文件系统所在分区、设置主机名、运行脚本、安装软件包等初始化设置&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="cloudinit-iso-镜像制作">cloudinit iso 镜像制作&lt;/h2>
+&lt;h3 id="创建脚本">创建脚本&lt;/h3>
+&lt;pre>&lt;code class="language-bash">cat &amp;lt;&amp;lt;EOFALL &amp;gt; gen-cloudinit-iso.sh
+#!/bin/bash
+
+set -eux
+
+CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot;
+FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot;
+
+mkdir -p \${CLOUD_INIT_DIR}
+
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data
+instance-id: \${VM}
+local-hostname: \${VM}
+EOF
+
+# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
+cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data
+#cloud-config
+EOF
+
+# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
+xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
+EOFALL
+&lt;/code>&lt;/pre>
+&lt;h3 id="生成-cloudinit-iso">生成 cloudinit iso&lt;/h3>
+&lt;pre>&lt;code class="language-bash">VM=k8s-node01 bash gen-cloudinit-iso.sh
+&lt;/code>&lt;/pr</description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime&lt;/a>是在&lt;a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">client-go/tools/cache&lt;/a>和&lt;a href="https://github.com/kubernetes/client-go/tree/master/util/workqueue">client-go/util/workqueue&lt;/a>的基础上实现的, 了解&lt;code>client-go/tools/cache&lt;/code>和&lt;code>client-go/util/workqueue&lt;/code>对理解&lt;code>controller-runtime&lt;/code>很有帮助&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="介绍informer">介绍informer&lt;/h2>
+&lt;p>带着问题看&lt;/p>
+&lt;h2 id="开发crd时想到的一些问题">开发CRD时想到的一些问题&lt;/h2>
+&lt;h3 id="更新local-store缓存和触发reconcile是否有先后顺序">更新local store缓存和触发reconcile是否有先后顺序&lt;/h3>
+&lt;h3 id="同一个crd-object会不会同时被reconcile">同一个crd object会不会同时被reconcile&lt;/h3>
+&lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
+&lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
+&lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
+&lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
+&lt;h3 id="如何解决进入reconcile之后读到的是旧数据的问题">如何解决进入reconcile之后读到的是旧数据的问题&lt;/h3>
+&lt;p>读到旧数据是否说明是先出发reconcile再更新local store的&lt;/p>
+&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p>
+&lt;p>在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新&lt;/p>
+&lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that">https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that&lt;/a>&lt;/p>
+&lt;p>&lt;a href="https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520">https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520&lt;/a>&lt;/p></description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">简介&lt;/h2>
+&lt;h3 id="背景">背景&lt;/h3>
+&lt;blockquote>
+&lt;p>在kubevirt中, 通过vmi的spec没办法涵盖所有的&lt;a href="https://libvirt.org/formatdomain.html">libvirt domain xml&lt;/a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML&lt;/p>
+&lt;/blockquote>
+&lt;h3 id="功能介绍">功能介绍&lt;/h3>
+&lt;p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.&lt;/p>
+&lt;p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>OnDefineDomain&lt;/code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm&lt;/li>
+&lt;li>&lt;code>PreCloudInitIso&lt;/code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data&lt;/li>
+&lt;li>&lt;code>Shutdown&lt;/code>: 这个是&lt;code>v1alpha3&lt;/code>版本才支持的&lt;/li>
+&lt;/ol>
+&lt;p>使用hook sidecar功能需要在&lt;code>kv.spec.configuration.developerConfiguration.featureGates&lt;/code>中开启&lt;code>Sidecar&lt;/code>功能&lt;/p>
+&lt;h2 id="源码分析">源码分析&lt;/h2>
+&lt;h3 id="kubevirt-boot-sidecar-介绍">kubevirt-boot-sidecar 介绍&lt;/h3>
+&lt;p>以下以&lt;a href="https://github.com/go-bai/kubevirt-boot-sidecar">kubevirt-boot-sidecar&lt;/a>为例讲述sidecar的工作流程, 这个sidecar支持修改&lt;code>引导设备顺序(boot)&lt;/code>和&lt;code>开启交互式引导菜单(bootmenu)&lt;/code>&lt;/p>
+&lt;p>&lt;code>kubevirt-boot-sidecar&lt;/code>只实现了&lt;code>OnDefineDomain&lt;/code>, 下面也是主要串一下OnDefineDomain相关的&lt;/p>
+&lt;h3 id="sidecar工作流程">sidecar工作流程&lt;/h3>
+&lt;ol>
+&lt;li>&lt;code>virt-launcher&lt;/code>刚启动时收集所有sidecar信息
+&lt;pre>&lt;code class="language-golang">// cmd/virt-launcher/virt-launcher.go
+func main() {
+ hookSidecars := pflag.Uint(&amp;quot;hook-sidecars&amp;quot;, 0, &amp;quot;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&amp;quot;)
+ // 收集所有sidecar的信息
+ err := hookManager.Collect(*hookSidecars, *qemuTimeout)
+
+ // 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI
+ // virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain
+ // SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.OnDefineDomain执行所有的sidecar的OnDefineDomain方法
+ // 最终用OnDefineDomain编辑后的domainSpec创建domain
+ cmdServerDone := startCmdServer(cmdclient.UninitializedSocketOnGuest(), domainManager, stopChan, options)
+}
+
+// pkg/hooks/manager.go
+// numberOfRequestedHookSidecars为vmi注解 hooks.kubevirt.io/hookSidecars 的数组长度, 在virt-controller生成pod manifest的逻辑中计算得出
+func (m *hookManager) Collect(numberOfRequestedHookSidecars uint, timeout time.Duration) error {
+ // callbacksPerHookPoint
+ callbacksPerHookPoint, err := m.collectSideCarSockets(numberOfRequestedHookSidecars, timeout)
+ m.CallbacksPerHookPoint = callbacksPerHookPoint
+}
+
+// pkg/hooks/manager.go
+func (m *hookManager) collectSideCarSockets(numberOfRequestedHookSidecars uint, timeout time.Duration) (map[string][]*callBackClient, error) {
+ callbacksPerHookPoint := make(map[string][]*callBackClient)
+ processedSockets := make(map[string]bool)
+ timeoutCh := time.After(timeout)
+
+ for uint(len(processedSockets)) &amp;lt; numberOfRequestedHookSidecars {
+ sockets, err := os.ReadDir(m.hookSocketSharedDirectory)
+ // 遍历 /var/run/kubevirt-hooks/ 目录下的 unix socket 文件
+ for _, socket := range sockets {
+ select {
+ case &amp;lt;-timeoutCh:
+ return nil, fmt.Errorf(&amp;quot;Failed to collect all expected sidecar hook sockets within given timeout&amp;quot;)
+ default:
+ if _, processed := processedSockets[socket.Name()]; processed {
+ continue
+ }
+
+ // 连接 sock 文件对应的 sidecar server 的 Info 函数获取 server 实现了哪些 hook(onDefineDomain或preCloudInitIso)
+ callBackClient, notReady, err := processSideCarSocket(filepath.Join(m.hookSocketSharedDirectory, socket.Name()))
+ if notReady {
+ log.Log.Info(&amp;quot;Sidecar server might not be ready yet, retrying in the next iteration&amp;quot;)
+ continue
+ } else if err != nil {
+ return nil, err
+ }
+
+ // callbacksPerHookPoint[onDefineDomain|preCloudInitIso][]*callBackClient{}
+ // 聚合出 onDefineDomain:[&amp;quot;aaaa.sock&amp;quot;,&amp;quot;bbbb.sock&amp;quot;]
+ for _, subscribedHookPoint := range callBackClient.subscribedHookPoints {
+ callbacksPerHookPoint[subscribedHookPoint.GetName()] = append(callbacksPerHookPoint[subscribedHookPoint.GetName()], callBackClient)
+ }
+
+ processedSockets[socket.Name()] = true
+ }
+ }
+ time.Sleep(time.Second)
+ }
+ // {&amp;quot;onDefineDomain&amp;quot;:[{&amp;quot;SocketPath&amp;quot;:&amp;quot;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;quot;, &amp;quot;Version&amp;quot;:&amp;quot;v1alpha3&amp;quot;, &amp;quot;subscribedHookPoints&amp;quot;: [{&amp;quot;name&amp;quot;: &amp;quot;onDefineDomain&amp;quot;, &amp;quot;priority&amp;quot;: 0}]}]}
+ return callbacksPerHookPoint, nil
+}
+&lt;/code>&lt;/pr</description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>&lt;blockquote>
+&lt;p>通过无线网卡连接网络&lt;code>A(192.168.31.0/24)&lt;/code>, 无线网卡相当于&lt;code>WAN&lt;/code>口，通过有线网卡接入网络&lt;code>B(192.168.1.0/24)&lt;/code>, 有线网卡相当于&lt;code>LAN&lt;/code>口&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="准备一个ubuntu虚拟机router">准备一个ubuntu虚拟机&lt;code>router&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash"># 准备qcow2基础镜像
+wget https://down.idc.wiki/Image/realServer-Template/current/qcow2/ubuntu22.qcow2 -O /var/lib/libvirt/images/ubuntu.qcow2
+# 创建虚拟机以基础镜像为backing file的增量盘
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/router.qcow2 20G
+# 创建并启动虚拟机
+virt-install --name router --memory 512 --vcpus 1 --disk /var/lib/libvirt/disks/router.qcow2,bus=sata --import --os-variant ubuntu22.10 --network bridge=br0 --noautoconsole
+# 设置自动启动
+virsh autostart router
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置网络">配置网络&lt;/h2>
+&lt;h3 id="将无线网卡透传进虚拟机">将无线网卡透传进虚拟机&lt;/h3>
+&lt;p>打开 &lt;code>virt-manager&lt;/code> -&amp;gt; 双击 &lt;code>router domain&lt;/code> -&amp;gt; 点击 &lt;code>Show virtual hardware details&lt;/code> -&amp;gt; 点击 &lt;code>Add Hardware&lt;/code> -&amp;gt; 点击 &lt;code>PCI Host Device&lt;/code> -&amp;gt; 选择 &lt;code>Intel Corporation Wi-Fi 6 AX200&lt;/code> -&amp;gt; 点击 &lt;code>Finish&lt;/code>&lt;/p></description></item><item><title>Rclone</title><link>/posts/rclone/</link><pubDate>Thu, 04 Apr 2024 15:56:58 +0800</pubDate><guid>/posts/rclone/</guid><description>&lt;blockquote>
+&lt;p>使用&lt;code>rclone&lt;/code>和&lt;code>alist&lt;/code>提供的&lt;code>webdav&lt;/code>接口将阿里云盘&lt;code>mount&lt;/code>到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="下载安装rclone">下载安装&lt;code>rclone&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash">curl https://rclone.org/install.sh | bash
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置rclone-config">配置&lt;code>rclone config&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash"># rclone config
+No remotes found, make a new one?
+n) New remote
+s) Set configuration password
+q) Quit config
+n/s/q&amp;gt; n
+
+Enter name for new remote.
+name&amp;gt; alist
+
+Option Storage.
+Type of storage to configure.
+Choose a number from below, or type in your own value.
+ 1 / 1Fichier
+ \ (fichier)
+...
+51 / WebDAV
+ \ (webdav)
+...
+Storage&amp;gt; 51
+
+Option url.
+URL of http host to connect to.
+E.g. https://example.com.
+Enter a value.
+url&amp;gt; http://alist.home.lan/dav/
+
+Option vendor.
+Name of the WebDAV site/service/software you are using.
+Choose a number from below, or type in your own value.
+Press Enter to leave empty.
+ 1 / Fastmail Files
+ \ (fastmail)
+ 2 / Nextcloud
+ \ (nextcloud)
+ 3 / Owncloud
+ \ (owncloud)
+ 4 / Sharepoint Online, authenticated by Microsoft account
+ \ (sharepoint)
+ 5 / Sharepoint with NTLM authentication, usually self-hosted or on-premises
+ \ (sharepoint-ntlm)
+ 6 / rclone WebDAV server to serve a remote over HTTP via the WebDAV protocol
+ \ (rclone)
+ 7 / Other site/service or software
+ \ (other)
+vendor&amp;gt; 7
+
+Option user.
+User name.
+In case NTLM authentication is used, the username should be in the format 'Domain\User'.
+Enter a value. Press Enter to leave empty.
+user&amp;gt; admin
+
+Option pass.
+Password.
+Choose an alternative below. Press Enter for the default (n).
+y) Yes, type in my own password
+g) Generate random password
+n) No, leave this optional password blank (default)
+y/g/n&amp;gt; y
+Enter the password:
+password:
+Confirm the password:
+password:
+
+Option bearer_token.
+Bearer token instead of user/pass (e.g. a Macaroon).
+Enter a value. Press Enter to leave empty.
+bearer_token&amp;gt;
+
+Edit advanced config?
+y) Yes
+n) No (default)
+y/n&amp;gt; n
+
+Configuration complete.
+Options:
+- type: webdav
+- url: http://alist.home.lan/dav/
+- vendor: other
+- user: admin
+- pass: *** ENCRYPTED ***
+Keep this &amp;quot;alist&amp;quot; remote?
+y) Yes this is OK (default)
+e) Edit this remote
+d) Delete this remote
+y/e/d&amp;gt; y
+
+Current remotes:
+
+Name Type
+==== ====
+alist webdav
+
+e) Edit existing remote
+n) New remote
+d) Delete remote
+r) Rename remote
+c) Copy remote
+s) Set configuration password
+q) Quit config
+e/n/d/r/c/s/q&amp;gt; q
+&lt;/code>&lt;/pr</description></item><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
+&lt;p>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="下载并解压ventoy">下载并解压&lt;code>ventoy&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash">wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz
+tar -xvzf ventoy-1.0.97-linux.tar.gz
+cd ventoy-1.0.97/
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>Ventoy2Disk.sh&lt;/code>用来安装&lt;code>ventor&lt;/code>到U盘&lt;/p>
+&lt;pre>&lt;code class="language-bash">./Ventoy2Disk.sh -h
+
+**********************************************
+ Ventoy: 1.0.97 x86_64
+ longpanda admin@ventoy.net
+ https://www.ventoy.net
+**********************************************
+
+Usage: Ventoy2Disk.sh CMD [ OPTION ] /dev/sdX
+ CMD:
+ -i install Ventoy to sdX (fails if disk already installed with Ventoy)
+ -I force install Ventoy to sdX (no matter if installed or not)
+ -u update Ventoy in sdX
+ -l list Ventoy information in sdX
+
+ OPTION: (optional)
+ -r SIZE_MB preserve some space at the bottom of the disk (only for install)
+ -s/-S enable/disable secure boot support (default is enabled)
+ -g use GPT partition style, default is MBR (only for install)
+ -L Label of the 1st exfat partition (default is Ventoy)
+ -n try non-destructive installation (only for install)
+&lt;/code>&lt;/pr</description></item><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
+&lt;p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="binbash">&lt;code>#!/bin/bash&lt;/code>&lt;/h2>
+&lt;p>&lt;code>#!/bin/bash&lt;/code>被称为&lt;code>shebang line&lt;/code>, 指定执行此脚本文件时使用&lt;code>/bin/bash&lt;/code>做为shell解释器程序&lt;/p>
+&lt;p>很多主流操作系统默认的shell解释器也是bash&lt;/p>
+&lt;pre>&lt;code class="language-bash"># echo $SHELL
+/bin/bash
+&lt;/code>&lt;/pre>
+&lt;h2 id="set">&lt;code>set&lt;/code>&lt;/h2>
+&lt;p>&lt;code>set&lt;/code>命令用来修改shell环境的运行参数, 完整的可定制的&lt;a href="https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html">官方手册&lt;/a>&lt;/p>
+&lt;p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+set -uxe
+set -o pipefail
+&lt;/code>&lt;/pre>
+&lt;h3 id="set--u">&lt;code>set -u&lt;/code>&lt;/h3>
+&lt;p>执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, &lt;code>set -u&lt;/code>可以让脚本读到不存在变量时报错&lt;/p>
+&lt;h3 id="set--x">&lt;code>set -x&lt;/code>&lt;/h3>
+&lt;p>命令执行前会先打印出来, 行首以&lt;code>+&lt;/code>表示, 在调试脚本时非常有帮助&lt;/p>
+&lt;h3 id="set--e">&lt;code>set -e&lt;/code>&lt;/h3>
+&lt;p>执行脚本时, Bash遇到错误默认会继续执行, &lt;code>set -e&lt;/code>使得脚本只要发生错误, 就中止执行&lt;/p>
+&lt;h3 id="set--o-pipefail">&lt;code>set -o pipefail&lt;/code>&lt;/h3>
+&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p></description></item><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>&lt;h2 id="初始化演示环境">初始化演示环境&lt;/h2>
+&lt;h3 id="使用docker部署">使用docker部署&lt;/h3>
+&lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
+&lt;pre>&lt;code class="language-bash">docker run -d --name pgsql \
+ -e POSTGRES_USER=admin \
+ -e POSTGRES_PASSWORD=passwd \
+ -e POSTGRES_DB=testdb \
+ -p 15432:5432 \
+ postgres:16.2
+&lt;/code>&lt;/pre>
+&lt;h3 id="使用psql连接">使用&lt;code>psql&lt;/code>连接&lt;/h3>
+&lt;pre>&lt;code class="language-bash">docker exec -it pgsql psql -U admin -d testdb
+&lt;/code>&lt;/pre>
+&lt;h3 id="初始化uservps和host表">初始化&lt;code>user&lt;/code>,&lt;code>vps&lt;/code>和&lt;code>host&lt;/code>表&lt;/h3>
+&lt;pre>&lt;code class="language-sql">CREATE TABLE &amp;quot;user&amp;quot; (
+ id bigserial PRIMARY KEY,
+ username VARCHAR(255) NOT NULL,
+ password VARCHAR(255) NOT NULL
+);
+CREATE TABLE &amp;quot;host&amp;quot; (
+ id bigserial PRIMARY KEY,
+ hostname VARCHAR(255) NOT NULL
+);
+CREATE TABLE &amp;quot;vps&amp;quot; (
+ id bigserial PRIMARY KEY,
+ user_id bigint NOT NULL,
+ host_id bigint NOT NULL,
+ name VARCHAR(255) NOT NULL,
+ sys_disk jsonb NOT NULL DEFAULT '{}'
+);
+&lt;/code>&lt;/pr</description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
+&lt;p>先亮个当前的穷人版家庭网络拓扑图&lt;/p>
+&lt;p>&lt;img src="/posts/linux/imgs/home-network-topology-diagram.svg" alt="穷人版家庭网络拓扑图">&lt;/p>
+&lt;h2 id="准备qcow2镜像">准备&lt;code>qcow2&lt;/code>镜像&lt;/h2>
+&lt;p>首先下载最新的&lt;a href="https://downloads.openwrt.org/releases">镜像&lt;/a>, 截止目前最新版为&lt;code>23.05.3&lt;/code>, 我这里下载的是x86-64的镜像&lt;/p>
+&lt;pre>&lt;code class="language-bash">wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+# 解压
+gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+# 这里因为我要作为KVM虚拟机的镜像, 所以转换为qcow2格式. 如果是在物理机上部署, 可以直接直接刷到U盘上.
+qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
+&lt;/code>&lt;/pre>
+&lt;h2 id="运行虚机">运行虚机&lt;/h2>
+&lt;p>我是用&lt;code>libvirt&lt;/code>来管理qemu/kvm虚拟机, 如果没安装要先安装&lt;/p>
+&lt;pre>&lt;code class="language-bash">apt install virt-manager qemu bridge-utils -y
+&lt;/code>&lt;/pre>
+&lt;p>我这里将镜像复制到了&lt;code>/var/lib/libvirt/disks/&lt;/code>目录下&lt;/p>
+&lt;pre>&lt;code class="language-bash">qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
+&lt;/code>&lt;/pr</description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
+&lt;p>最近经常电脑用着用着就不能联网了，发现&lt;code>enp1s0&lt;/code>总是偶尔冒出一个&lt;code>ipv4&lt;/code>地址，并且路由表会多出一个从&lt;code>enp1s0&lt;/code>出去的&lt;code>default&lt;/code>路由。后来看&lt;code>journalctl&lt;/code>日志发现是&lt;code>dhclient&lt;/code>搞的事情(学艺不精, 没第一时间联系起来)。&lt;/p>
+&lt;p>下面是部分日志：&lt;/p>
+&lt;pre>&lt;code class="language-bash">➜ ~ journalctl -n 1000000 | grep '192.168.1.22\|enp1s0'
+...
+10月 09 20:14:25 gobai-SER dhclient[107299]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x4745a8ce)
+10月 09 20:14:26 gobai-SER dhclient[73666]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x2cfc74b3)
+10月 09 20:14:26 gobai-SER dhclient[157839]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x453b8549)
+10月 09 20:14:28 gobai-SER dhclient[170251]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x334a15e8)
+10月 09 20:14:28 gobai-SER dhclient[237127]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x7fd24947)
+10月 09 20:14:32 gobai-SER avahi-autoipd(enp1s0)[307826]: Found user 'avahi-autoipd' (UID 110) and group 'avahi-autoipd' (GID 119).
+10月 09 20:14:32 gobai-SER avahi-autoipd(enp1s0)[307826]: Successfully called chroot().
+10月 09 20:14:32 gobai-SER avahi-autoipd(enp1s0)[307826]: Successfully dropped root privileges.
+10月 09 20:14:32 gobai-SER avahi-autoipd(enp1s0)[307826]: Starting with address 169.254.4.220
+10月 09 20:14:32 gobai-SER avahi-autoipd(enp1s0)[307826]: Got SIGTERM, quitting.
+10月 09 20:14:32 gobai-SER dhclient[170251]: DHCPDISCOVER on enp1s0 to 255.255.255.255 port 67 interval 3 (xid=0x1f69d35f)
+10月 09 20:14:32 gobai-SER dhclient[170251]: DHCPOFFER of 192.168.1.22 from 192.168.1.1
+10月 09 20:14:32 gobai-SER dhclient[170251]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x5fd3691f)
+10月 09 20:14:32 gobai-SER dhclient[170251]: DHCPACK of 192.168.1.22 from 192.168.1.1 (xid=0x1f69d35f)
+10月 09 20:14:32 gobai-SER avahi-daemon[588]: Joining mDNS multicast group on interface enp1s0.IPv4 with address 192.168.1.22.
+10月 09 20:14:32 gobai-SER avahi-daemon[588]: New relevant interface enp1s0.IPv4 for mDNS.
+10月 09 20:14:32 gobai-SER avahi-daemon[588]: Registering new address record for 192.168.1.22 on enp1s0.IPv4.
+10月 09 20:14:32 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set search domain list to: home
+10月 09 20:14:32 gobai-SER dhclient[157839]: DHCPDISCOVER on enp1s0 to 255.255.255.255 port 67 interval 3 (xid=0x41cc913f)
+10月 09 20:14:32 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set DNS server list to: 192.168.1.1, 223.5.5.5
+10月 09 20:14:32 gobai-SER dhclient[157839]: DHCPOFFER of 192.168.1.22 from 192.168.1.1
+10月 09 20:14:32 gobai-SER dhclient[157839]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x3f91cc41)
+10月 09 20:14:32 gobai-SER dhclient[157839]: DHCPACK of 192.168.1.22 from 192.168.1.1 (xid=0x41cc913f)
+10月 09 20:14:32 gobai-SER dhclient[170251]: bound to 192.168.1.22 -- renewal in 32921 seconds.
+10月 09 20:14:32 gobai-SER dhclient[157839]: bound to 192.168.1.22 -- renewal in 36989 seconds.
+10月 09 20:14:35 gobai-SER avahi-daemon[588]: Withdrawing address record for 192.168.1.22 on enp1s0.
+10月 09 20:14:35 gobai-SER avahi-daemon[588]: Leaving mDNS multicast group on interface enp1s0.IPv4 with address 192.168.1.22.
+10月 09 20:14:35 gobai-SER avahi-daemon[588]: Interface enp1s0.IPv4 no longer relevant for mDNS.
+10月 09 20:14:35 gobai-SER avahi-autoipd(enp1s0)[307982]: Found user 'avahi-autoipd' (UID 110) and group 'avahi-autoipd' (GID 119).
+10月 09 20:14:35 gobai-SER avahi-autoipd(enp1s0)[307982]: Successfully called chroot().
+10月 09 20:14:35 gobai-SER avahi-autoipd(enp1s0)[307982]: Successfully dropped root privileges.
+10月 09 20:14:35 gobai-SER avahi-autoipd(enp1s0)[307982]: Starting with address 169.254.4.220
+10月 09 20:14:35 gobai-SER avahi-autoipd(enp1s0)[307982]: Got SIGTERM, quitting.
+10月 09 20:14:36 gobai-SER dhclient[73666]: DHCPDISCOVER on enp1s0 to 255.255.255.255 port 67 interval 3 (xid=0x50a89e0e)
+10月 09 20:14:36 gobai-SER dhclient[73666]: DHCPOFFER of 192.168.1.22 from 192.168.1.1
+10月 09 20:14:36 gobai-SER dhclient[73666]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0xe9ea850)
+10月 09 20:14:36 gobai-SER dhclient[73666]: DHCPACK of 192.168.1.22 from 192.168.1.1 (xid=0x50a89e0e)
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: Joining mDNS multicast group on interface enp1s0.IPv4 with address 192.168.1.22.
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: New relevant interface enp1s0.IPv4 for mDNS.
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: Registering new address record for 192.168.1.22 on enp1s0.IPv4.
+10月 09 20:14:36 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set search domain list to: home
+10月 09 20:14:36 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set DNS server list to: 192.168.1.1, 223.5.5.5
+10月 09 20:14:36 gobai-SER dhclient[73666]: bound to 192.168.1.22 -- renewal in 34351 seconds.
+10月 09 20:14:36 gobai-SER dhclient[107299]: DHCPDISCOVER on enp1s0 to 255.255.255.255 port 67 interval 3 (xid=0x27725347)
+10月 09 20:14:36 gobai-SER dhclient[107299]: DHCPOFFER of 192.168.1.22 from 192.168.1.1
+10月 09 20:14:36 gobai-SER dhclient[107299]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x47537227)
+10月 09 20:14:36 gobai-SER dhclient[107299]: DHCPACK of 192.168.1.22 from 192.168.1.1 (xid=0x27725347)
+10月 09 20:14:36 gobai-SER dhclient[107299]: bound to 192.168.1.22 -- renewal in 40122 seconds.
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: Withdrawing address record for 192.168.1.22 on enp1s0.
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: Leaving mDNS multicast group on interface enp1s0.IPv4 with address 192.168.1.22.
+10月 09 20:14:36 gobai-SER avahi-daemon[588]: Interface enp1s0.IPv4 no longer relevant for mDNS.
+10月 09 20:14:36 gobai-SER avahi-autoipd(enp1s0)[308110]: Found user 'avahi-autoipd' (UID 110) and group 'avahi-autoipd' (GID 119).
+10月 09 20:14:36 gobai-SER avahi-autoipd(enp1s0)[308110]: Successfully called chroot().
+10月 09 20:14:36 gobai-SER avahi-autoipd(enp1s0)[308110]: Successfully dropped root privileges.
+10月 09 20:14:36 gobai-SER avahi-autoipd(enp1s0)[308110]: Starting with address 169.254.4.220
+10月 09 20:14:42 gobai-SER avahi-autoipd(enp1s0)[308110]: Callout BIND, address 169.254.4.220 on interface enp1s0
+10月 09 20:14:42 gobai-SER avahi-daemon[588]: Joining mDNS multicast group on interface enp1s0.IPv4 with address 169.254.4.220.
+10月 09 20:14:42 gobai-SER avahi-daemon[588]: New relevant interface enp1s0.IPv4 for mDNS.
+10月 09 20:14:42 gobai-SER avahi-daemon[588]: Registering new address record for 169.254.4.220 on enp1s0.IPv4.
+10月 09 20:14:46 gobai-SER avahi-autoipd(enp1s0)[308110]: Successfully claimed IP address 169.254.4.220
+10月 09 20:14:46 gobai-SER avahi-autoipd(enp1s0)[308110]: Got SIGTERM, quitting.
+10月 09 20:14:46 gobai-SER avahi-autoipd(enp1s0)[308110]: Callout STOP, address 169.254.4.220 on interface enp1s0
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: Withdrawing address record for 169.254.4.220 on enp1s0.
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: Leaving mDNS multicast group on interface enp1s0.IPv4 with address 169.254.4.220.
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: Interface enp1s0.IPv4 no longer relevant for mDNS.
+10月 09 20:14:46 gobai-SER dhclient[237127]: DHCPDISCOVER on enp1s0 to 255.255.255.255 port 67 interval 3 (xid=0x389e944d)
+10月 09 20:14:46 gobai-SER dhclient[237127]: DHCPOFFER of 192.168.1.22 from 192.168.1.1
+10月 09 20:14:46 gobai-SER dhclient[237127]: DHCPREQUEST for 192.168.1.22 on enp1s0 to 255.255.255.255 port 67 (xid=0x4d949e38)
+10月 09 20:14:46 gobai-SER dhclient[237127]: DHCPACK of 192.168.1.22 from 192.168.1.1 (xid=0x389e944d)
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: Joining mDNS multicast group on interface enp1s0.IPv4 with address 192.168.1.22.
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: New relevant interface enp1s0.IPv4 for mDNS.
+10月 09 20:14:46 gobai-SER avahi-daemon[588]: Registering new address record for 192.168.1.22 on enp1s0.IPv4.
+10月 09 20:14:47 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set search domain list to: home
+10月 09 20:14:47 gobai-SER systemd-resolved[237121]: enp1s0: Bus client set DNS server list to: 192.168.1.1, 223.5.5.5
+10月 09 20:14:47 gobai-SER dhclient[237127]: bound to 192.168.1.22 -- renewal in 40782 seconds.
+
+➜ ~ ps -aux | grep dhclient
+root 73666 0.0 0.0 101232 6228 ? Ssl 9月28 0:15 dhclient
+root 107299 0.0 0.0 101232 6228 ? Ssl 10月04 0:09 dhclient
+root 157839 0.0 0.0 101232 6112 ? Ssl 10月06 0:06 dhclient
+root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
+root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
+gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
+&lt;/code>&lt;/pr</description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
+&lt;ol>
+&lt;li>LAN网关 &lt;code>192.168.1.1&lt;/code>&lt;/li>
+&lt;li>子网掩码 &lt;code>255.255.255.0&lt;/code>&lt;/li>
+&lt;li>DHCP范围 &lt;code>192.168.1.2&lt;/code>-&lt;code>192.168.32&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="创建一个bridged-network">创建一个&lt;code>bridged network&lt;/code>&lt;/h2>
+&lt;p>创建一个网桥&lt;code>br0&lt;/code>给虚机使用，使得虚机和其他设备都在一个LAN下&lt;/p>
+&lt;p>总配置(&lt;code>netplan get&lt;/code>)如下:&lt;/p>
+&lt;pre>&lt;code class="language-yaml">network:
+ version: 2
+ renderer: NetworkManager
+ ethernets:
+ enp1s0:
+ dhcp4: false
+ dhcp6: false
+ bridges:
+ br0:
+ addresses:
+ - &amp;quot;192.168.1.100/24&amp;quot;
+ nameservers:
+ addresses:
+ - 192.168.1.1
+ dhcp4: false
+ dhcp6: false
+ interfaces:
+ - enp1s0
+ parameters:
+ stp: false
+ routes:
+ - to: &amp;quot;default&amp;quot;
+ via: &amp;quot;192.168.1.1&amp;quot;
+&lt;/code>&lt;/pr</description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>&lt;blockquote>
+&lt;p>现在要将 &lt;code>/dev/sda3&lt;/code> 分区删掉并扩容到 &lt;code>/dev/sda2&lt;/code>, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 &lt;code>/&lt;/code> 挂载在 &lt;code>/dev/sda2&lt;/code> 上, 并且 filesystem 是 &lt;code>ext4&lt;/code>)&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="磁盘初始分区和挂载情况">磁盘初始分区和挂载情况&lt;/h2>
+&lt;pre>&lt;code class="language-bash">➜ ~ lsblk /dev/sda
+NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+sda 8:0 0 100G 0 disk 
+├─sda1 8:1 0 512M 0 part /boot/efi
+├─sda2 8:2 0 98.5G 0 part /
+└─sda3 8:3 0 976M 0 part 
+
+➜ ~ fdisk -l /dev/sda
+Disk /dev/sda: 100 GiB, 107374182400 bytes, 209715200 sectors
+Disk model: BlockVolume 
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 1048576 bytes
+Disklabel type: gpt
+Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039
+
+Device Start End Sectors Size Type
+/dev/sda1 2048 1050623 1048576 512M EFI System
+/dev/sda2 1050624 207714303 206663680 98.5G Linux filesystem
+/dev/sda3 207714304 209713151 1998848 976M Linux swap
+
+➜ ~ df -hT /dev/sda2
+Filesystem Type Size Used Avail Use% Mounted on
+/dev/sda2 ext4 97G 28G 64G 31% /
+&lt;/code>&lt;/pr</description></item><item><title>Vscode Extensions</title><link>/posts/vscode-extensions/</link><pubDate>Mon, 25 Sep 2023 21:27:06 +0800</pubDate><guid>/posts/vscode-extensions/</guid><description>&lt;h2 id="记录我的vscode使用的扩展插件">记录我的vscode使用的扩展插件&lt;/h2>
+&lt;p>持续补充中&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=wayou.vscode-icons-mac">vscode-icons-mac&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens">GitLens&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=golang.go">Go&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh">Remote - SSH&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Remisa.shellman">shellman&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=humao.rest-client">REST Client&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree">Todo Tree&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="一些配置">一些配置&lt;/h2>
+&lt;pre>&lt;code class="language-json">&amp;quot;workbench.tree.indent&amp;quot;: 16
+&lt;/code>&lt;/pre></description></item><item><title>MacOS Config</title><link>/posts/macos-config/</link><pubDate>Sun, 24 Sep 2023 10:56:13 +0800</pubDate><guid>/posts/macos-config/</guid><description>&lt;h2 id="安装iproute2mac">安装&lt;code>iproute2mac&lt;/code>&lt;/h2>
+&lt;p>可以和在linux操作系统一样使用&lt;code>ip&lt;/code>命令查看和管理网络, 赞!!!&lt;/p>
+&lt;pre>&lt;code class="language-bash">brew install iproute2mac
+&lt;/code>&lt;/pre>
+&lt;h2 id="ssh配置alive">ssh配置alive&lt;/h2>
+&lt;p>配置&lt;code>ServerAliveInterval&lt;/code>, 防止长时间没有数据交互后连接断掉&lt;/p>
+&lt;pre>&lt;code class="language-bash"># cat ~/.ssh/config
+Host *
+ ServerAliveInterval 30
+
+Host home
+ HostName 192.168.1.100
+ User root
+...
+&lt;/code>&lt;/pre></description></item><item><title>Ubuntu Config</title><link>/posts/ubuntu-config/</link><pubDate>Sun, 24 Sep 2023 10:56:12 +0800</pubDate><guid>/posts/ubuntu-config/</guid><description>&lt;blockquote>
+&lt;p>以下配置都是在 &lt;code>Ubuntu 22.04&lt;/code> 系统配置&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="配置中文输入法">配置中文输入法&lt;/h2>
+&lt;ol>
+&lt;li>Open Settings, go to &lt;code>Region &amp;amp; Language&lt;/code> -&amp;gt; &lt;code>Manage Installed Languages&lt;/code> -&amp;gt; &lt;code>Install / Remove languages&lt;/code>.&lt;/li>
+&lt;li>Select &lt;code>Chinese (Simplified)&lt;/code>. Make sure &lt;code>Keyboard Input method system&lt;/code> has &lt;code>Ibus&lt;/code> selected. Apply.&lt;/li>
+&lt;li>Reboot&lt;/li>
+&lt;li>Log back in, reopen Settings, go to &lt;code>Keyboard&lt;/code>.&lt;/li>
+&lt;li>Click on the &amp;ldquo;+&amp;rdquo; sign under &lt;code>Input sources&lt;/code>.&lt;/li>
+&lt;li>Select &lt;code>Chinese (China)&lt;/code> and then &lt;code>Chinese (Intelligent Pinyin)&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p>
+&lt;h2 id="修正简体中文显示为异体日文字形">修正简体中文显示为异体(日文)字形&lt;/h2>
+&lt;blockquote>
+&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>解决Go应用在容器中的时区问题</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">容器中的时区问题&lt;/h2>
+&lt;p>应用直接运行在服务器上需要设置服务器时区为东八区，现在很多应用都是部署在容器中了，同样也是要设置容器镜像的时区。&lt;/p>
+&lt;p>许多容器镜像默认时区为 &lt;code>UTC&lt;/code> (&lt;a href="https://zh.wikipedia.org/zh-hans/%E5%8D%8F%E8%B0%83%E4%B8%96%E7%95%8C%E6%97%B6">Coordinated Universal Time 协调世界时&lt;/a>)，比东八区慢八个小时，当程序涉及数据库写入操作或者日志记录等功能时就会有时间差。&lt;/p>
+&lt;p>常规解决方案一般两大类&lt;/p>
+&lt;ol>
+&lt;li>build docker镜像时就把镜像内的时区设置为 &lt;code>Asia/Shanghai&lt;/code>&lt;/li>
+&lt;li>运行容器时把本地时区正常的主机的时区配置文件挂载到容器。&lt;/li>
+&lt;/ol>
+&lt;h3 id="看一下-go-是如何读取时区文件并设置-timetime-的时区的">看一下 &lt;code>Go&lt;/code> 是如何读取时区文件并设置 &lt;code>time.Time&lt;/code> 的时区的&lt;/h3>
+&lt;p>&lt;code>Go&lt;/code> 源码 &lt;a href="https://github.com/golang/go/blob/master/src/time/zoneinfo_unix.go">src/time/zoneinfo_unix.go&lt;/a> 中代码和注释都很清晰👍&lt;/p>
+&lt;pre>&lt;code class="language-golang">package time
+
+import (
+ &amp;quot;syscall&amp;quot;
+)
+
+// Many systems use /usr/share/zoneinfo, Solaris 2 has
+// /usr/share/lib/zoneinfo, IRIX 6 has /usr/lib/locale/TZ,
+// NixOS has /etc/zoneinfo.
+var platformZoneSources = []string{
+ &amp;quot;/usr/share/zoneinfo/&amp;quot;,
+ &amp;quot;/usr/share/lib/zoneinfo/&amp;quot;,
+ &amp;quot;/usr/lib/locale/TZ/&amp;quot;,
+ &amp;quot;/etc/zoneinfo&amp;quot;,
+}
+
+func initLocal() {
+ // consult $TZ to find the time zone to use.
+ // no $TZ means use the system default /etc/localtime.
+ // $TZ=&amp;quot;&amp;quot; means use UTC.
+ // $TZ=&amp;quot;foo&amp;quot; or $TZ=&amp;quot;:foo&amp;quot; if foo is an absolute path, then the file pointed
+ // by foo will be used to initialize timezone; otherwise, file
+ // /usr/share/zoneinfo/foo will be used.
+
+ tz, ok := syscall.Getenv(&amp;quot;TZ&amp;quot;)
+ switch {
+ case !ok:
+ z, err := loadLocation(&amp;quot;localtime&amp;quot;, []string{&amp;quot;/etc&amp;quot;})
+ if err == nil {
+ localLoc = *z
+ localLoc.name = &amp;quot;Local&amp;quot;
+ return
+ }
+ case tz != &amp;quot;&amp;quot;:
+ if tz[0] == ':' {
+ tz = tz[1:]
+ }
+ if tz != &amp;quot;&amp;quot; &amp;amp;&amp;amp; tz[0] == '/' {
+ if z, err := loadLocation(tz, []string{&amp;quot;&amp;quot;}); err == nil {
+ localLoc = *z
+ if tz == &amp;quot;/etc/localtime&amp;quot; {
+ localLoc.name = &amp;quot;Local&amp;quot;
+ } else {
+ localLoc.name = tz
+ }
+ return
+ }
+ } else if tz != &amp;quot;&amp;quot; &amp;amp;&amp;amp; tz != &amp;quot;UTC&amp;quot; {
+ if z, err := loadLocation(tz, platformZoneSources); err == nil {
+ localLoc = *z
+ return
+ }
+ }
+ }
+
+ // Fall back to UTC.
+ localLoc.name = &amp;quot;UTC&amp;quot;
+}
+&lt;/code>&lt;/pr</description></item><item><title>SQLite3</title><link>/posts/sqlite3/</link><pubDate>Tue, 14 Dec 2021 10:33:14 +0800</pubDate><guid>/posts/sqlite3/</guid><description>&lt;h2 id="rollback日志模式下的五种锁状态介绍">rollback日志模式下的五种锁状态介绍&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>UNLOCKED&lt;/code>
+&lt;ul>
+&lt;li>没锁状态&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>SHARED&lt;/code>
+&lt;ul>
+&lt;li>获取&lt;code>SHARED&lt;/code>锁才能执行读操作，一个数据库可同时存在多个&lt;code>SHARED&lt;/code>锁&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>RESERVED&lt;/code>
+&lt;ul>
+&lt;li>获取&lt;code>RESERVED&lt;/code>锁才能在未来写数据库，一个数据库同一时间只能存在一个&lt;code>RESERVED&lt;/code>锁&lt;/li>
+&lt;li>有&lt;code>RESERVED&lt;/code>锁时说明还没开始写，所以有&lt;code>RESERVED&lt;/code>锁时可以获取新的&lt;code>SHARED&lt;/code>锁&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>PENDING&lt;/code>
+&lt;ul>
+&lt;li>有&lt;code>PENDING&lt;/code>锁意味着要开始写了，但是此时有其他连接拥有&lt;code>SHARED&lt;/code>锁在读数据，此时写操作只能等待所有&lt;code>SHARED&lt;/code>释放。&lt;/li>
+&lt;li>&lt;code>PENDING&lt;/code>阻塞其他连接获取新的&lt;code>SHARED&lt;/code>锁，当&lt;code>SHARED&lt;/code>锁释放完时转为&lt;code>EXCLUSIVE&lt;/code>锁开始写操作。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>EXCLUSIVE&lt;/code>
+&lt;ul>
+&lt;li>同一时间只能存在一个&lt;code>EXCLUSIVE&lt;/code>锁，并且有&lt;code>EXCLUSIVE&lt;/code>锁存在时不允许其他任何锁类型存在。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>所以总结一下就是读读可并发，读写不可并发，写写不可并发。&lt;/p>
+&lt;h2 id="优化篇">优化篇&lt;/h2>
+&lt;h3 id="sqlite_busy-问题">&lt;code>SQLITE_BUSY&lt;/code> 问题&lt;/h3>
+&lt;p>看到上面这么多锁不能共存的情况应该会想到，冲突会很频繁，如 &lt;code>EXCLUSIVE&lt;/code> 锁存在时不允许其他连接获取任何锁，当其他进程需要读写操作时就会获取锁失败，立即报 &lt;code>SQLITE_BUSY&lt;/code> 错误。&lt;/p>
+&lt;p>设置 &lt;code>busy_timeout&lt;/code> 就不会立即返回 &lt;code>SQLITE_BUSY&lt;/code>，会定时retry失败的操作，如果在设置的 &lt;code>busy_timeout&lt;/code> 时间内还没执行成功，依然会返回 &lt;code>SQLITE_BUSY&lt;/code>。&lt;/p>
+&lt;p>使用不同sqlite驱动，设置 &lt;code>busy_timeout&lt;/code> 的方式不同&lt;/p>
+&lt;ul>
+&lt;li>modernc.org/sqlite &lt;code>database.db?_pragma=busy_timeout%3d50000&lt;/code>&lt;/li>
+&lt;li>github.com/mattn/go-sqlite3 &lt;code>database.db?_busy_timeout=50000&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>Shared cache mode 支持 table level locks，暂时还没研究。&lt;/p>
+&lt;h3 id="针对写操作慢的问题">针对写操作慢的问题&lt;/h3>
+&lt;p>解决方案：将多个写操作放入一个事务里执行。sqlite官方&lt;a href="https://www.sqlite.org/faq.html#q19">FAQ&lt;/a>对其解释如下&lt;/p></description></item><item><title>Vim Tricks</title><link>/posts/vim-tricks/</link><pubDate>Wed, 24 Nov 2021 21:45:54 +0800</pubDate><guid>/posts/vim-tricks/</guid><description>&lt;h2 id="批量替换">批量替换&lt;/h2>
+&lt;p>批量替换 v1.6.1 为 v2.7.0&lt;/p>
+&lt;pre>&lt;code class="language-bash">:%s/v1.6.1/v2.7.0/g
+&lt;/code>&lt;/pre>
+&lt;h2 id="两行合为一行">两行合为一行&lt;/h2>
+&lt;p>&lt;code>NORMAL&lt;/code> 模式下按 &lt;code>shift + j&lt;/code> 就会将光标下一行合并到当前行行尾&lt;/p></description></item><item><title>减小go程序编译后的体积</title><link>/posts/go-app-reduce-size/</link><pubDate>Mon, 22 Nov 2021 10:29:02 +0800</pubDate><guid>/posts/go-app-reduce-size/</guid><description>&lt;h2 id="编译经典程序">编译经典程序&lt;/h2>
+&lt;h3 id="程序代码">程序代码&lt;/h3>
+&lt;pre>&lt;code class="language-golang">package main
+
+import &amp;quot;fmt&amp;quot;
+
+func main() {
+ fmt.Println(&amp;quot;Hello World.&amp;quot;)
+}
+&lt;/code>&lt;/pre>
+&lt;h3 id="编译环境">编译环境&lt;/h3>
+&lt;pre>&lt;code class="language-bash">$ go version
+go version go1.16.7 linux/amd64
+&lt;/code>&lt;/pre>
+&lt;h2 id="0-直接编译">0. 直接编译&lt;/h2>
+&lt;pre>&lt;code class="language-bash">$ go build -o helloword main.go
+$ ls -lh helloword 
+-rwxrwxr-x 1 gobai gobai 1.9M Nov 23 09:34 helloword
+&lt;/code>&lt;/pre>
+&lt;h2 id="1-修改编译选项">1. 修改编译选项&lt;/h2>
+&lt;p>除去编译时带的符号表和调试信息&lt;/p>
+&lt;pre>&lt;code class="language-bash">$ go build -ldflags=&amp;quot;-s -w&amp;quot; -o helloword main.go
+$ ls -lh helloword 
+-rwxrwxr-x 1 gobai gobai 1.3M Nov 23 09:38 helloword
+&lt;/code>&lt;/pr</description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
+&lt;h2 id="常用过滤日志日志的命令">常用过滤日志日志的命令&lt;/h2>
+&lt;h3 id="根据时间约束过滤日志">根据时间约束过滤日志&lt;/h3>
+&lt;h4 id="获取-2023-01-15-000000-之后的日志">获取 &lt;code>2023-01-15 00:00:00&lt;/code> 之后的日志&lt;/h4>
+&lt;pre>&lt;code class="language-bash">journalctl --since '2023-01-15 00:00:00'
+&lt;/code>&lt;/pre>
+&lt;h4 id="获取-2023-01-15-000000-之后-2023-01-15-120000-之前的日志">获取 &lt;code>2023-01-15 00:00:00&lt;/code> 之后, &lt;code>2023-01-15 12:00:00&lt;/code> 之前的日志&lt;/h4>
+&lt;pre>&lt;code class="language-bash">journalctl --since '2023-01-15 00:00:00' --until '2023-01-15 12:00:00'
+&lt;/code>&lt;/pre>
+&lt;h3 id="只查看一个服务unit的日志">只查看一个服务(Unit)的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl -u nginx
+&lt;/code>&lt;/pre>
+&lt;h3 id="自由组合约束条件">自由组合约束条件&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl -u nginx --since '2023-01-15 00:00:00' --until '2023-01-15 12:00:00'
+&lt;/code>&lt;/pre>
+&lt;h2 id="查看日志占用磁盘量">查看日志占用磁盘量&lt;/h2>
+&lt;pre>&lt;code class="language-bash">journalctl --disk-usage
+&lt;/code>&lt;/pre>
+&lt;pre>&lt;code class="language-bash">Output
+Archived and active journals take up 3.9G in the file system.
+&lt;/code>&lt;/pr</description></item><item><title>Git Tricks</title><link>/posts/git-tricks/</link><pubDate>Fri, 12 Nov 2021 15:36:19 +0800</pubDate><guid>/posts/git-tricks/</guid><description>&lt;h2 id="暂存当前代码改动">暂存当前代码改动&lt;/h2>
+&lt;p>场景是在一个git branch写了不少代码以后发现写错分支了，总不能删了再重新写吧，可以使用 &lt;code>git stash&lt;/code> 命令解决。&lt;/p>
+&lt;pre>&lt;code class="language-bash"># 将当前改动的代码暂存
+git stash
+# git checkout 到你要工作的分支
+git checkout your_workspace_branch
+# 把暂存的代码从堆栈弹出到当前分支
+git stash pop
+&lt;/code>&lt;/pre></description></item></channel></rss>

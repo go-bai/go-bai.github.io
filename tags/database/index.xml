@@ -1,2 +1,31 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Database on gobai's blog</title><link>/tags/database/</link><description>Recent content in Database on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 09 Mar 2024 10:49:09 +0800</lastBuildDate><atom:link href="/tags/database/index.xml" rel="self" type="application/rss+xml"/><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>初始化演示环境 使用docker部署 部署的当前时间最新版本postgres:16.2
-docker run -d --name pgsql \ -e POSTGRES_USER=admin \ -e POSTGRES_PASSWORD=passwd \ -e POSTGRES_DB=testdb \ -p 15432:5432 \ postgres:16.2 使用psql连接 docker exec -it pgsql psql -U admin -d testdb 初始化user,vps和host表 CREATE TABLE &amp;quot;user&amp;quot; ( id bigserial PRIMARY KEY, username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL ); CREATE TABLE &amp;quot;host&amp;quot; ( id bigserial PRIMARY KEY, hostname VARCHAR(255) NOT NULL ); CREATE TABLE &amp;quot;vps&amp;quot; ( id bigserial PRIMARY KEY, user_id bigint NOT NULL, host_id bigint NOT NULL, name VARCHAR(255) NOT NULL, sys_disk jsonb NOT NULL DEFAULT '{}' ); 查看创建出的表 testdb=# \z Access privileges Schema | Name | Type | Access privileges | Column privileges | Policies --------+-------------+----------+-------------------+-------------------+---------- public | host | table | | | public | host_id_seq | sequence | | | public | user | table | | | public | user_id_seq | sequence | | | public | vps | table | | | public | vps_id_seq | sequence | | | (6 rows) testdb=# \d user Table &amp;quot;public.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Database on gobai's blog</title><link>/tags/database/</link><description>Recent content in Database on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 09 Mar 2024 10:49:09 +0800</lastBuildDate><atom:link href="/tags/database/index.xml" rel="self" type="application/rss+xml"/><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>&lt;h2 id="初始化演示环境">初始化演示环境&lt;/h2>
+&lt;h3 id="使用docker部署">使用docker部署&lt;/h3>
+&lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
+&lt;pre>&lt;code class="language-bash">docker run -d --name pgsql \
+ -e POSTGRES_USER=admin \
+ -e POSTGRES_PASSWORD=passwd \
+ -e POSTGRES_DB=testdb \
+ -p 15432:5432 \
+ postgres:16.2
+&lt;/code>&lt;/pre>
+&lt;h3 id="使用psql连接">使用&lt;code>psql&lt;/code>连接&lt;/h3>
+&lt;pre>&lt;code class="language-bash">docker exec -it pgsql psql -U admin -d testdb
+&lt;/code>&lt;/pre>
+&lt;h3 id="初始化uservps和host表">初始化&lt;code>user&lt;/code>,&lt;code>vps&lt;/code>和&lt;code>host&lt;/code>表&lt;/h3>
+&lt;pre>&lt;code class="language-sql">CREATE TABLE &amp;quot;user&amp;quot; (
+ id bigserial PRIMARY KEY,
+ username VARCHAR(255) NOT NULL,
+ password VARCHAR(255) NOT NULL
+);
+CREATE TABLE &amp;quot;host&amp;quot; (
+ id bigserial PRIMARY KEY,
+ hostname VARCHAR(255) NOT NULL
+);
+CREATE TABLE &amp;quot;vps&amp;quot; (
+ id bigserial PRIMARY KEY,
+ user_id bigint NOT NULL,
+ host_id bigint NOT NULL,
+ name VARCHAR(255) NOT NULL,
+ sys_disk jsonb NOT NULL DEFAULT '{}'
+);
+&lt;/code>&lt;/pr</description></item></channel></rss>
