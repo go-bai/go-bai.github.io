@@ -81,4 +81,75 @@ func (m *hookManager) collectSideCarSockets(numberOfRequestedHookSidecars uint, 
  // {&amp;quot;onDefineDomain&amp;quot;:[{&amp;quot;SocketPath&amp;quot;:&amp;quot;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;quot;, &amp;quot;Version&amp;quot;:&amp;quot;v1alpha3&amp;quot;, &amp;quot;subscribedHookPoints&amp;quot;: [{&amp;quot;name&amp;quot;: &amp;quot;onDefineDomain&amp;quot;, &amp;quot;priority&amp;quot;: 0}]}]}
  return callbacksPerHookPoint, nil
 }
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;code>virt-launcher&lt;/code>启动之后, &lt;code>virt-handler&lt;/code>会执行一些本地盘等相关初始化配置后通过gRPC调用&lt;code>virt-launcher&lt;/code>的&lt;code>SyncVirtualMachine&lt;/code>方法开始创建domain
+&lt;ol>
+&lt;li>&lt;code>SyncVMI&lt;/code>
+&lt;ol>
+&lt;li>&lt;code>Convert_v1_VirtualMachineInstance_To_api_Domain&lt;/code> 将 vmi 转换为 domainSpec&lt;/li>
+&lt;li>&lt;code>lookupOrCreateVirDomain&lt;/code> 先&lt;code>LookupDomainByName&lt;/code>, 如果已存在则直接退出
+&lt;ol>
+&lt;li>&lt;code>preStartHook&lt;/code>
+&lt;pre>&lt;code class="language-golang">hooksManager := hooks.GetManager()
+// 执行所有的 PreCloudInitIso sidecar
+cloudInitData, err = hooksManager.PreCloudInitIso(vmi, cloudInitData)
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;code>setDomainSpecWithHooks&lt;/code>
+&lt;pre>&lt;code class="language-golang">// pkg/virt-launcher/virtwarp/util/libvirt-helper.go
+func SetDomainSpecStrWithHooks(virConn cli.Connection, vmi *v1.VirtualMachineInstance, wantedSpec *api.DomainSpec) (cli.VirDomain, error) {
+ hooksManager := getHookManager()
+ // 执行所有的 OnDefineDomain sidecar
+ domainSpec, err := hooksManager.OnDefineDomain(wantedSpec, vmi)
+ // 调用 virConn.DomainDefineXML 创建 domain
+ return SetDomainSpecStr(virConn, vmi, domainSpec)
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) OnDefineDomain(domainSpec *virtwrapApi.DomainSpec, vmi *v1.VirtualMachineInstance) (string, error) {
+ domainSpecXML, err := xml.MarshalIndent(domainSpec, &amp;quot;&amp;quot;, &amp;quot;\t&amp;quot;)
+
+ callbacks, found := m.CallbacksPerHookPoint[hooksInfo.OnDefineDomainHookPointName]
+ if !found {
+ return string(domainSpecXML), nil
+ }
+
+ vmiJSON, err := json.Marshal(vmi)
+
+ for _, callback := range callbacks {
+ // 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML
+ domainSpecXML, err = m.onDefineDomainCallback(callback, domainSpecXML, vmiJSON)
+ }
+
+ return string(domainSpecXML), nil
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) onDefineDomainCallback(callback *callBackClient, domainSpecXML, vmiJSON []byte) ([]byte, error) {
+ // dial /var/run/kubevirt-hooks/shim-xxxx.sock
+ conn, err := grpcutil.DialSocketWithTimeout(callback.SocketPath, 1)
+
+ switch callback.Version {
+ case hooksV1alpha3.Version:
+ client := hooksV1alpha3.NewCallbacksClient(conn)
+ // 调用sidecar server 的 OnDefineDomain 方法
+ result, err := client.OnDefineDomain(ctx, &amp;amp;hooksV1alpha3.OnDefineDomainParams{
+ DomainXML: domainSpecXML,
+ Vmi: vmiJSON,
+ })
+ domainSpecXML = result.GetDomainXML()
+ }
+
+ return domainSpecXML, nil
+}
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配&lt;code>sidecar-shim&lt;/code>, 下面开始介绍&lt;/p></description></item></channel></rss>

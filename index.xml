@@ -1,4 +1,77 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 27 Jul 2024 22:57:08 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>Libvirt</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">&lt;code>virsh&lt;/code> 命令&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 13 Oct 2024 11:27:56 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>构建多平台容器镜像</title><link>/posts/builing-multi-platform-container-images-guide/</link><pubDate>Sun, 13 Oct 2024 11:27:56 +0800</pubDate><guid>/posts/builing-multi-platform-container-images-guide/</guid><description>&lt;blockquote>
+&lt;p>构建多平台容器镜像&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="docker-buildx-插件子命令">Docker buildx 插件/子命令&lt;/h2>
+&lt;p>&lt;a href="https://github.com/docker/buildx">buildx&lt;/a> 是 Docker 的一个 CLI 插件，用于扩展来自于 &lt;a href="https://github.com/moby/buildkit">Moby BuildKit&lt;/a> 项目的构建功能。&lt;/p>
+&lt;p>注意：buildx 需要 Docker 19.03 或更高版本。&lt;/p>
+&lt;h2 id="buildkit">BuildKit&lt;/h2>
+&lt;p>BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。&lt;/p>
+&lt;p>Docker Engine 从 &lt;a href="https://docs.docker.com/engine/release-notes/23.0/#2300">23.0.0&lt;/a> 版本开始默认在Linux上使用Buildx和BuildKit为builder。&lt;/p>
+&lt;h3 id="builder-a-buildkit-daemon">Builder: a BuildKit daemon&lt;/h3>
+&lt;ul>
+&lt;li>&lt;a href="https://docs.docker.com/build/builders/">Builders介绍&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。&lt;/p>
+&lt;h3 id="build-drivers">Build drivers&lt;/h3>
+&lt;p>Build 驱动有多种，例如 &lt;code>docker&lt;/code>、&lt;code>docker-container&lt;/code>、&lt;code>kubernetes&lt;/code>、&lt;code>remote&lt;/code> 等。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>docker&lt;/code> 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。&lt;/li>
+&lt;li>&lt;code>docker-container&lt;/code> 使用Docker创建一个专用的BuildKit容器。&lt;/li>
+&lt;li>&lt;code>kubernetes&lt;/code> 在Kubernetes集群中创建BuildKit pods。&lt;/li>
+&lt;li>&lt;code>remote&lt;/code> 直接连接到手动管理的BuildKit守护进程。&lt;/li>
+&lt;/ul>
+&lt;div style="text-align: center;">Build Drivers Comparison&lt;/div>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">Feature&lt;/th>
+ &lt;th style="text-align: left">docker&lt;/th>
+ &lt;th style="text-align: left">docker-container&lt;/th>
+ &lt;th style="text-align: left">kubernetes&lt;/th>
+ &lt;th style="text-align: left">remote&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">Automatically load image&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">Cache export&lt;/td>
+ &lt;td style="text-align: left">✓*&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">Tarball output&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">Multi-arch images&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">BuildKit configuration&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td style="text-align: left">&lt;/td>
+ &lt;td style="text-align: left">Managed externally&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;div style="text-align: center;">* The docker driver doesn't support all cache export options&lt;/div>
+&lt;h3 id="默认的-builder">默认的 Builder&lt;/h3>
+&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>Libvirt</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">&lt;code>virsh&lt;/code> 命令&lt;/h2>
 &lt;h3 id="virsh-domifaddr-查看虚拟机网卡ip">&lt;code>virsh domifaddr&lt;/code> 查看虚拟机网卡ip&lt;/h3>
 &lt;pre>&lt;code class="language-bash"># virsh domifaddr k3s-node01 --source lease
  Name MAC address Protocol Address
@@ -9,7 +82,20 @@
  Name MAC address Protocol Address
 -------------------------------------------------------------------------------
  vnet18 52:54:00:0e:08:02 ipv4 192.168.1.248/0
-&lt;/code>&lt;/pr</description></item><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;p>通过qemu guest agent获取网卡ip&lt;/p>
+&lt;pre>&lt;code class="language-bash"># virsh domifaddr k3s-node01 --source agent
+ Name MAC address Protocol Address
+-------------------------------------------------------------------------------
+ lo 00:00:00:00:00:00 ipv4 127.0.0.1/8
+ enp1s0 52:54:00:0e:08:02 ipv4 192.168.1.248/24
+ flannel.1 92:61:59:0c:29:90 ipv4 10.42.0.0/32
+ cni0 42:fb:8d:3e:c1:a4 ipv4 10.42.0.1/24
+ vethde547696 da:18:a8:b2:ed:f0 N/A N/A
+ vethe1841f6e ce:79:fc:e1:1e:0b N/A N/A
+ veth464995dc 82:a9:3b:a6:b5:49 N/A N/A
+ veth2370e2ac 4a:c8:32:5c:fb:34 N/A N/A
+&lt;/code>&lt;/pre></description></item><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;blockquote>
 &lt;p>通过RKE2快速搭建测试使用的k8s集群环境&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="环境准备">环境准备&lt;/h2>
@@ -46,7 +132,40 @@ xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on
 EOFALL
 
 chmod +x /usr/bin/gen-cloudinit-iso
-&lt;/code>&lt;/pr</description></item><item><title>Cloudinit</title><link>/posts/cloudinit/</link><pubDate>Sun, 30 Jun 2024 23:56:57 +0800</pubDate><guid>/posts/cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">cloudinit 介绍&lt;/h2>
+&lt;/code>&lt;/pre>
+&lt;h2 id="创建虚拟机">创建虚拟机&lt;/h2>
+&lt;pre>&lt;code class="language-bash">for vm in &amp;quot;k8s-node01&amp;quot; &amp;quot;k8s-node02&amp;quot;; do
+ export VM=${vm}
+ # prepare cloudinit iso
+ gen-cloudinit-iso
+ # prepare sysdisk and datadisk 
+ qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+ qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+ qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
+
+ virt-install \
+ --name ${VM} \
+ --memory 16384 \
+ --vcpus 8 \
+ --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+ --network bridge=br0 \
+ --import \
+ --os-variant ubuntu22.10 \
+ --noautoconsole
+done
+&lt;/code>&lt;/pre>
+&lt;h2 id="安装-rke2">安装 RKE2&lt;/h2>
+&lt;h3 id="脚本在线安装">脚本在线安装&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># TODO 指定 cni
+curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
+systemctl enable rke2-server.service
+systemctl start rke2-server.service
+&lt;/code>&lt;/pre>
+&lt;h3 id="离线安装">离线安装&lt;/h3>
+&lt;p>TODO&lt;/p></description></item><item><title>Cloudinit</title><link>/posts/cloudinit/</link><pubDate>Sun, 30 Jun 2024 23:56:57 +0800</pubDate><guid>/posts/cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">cloudinit 介绍&lt;/h2>
 &lt;blockquote>
 &lt;p>用于在新建的虚拟机中进行时间设置、密码设置、扩展根文件系统所在分区、设置主机名、运行脚本、安装软件包等初始化设置&lt;/p>
 &lt;/blockquote>
@@ -78,7 +197,35 @@ EOFALL
 &lt;/code>&lt;/pre>
 &lt;h3 id="生成-cloudinit-iso">生成 cloudinit iso&lt;/h3>
 &lt;pre>&lt;code class="language-bash">VM=k8s-node01 bash gen-cloudinit-iso.sh
-&lt;/code>&lt;/pr</description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;h3 id="使用">使用&lt;/h3>
+&lt;p>创建一个k8s节点虚拟机&lt;/p>
+&lt;pre>&lt;code class="language-bash">VM=k8s-node01
+mkdir -p /var/lib/libvirt/disks/${VM}
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk03.qcow2 500G
+
+virt-install \
+ --name ${VM} \
+ --memory 16384 \
+ --vcpus 8 \
+ --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk03.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+ --network bridge=br0 \
+ --import \
+ --os-variant ubuntu22.10 \
+ --noautoconsole
+&lt;/code>&lt;/pre>
+&lt;h2 id="参考">参考&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://cloudinit.readthedocs.io/en/latest/explanation/format.html">https://cloudinit.readthedocs.io/en/latest/explanation/format.html&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go">https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
 &lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime&lt;/a>是在&lt;a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">client-go/tools/cache&lt;/a>和&lt;a href="https://github.com/kubernetes/client-go/tree/master/util/workqueue">client-go/util/workqueue&lt;/a>的基础上实现的, 了解&lt;code>client-go/tools/cache&lt;/code>和&lt;code>client-go/util/workqueue&lt;/code>对理解&lt;code>controller-runtime&lt;/code>很有帮助&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="介绍informer">介绍informer&lt;/h2>
@@ -178,7 +325,78 @@ func (m *hookManager) collectSideCarSockets(numberOfRequestedHookSidecars uint, 
  // {&amp;quot;onDefineDomain&amp;quot;:[{&amp;quot;SocketPath&amp;quot;:&amp;quot;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;quot;, &amp;quot;Version&amp;quot;:&amp;quot;v1alpha3&amp;quot;, &amp;quot;subscribedHookPoints&amp;quot;: [{&amp;quot;name&amp;quot;: &amp;quot;onDefineDomain&amp;quot;, &amp;quot;priority&amp;quot;: 0}]}]}
  return callbacksPerHookPoint, nil
 }
-&lt;/code>&lt;/pr</description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;code>virt-launcher&lt;/code>启动之后, &lt;code>virt-handler&lt;/code>会执行一些本地盘等相关初始化配置后通过gRPC调用&lt;code>virt-launcher&lt;/code>的&lt;code>SyncVirtualMachine&lt;/code>方法开始创建domain
+&lt;ol>
+&lt;li>&lt;code>SyncVMI&lt;/code>
+&lt;ol>
+&lt;li>&lt;code>Convert_v1_VirtualMachineInstance_To_api_Domain&lt;/code> 将 vmi 转换为 domainSpec&lt;/li>
+&lt;li>&lt;code>lookupOrCreateVirDomain&lt;/code> 先&lt;code>LookupDomainByName&lt;/code>, 如果已存在则直接退出
+&lt;ol>
+&lt;li>&lt;code>preStartHook&lt;/code>
+&lt;pre>&lt;code class="language-golang">hooksManager := hooks.GetManager()
+// 执行所有的 PreCloudInitIso sidecar
+cloudInitData, err = hooksManager.PreCloudInitIso(vmi, cloudInitData)
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;code>setDomainSpecWithHooks&lt;/code>
+&lt;pre>&lt;code class="language-golang">// pkg/virt-launcher/virtwarp/util/libvirt-helper.go
+func SetDomainSpecStrWithHooks(virConn cli.Connection, vmi *v1.VirtualMachineInstance, wantedSpec *api.DomainSpec) (cli.VirDomain, error) {
+ hooksManager := getHookManager()
+ // 执行所有的 OnDefineDomain sidecar
+ domainSpec, err := hooksManager.OnDefineDomain(wantedSpec, vmi)
+ // 调用 virConn.DomainDefineXML 创建 domain
+ return SetDomainSpecStr(virConn, vmi, domainSpec)
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) OnDefineDomain(domainSpec *virtwrapApi.DomainSpec, vmi *v1.VirtualMachineInstance) (string, error) {
+ domainSpecXML, err := xml.MarshalIndent(domainSpec, &amp;quot;&amp;quot;, &amp;quot;\t&amp;quot;)
+
+ callbacks, found := m.CallbacksPerHookPoint[hooksInfo.OnDefineDomainHookPointName]
+ if !found {
+ return string(domainSpecXML), nil
+ }
+
+ vmiJSON, err := json.Marshal(vmi)
+
+ for _, callback := range callbacks {
+ // 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML
+ domainSpecXML, err = m.onDefineDomainCallback(callback, domainSpecXML, vmiJSON)
+ }
+
+ return string(domainSpecXML), nil
+}
+
+// /pkg/hooks/manager.go
+func (m *hookManager) onDefineDomainCallback(callback *callBackClient, domainSpecXML, vmiJSON []byte) ([]byte, error) {
+ // dial /var/run/kubevirt-hooks/shim-xxxx.sock
+ conn, err := grpcutil.DialSocketWithTimeout(callback.SocketPath, 1)
+
+ switch callback.Version {
+ case hooksV1alpha3.Version:
+ client := hooksV1alpha3.NewCallbacksClient(conn)
+ // 调用sidecar server 的 OnDefineDomain 方法
+ result, err := client.OnDefineDomain(ctx, &amp;amp;hooksV1alpha3.OnDefineDomainParams{
+ DomainXML: domainSpecXML,
+ Vmi: vmiJSON,
+ })
+ domainSpecXML = result.GetDomainXML()
+ }
+
+ return domainSpecXML, nil
+}
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配&lt;code>sidecar-shim&lt;/code>, 下面开始介绍&lt;/p></description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>&lt;blockquote>
 &lt;p>通过无线网卡连接网络&lt;code>A(192.168.31.0/24)&lt;/code>, 无线网卡相当于&lt;code>WAN&lt;/code>口，通过有线网卡接入网络&lt;code>B(192.168.1.0/24)&lt;/code>, 有线网卡相当于&lt;code>LAN&lt;/code>口&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="准备一个ubuntu虚拟机router">准备一个ubuntu虚拟机&lt;code>router&lt;/code>&lt;/h2>
@@ -302,7 +520,27 @@ c) Copy remote
 s) Set configuration password
 q) Quit config
 e/n/d/r/c/s/q&amp;gt; q
-&lt;/code>&lt;/pr</description></item><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;h3 id="查看有哪些remote">查看有哪些remote&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># rclone listremotes
+alist:
+&lt;/code>&lt;/pre>
+&lt;h3 id="查看某个remote下的目录或文件">查看某个&lt;code>remote&lt;/code>下的目录或文件&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># rclone lsd alist:/ali/video/诛仙
+ -1 2024-04-02 12:27:23 -1 诛仙.第1季.2022-2023.4K.全26集
+ -1 2024-04-02 12:27:24 -1 诛仙.第2季.2024
+# rclone ls alist:/ali/video/诛仙/诛仙.第2季.2024
+959919343 第27集-Zhu.Xian-2024-03-29-4k-HEVC-H265.AAC-WEB-DL.mkv
+995844543 第28集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+1012470661 第29集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+&lt;/code>&lt;/pre>
+&lt;h2 id="将alist-mount-到目录">将&lt;code>alist&lt;/code> mount 到目录&lt;/h2>
+&lt;pre>&lt;code class="language-bash">sudo mkdir -p /mnt/alist
+sudo chmod 777 /mnt/alist
+# --header &amp;quot;Referer:https://www.aliyundrive.com/&amp;quot; 是必须要有的
+rclone mount --cache-dir=/tmp --vfs-cache-mode=writes --header &amp;quot;Referer:https://www.aliyundrive.com/&amp;quot; alist: /mnt/alist/
+&lt;/code>&lt;/pre>
+&lt;p>配置开机自动挂载&lt;/p></description></item><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
 &lt;p>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="下载并解压ventoy">下载并解压&lt;code>ventoy&lt;/code>&lt;/h2>
@@ -332,7 +570,55 @@ Usage: Ventoy2Disk.sh CMD [ OPTION ] /dev/sdX
  -g use GPT partition style, default is MBR (only for install)
  -L Label of the 1st exfat partition (default is Ventoy)
  -n try non-destructive installation (only for install)
-&lt;/code>&lt;/pr</description></item><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;h2 id="安装ventoy">安装ventoy&lt;/h2>
+&lt;pre>&lt;code class="language-bash"># ./Ventoy2Disk.sh -I /dev/sdb
+
+**********************************************
+ Ventoy: 1.0.97 x86_64
+ longpanda admin@ventoy.net
+ https://www.ventoy.net
+**********************************************
+
+Disk : /dev/sdb
+Model: Kingston DataTraveler 3.0 (scsi)
+Size : 115 GB
+Style: MBR
+
+
+Attention:
+You will install Ventoy to /dev/sdb.
+All the data on the disk /dev/sdb will be lost!!!
+
+Continue? (y/n) y
+
+All the data on the disk /dev/sdb will be lost!!!
+Double-check. Continue? (y/n) y
+
+Create partitions on /dev/sdb by parted in MBR style ...
+Done
+Wait for partitions ...
+partition exist OK
+create efi fat fs /dev/sdb2 ...
+mkfs.fat 4.2 (2021-01-31)
+success
+Wait for partitions ...
+/dev/sdb1 exist OK
+/dev/sdb2 exist OK
+partition exist OK
+Format partition 1 /dev/sdb1 ...
+mkexfatfs 1.3.0
+Creating... done.
+Flushing... done.
+File system created successfully.
+mkexfatfs success
+writing data to disk ...
+sync data ...
+esp partition processing ...
+
+Install Ventoy to /dev/sdb successfully finished.
+&lt;/code>&lt;/pre>
+&lt;p>查看最终的U盘分区, &lt;code>sdb1&lt;/code>分区是存放&lt;code>iso&lt;/code>镜像的&lt;/p></description></item><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
 &lt;p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="binbash">&lt;code>#!/bin/bash&lt;/code>&lt;/h2>
@@ -355,7 +641,19 @@ set -o pipefail
 &lt;h3 id="set--e">&lt;code>set -e&lt;/code>&lt;/h3>
 &lt;p>执行脚本时, Bash遇到错误默认会继续执行, &lt;code>set -e&lt;/code>使得脚本只要发生错误, 就中止执行&lt;/p>
 &lt;h3 id="set--o-pipefail">&lt;code>set -o pipefail&lt;/code>&lt;/h3>
-&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p></description></item><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>&lt;h2 id="初始化演示环境">初始化演示环境&lt;/h2>
+&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+set -e
+
+foo | echo a
+echo bar
+&lt;/code>&lt;/pre>
+&lt;p>执行的结果为:&lt;/p>
+&lt;pre>&lt;code class="language-bash">a
+set.sh: line 4: foo: command not found
+bar
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>set -o pipefail&lt;/code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行&lt;/p></description></item><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>&lt;h2 id="初始化演示环境">初始化演示环境&lt;/h2>
 &lt;h3 id="使用docker部署">使用docker部署&lt;/h3>
 &lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
 &lt;pre>&lt;code class="language-bash">docker run -d --name pgsql \
@@ -385,7 +683,80 @@ CREATE TABLE &amp;quot;vps&amp;quot; (
  name VARCHAR(255) NOT NULL,
  sys_disk jsonb NOT NULL DEFAULT '{}'
 );
-&lt;/code>&lt;/pr</description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;h3 id="查看创建出的表">查看创建出的表&lt;/h3>
+&lt;pre>&lt;code class="language-bash">testdb=# \z
+ Access privileges
+ Schema | Name | Type | Access privileges | Column privileges | Policies
+--------+-------------+----------+-------------------+-------------------+----------
+ public | host | table | | |
+ public | host_id_seq | sequence | | |
+ public | user | table | | |
+ public | user_id_seq | sequence | | |
+ public | vps | table | | |
+ public | vps_id_seq | sequence | | |
+(6 rows)
+
+testdb=# \d user
+ Table &amp;quot;public.user&amp;quot;
+ Column | Type | Collation | Nullable | Default
+----------+------------------------+-----------+----------+----------------------------------
+ id | bigint | | not null | nextval('user_id_seq'::regclass)
+ username | character varying(255) | | not null |
+ password | character varying(255) | | not null |
+Indexes:
+ &amp;quot;user_pkey&amp;quot; PRIMARY KEY, btree (id)
+
+testdb=# \d host
+ Table &amp;quot;public.host&amp;quot;
+ Column | Type | Collation | Nullable | Default
+----------+------------------------+-----------+----------+----------------------------------
+ id | bigint | | not null | nextval('host_id_seq'::regclass)
+ hostname | character varying(255) | | not null |
+Indexes:
+ &amp;quot;host_pkey&amp;quot; PRIMARY KEY, btree (id)
+
+testdb=# \d vps
+ Table &amp;quot;public.vps&amp;quot;
+ Column | Type | Collation | Nullable | Default
+----------+------------------------+-----------+----------+---------------------------------
+ id | bigint | | not null | nextval('vps_id_seq'::regclass)
+ user_id | bigint | | not null |
+ host_id | bigint | | not null |
+ name | character varying(255) | | not null |
+ sys_disk | jsonb | | not null | '{}'::jsonb
+Indexes:
+ &amp;quot;vps_pkey&amp;quot; PRIMARY KEY, btree (id)
+&lt;/code>&lt;/pre>
+&lt;h3 id="初始化数据">初始化数据&lt;/h3>
+&lt;pre>&lt;code class="language-sql">-- 插入用户数据
+INSERT INTO &amp;quot;user&amp;quot; (username, password) VALUES
+ ('user1', 'password1'),
+ ('user2', 'password2');
+
+-- 插入主机数据
+INSERT INTO &amp;quot;host&amp;quot; (hostname) VALUES
+ ('host1'),
+ ('host2');
+
+-- user1 在 host1 上创建一个 VPS
+INSERT INTO &amp;quot;vps&amp;quot; (user_id, host_id, name, sys_disk) VALUES
+ ((SELECT id FROM &amp;quot;user&amp;quot; WHERE username = 'user1'), (SELECT id FROM host WHERE hostname = 'host1'), 'vps_user1_host1', '{&amp;quot;disk_size&amp;quot;: 50}');
+
+-- user2 在 host1 上创建一个 VPS
+INSERT INTO &amp;quot;vps&amp;quot; (user_id, host_id, name, sys_disk) VALUES
+ ((SELECT id FROM &amp;quot;user&amp;quot; WHERE username = 'user2'), (SELECT id FROM host WHERE hostname = 'host1'), 'vps_user2_host1', '{&amp;quot;disk_size&amp;quot;: 60}');
+
+-- user1 在 host2 上创建一个 VPS
+INSERT INTO &amp;quot;vps&amp;quot; (user_id, host_id, name, sys_disk) VALUES
+ ((SELECT id FROM &amp;quot;user&amp;quot; WHERE username = 'user1'), (SELECT id FROM host WHERE hostname = 'host2'), 'vps_user1_host2', '{&amp;quot;disk_size&amp;quot;: 70}');
+
+-- user2 在 host2 上创建一个 VPS
+INSERT INTO &amp;quot;vps&amp;quot; (user_id, host_id, name, sys_disk) VALUES
+ ((SELECT id FROM &amp;quot;user&amp;quot; WHERE username = 'user2'), (SELECT id FROM host WHERE hostname = 'host2'), 'vps_user2_host2', '{&amp;quot;disk_size&amp;quot;: 80}');
+&lt;/code>&lt;/pre>
+&lt;h2 id="关于-databasesql">关于 &lt;code>database/sql&lt;/code>&lt;/h2>
+&lt;p>&lt;code>database/sql&lt;/code>提供了操作SQL数据库的通用接口, 需要结合&lt;code>database driver&lt;/code>同时使用, 这里是一些&lt;a href="https://go.dev/wiki/SQLDrivers">驱动列表&lt;/a>&lt;/p></description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
 &lt;p>先亮个当前的穷人版家庭网络拓扑图&lt;/p>
 &lt;p>&lt;img src="/posts/linux/imgs/home-network-topology-diagram.svg" alt="穷人版家庭网络拓扑图">&lt;/p>
 &lt;h2 id="准备qcow2镜像">准备&lt;code>qcow2&lt;/code>镜像&lt;/h2>
@@ -402,7 +773,23 @@ qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow
 &lt;/code>&lt;/pre>
 &lt;p>我这里将镜像复制到了&lt;code>/var/lib/libvirt/disks/&lt;/code>目录下&lt;/p>
 &lt;pre>&lt;code class="language-bash">qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
-&lt;/code>&lt;/pr</description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>使用&lt;code>virt-install&lt;/code>运行虚拟机, 这里网卡使用&lt;code>virtio&lt;/code>类型并桥接到之前文档里创建的&lt;code>br0&lt;/code>上,
+选择&lt;code>virtio&lt;/code>是因为性能最好, 可以达到&lt;code>10Gbps&lt;/code>以上&lt;/p>
+&lt;pre>&lt;code class="language-bash"># 运行, 这里网络指定的之前文章中创建的网桥网络br0
+virt-install \
+ --name openwrt \
+ --memory 256 \
+ --vcpus 1 \
+ --network bridge=br0,model=virtio \
+ --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide \
+ --import \
+ --autostart \
+ --osinfo detect=on,require=off \
+ --noautoconsole
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置网络">配置网络&lt;/h2>
+&lt;p>连接&lt;code>console&lt;/code>配置网络&lt;/p></description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
 &lt;p>最近经常电脑用着用着就不能联网了，发现&lt;code>enp1s0&lt;/code>总是偶尔冒出一个&lt;code>ipv4&lt;/code>地址，并且路由表会多出一个从&lt;code>enp1s0&lt;/code>出去的&lt;code>default&lt;/code>路由。后来看&lt;code>journalctl&lt;/code>日志发现是&lt;code>dhclient&lt;/code>搞的事情(学艺不精, 没第一时间联系起来)。&lt;/p>
 &lt;p>下面是部分日志：&lt;/p>
 &lt;pre>&lt;code class="language-bash">➜ ~ journalctl -n 1000000 | grep '192.168.1.22\|enp1s0'
@@ -490,7 +877,8 @@ root 157839 0.0 0.0 101232 6112 ? Ssl 10月06 0:06 dhclient
 root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
 root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
 gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
-&lt;/code>&lt;/pr</description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
 &lt;ol>
 &lt;li>LAN网关 &lt;code>192.168.1.1&lt;/code>&lt;/li>
 &lt;li>子网掩码 &lt;code>255.255.255.0&lt;/code>&lt;/li>
@@ -522,7 +910,49 @@ gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-
  routes:
  - to: &amp;quot;default&amp;quot;
  via: &amp;quot;192.168.1.1&amp;quot;
-&lt;/code>&lt;/pr</description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;p>由三个文件组成:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>/etc/netplan/01-network-manager-all.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml"># Let NetworkManager manage all devices on this system
+network:
+ version: 2
+ renderer: NetworkManager
+&lt;/code>&lt;/pre>
+&lt;ol start="2">
+&lt;li>&lt;code>/etc/netplan/10-ethernet-enp1s0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ ethernets:
+ enp1s0:
+ dhcp4: false
+ dhcp6: false
+&lt;/code>&lt;/pre>
+&lt;ol start="3">
+&lt;li>&lt;code>/etc/netplan/99-bridged-network-br0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ bridges:
+ br0:
+ dhcp4: false
+ dhcp6: false
+ addresses:
+ - 192.168.1.100/24
+ routes:
+ - to: default
+ via: 192.168.1.1
+ nameservers:
+ addresses: 
+ - 192.168.1.1
+ - 223.5.5.5
+ interfaces:
+ - enp1s0
+ parameters:
+ stp: false
+&lt;/code>&lt;/pre>
+&lt;h2 id="应用网络配置">应用网络配置&lt;/h2>
+&lt;p>容易失联，如果是ssh远程操作请谨慎操作&lt;/p></description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>&lt;blockquote>
 &lt;p>现在要将 &lt;code>/dev/sda3&lt;/code> 分区删掉并扩容到 &lt;code>/dev/sda2&lt;/code>, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 &lt;code>/&lt;/code> 挂载在 &lt;code>/dev/sda2&lt;/code> 上, 并且 filesystem 是 &lt;code>ext4&lt;/code>)&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="磁盘初始分区和挂载情况">磁盘初始分区和挂载情况&lt;/h2>
@@ -550,7 +980,39 @@ Device Start End Sectors Size Type
 ➜ ~ df -hT /dev/sda2
 Filesystem Type Size Used Avail Use% Mounted on
 /dev/sda2 ext4 97G 28G 64G 31% /
-&lt;/code>&lt;/pr</description></item><item><title>Vscode Extensions</title><link>/posts/vscode-extensions/</link><pubDate>Mon, 25 Sep 2023 21:27:06 +0800</pubDate><guid>/posts/vscode-extensions/</guid><description>&lt;h2 id="记录我的vscode使用的扩展插件">记录我的vscode使用的扩展插件&lt;/h2>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除分区-devsda3">删除分区 &lt;code>/dev/sda3&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash">➜ ~ fdisk /dev/sda
+
+Welcome to fdisk (util-linux 2.36.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Partition number (1-3, default 3): 3
+
+Partition 3 has been deleted.
+
+Command (m for help): p
+Disk /dev/sda: 100 GiB, 107374182400 bytes, 209715200 sectors
+Disk model: BlockVolume 
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 1048576 bytes
+Disklabel type: gpt
+Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039
+
+Device Start End Sectors Size Type
+/dev/sda1 2048 1050623 1048576 512M EFI System
+/dev/sda2 1050624 207714303 206663680 98.5G Linux filesystem
+
+Command (m for help): w # 保存退出
+The partition table has been altered.
+Syncing disks.
+&lt;/code>&lt;/pre>
+&lt;h2 id="扩容分区-devsda2-和-根文件系统">扩容分区 &lt;code>/dev/sda2&lt;/code> 和 根文件系统&lt;/h2>
+&lt;p>使用 &lt;code>fdisk&lt;/code> 扩容 &lt;code>/dev/sda2&lt;/code>, 前提是 &lt;code>/dev/sda2&lt;/code> 后面没有其他分区了，可以这样扩容(先删除不退出并重建分区, 分区 &lt;code>Start&lt;/code> 不变, &lt;code>End&lt;/code> 增大)&lt;/p></description></item><item><title>Vscode Extensions</title><link>/posts/vscode-extensions/</link><pubDate>Mon, 25 Sep 2023 21:27:06 +0800</pubDate><guid>/posts/vscode-extensions/</guid><description>&lt;h2 id="记录我的vscode使用的扩展插件">记录我的vscode使用的扩展插件&lt;/h2>
 &lt;p>持续补充中&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=wayou.vscode-icons-mac">vscode-icons-mac&lt;/a>&lt;/li>
@@ -592,7 +1054,52 @@ Host home
 &lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p>
 &lt;h2 id="修正简体中文显示为异体日文字形">修正简体中文显示为异体(日文)字形&lt;/h2>
 &lt;blockquote>
-&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>解决Go应用在容器中的时区问题</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">容器中的时区问题&lt;/h2>
+&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p>
+&lt;/blockquote>
+&lt;p>root权限编辑 &lt;code>/etc/fonts/conf.avail/64-language-selector-prefer.conf&lt;/code> 配置文件&lt;/p>
+&lt;pre>&lt;code class="language-diff">&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;
+&amp;lt;!DOCTYPE fontconfig SYSTEM &amp;quot;fonts.dtd&amp;quot;&amp;gt;
+&amp;lt;fontconfig&amp;gt;
+ &amp;lt;alias&amp;gt;
+ &amp;lt;family&amp;gt;sans-serif&amp;lt;/family&amp;gt;
+ &amp;lt;prefer&amp;gt;
++ &amp;lt;family&amp;gt;Noto Sans CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans CJK JP&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans CJK KR&amp;lt;/family&amp;gt;
+- &amp;lt;family&amp;gt;Noto Sans CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans CJK TC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans CJK HK&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Lohit Devanagari&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans Sinhala&amp;lt;/family&amp;gt;
+ &amp;lt;/prefer&amp;gt;
+ &amp;lt;/alias&amp;gt;
+ &amp;lt;alias&amp;gt;
+ &amp;lt;family&amp;gt;serif&amp;lt;/family&amp;gt;
+ &amp;lt;prefer&amp;gt;
++ &amp;lt;family&amp;gt;Noto Serif CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Serif CJK JP&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Serif CJK KR&amp;lt;/family&amp;gt;
+- &amp;lt;family&amp;gt;Noto Serif CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Serif CJK TC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Lohit Devanagari&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Serif Sinhala&amp;lt;/family&amp;gt;
+ &amp;lt;/prefer&amp;gt;
+ &amp;lt;/alias&amp;gt;
+ &amp;lt;alias&amp;gt;
+ &amp;lt;family&amp;gt;monospace&amp;lt;/family&amp;gt;
+ &amp;lt;prefer&amp;gt;
++ &amp;lt;family&amp;gt;Noto Sans Mono CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans Mono CJK JP&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans Mono CJK KR&amp;lt;/family&amp;gt;
+- &amp;lt;family&amp;gt;Noto Sans Mono CJK SC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans Mono CJK TC&amp;lt;/family&amp;gt;
+ &amp;lt;family&amp;gt;Noto Sans Mono CJK HK&amp;lt;/family&amp;gt;
+ &amp;lt;/prefer&amp;gt;
+ &amp;lt;/alias&amp;gt;
+&amp;lt;/fontconfig&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;h2 id="换apt源">换&lt;code>apt&lt;/code>源&lt;/h2>
+&lt;p>&lt;a href="https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/">https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/&lt;/a>&lt;/p></description></item><item><title>解决Go应用在容器中的时区问题</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">容器中的时区问题&lt;/h2>
 &lt;p>应用直接运行在服务器上需要设置服务器时区为东八区，现在很多应用都是部署在容器中了，同样也是要设置容器镜像的时区。&lt;/p>
 &lt;p>许多容器镜像默认时区为 &lt;code>UTC&lt;/code> (&lt;a href="https://zh.wikipedia.org/zh-hans/%E5%8D%8F%E8%B0%83%E4%B8%96%E7%95%8C%E6%97%B6">Coordinated Universal Time 协调世界时&lt;/a>)，比东八区慢八个小时，当程序涉及数据库写入操作或者日志记录等功能时就会有时间差。&lt;/p>
 &lt;p>常规解决方案一般两大类&lt;/p>
@@ -660,7 +1167,8 @@ func initLocal() {
  // Fall back to UTC.
  localLoc.name = &amp;quot;UTC&amp;quot;
 }
-&lt;/code>&lt;/pr</description></item><item><title>SQLite3</title><link>/posts/sqlite3/</link><pubDate>Tue, 14 Dec 2021 10:33:14 +0800</pubDate><guid>/posts/sqlite3/</guid><description>&lt;h2 id="rollback日志模式下的五种锁状态介绍">rollback日志模式下的五种锁状态介绍&lt;/h2>
+&lt;/code>&lt;/pre>
+&lt;p>首先检查是否设置了 &lt;code>TZ&lt;/code> 环境变量&lt;/p></description></item><item><title>SQLite3</title><link>/posts/sqlite3/</link><pubDate>Tue, 14 Dec 2021 10:33:14 +0800</pubDate><guid>/posts/sqlite3/</guid><description>&lt;h2 id="rollback日志模式下的五种锁状态介绍">rollback日志模式下的五种锁状态介绍&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>UNLOCKED&lt;/code>
 &lt;ul>
@@ -702,7 +1210,13 @@ func initLocal() {
 &lt;/ul>
 &lt;p>Shared cache mode 支持 table level locks，暂时还没研究。&lt;/p>
 &lt;h3 id="针对写操作慢的问题">针对写操作慢的问题&lt;/h3>
-&lt;p>解决方案：将多个写操作放入一个事务里执行。sqlite官方&lt;a href="https://www.sqlite.org/faq.html#q19">FAQ&lt;/a>对其解释如下&lt;/p></description></item><item><title>Vim Tricks</title><link>/posts/vim-tricks/</link><pubDate>Wed, 24 Nov 2021 21:45:54 +0800</pubDate><guid>/posts/vim-tricks/</guid><description>&lt;h2 id="批量替换">批量替换&lt;/h2>
+&lt;p>解决方案：将多个写操作放入一个事务里执行。sqlite官方&lt;a href="https://www.sqlite.org/faq.html#q19">FAQ&lt;/a>对其解释如下&lt;/p>
+&lt;blockquote>
+&lt;p>(19) INSERT is really slow - I can only do few dozen INSERTs per second
+Actually, SQLite will easily do 50,000 or more INSERT statements per second on an average desktop computer. But it will only do a few dozen transactions per second. Transaction speed is limited by the rotational speed of your disk drive. A transaction normally requires two complete rotations of the disk platter, which on a 7200RPM disk drive limits you to about 60 transactions per second.
+Transaction speed is limited by disk drive speed because (by default) SQLite actually waits until the data really is safely stored on the disk surface before the transaction is complete. That way, if you suddenly lose power or if your OS crashes, your data is still safe. For details, read about &lt;a href="https://www.sqlite.org/atomiccommit.html">atomic commit in SQLite..&lt;/a>
+By default, each INSERT statement is its own transaction. But if you surround multiple INSERT statements with BEGIN&amp;hellip;COMMIT then all the inserts are grouped into a single transaction. The time needed to commit the transaction is amortized over all the enclosed insert statements and so the time per insert statement is greatly reduced.
+Another option is to run PRAGMA synchronous=OFF. This command will cause SQLite to not wait on data to reach the disk surface, which will make write operations appear to be much faster. But if you lose power in the middle of a transaction, your database file might go corrupt.&lt;/p></description></item><item><title>Vim Tricks</title><link>/posts/vim-tricks/</link><pubDate>Wed, 24 Nov 2021 21:45:54 +0800</pubDate><guid>/posts/vim-tricks/</guid><description>&lt;h2 id="批量替换">批量替换&lt;/h2>
 &lt;p>批量替换 v1.6.1 为 v2.7.0&lt;/p>
 &lt;pre>&lt;code class="language-bash">:%s/v1.6.1/v2.7.0/g
 &lt;/code>&lt;/pre>
@@ -731,7 +1245,9 @@ $ ls -lh helloword
 &lt;pre>&lt;code class="language-bash">$ go build -ldflags=&amp;quot;-s -w&amp;quot; -o helloword main.go
 $ ls -lh helloword 
 -rwxrwxr-x 1 gobai gobai 1.3M Nov 23 09:38 helloword
-&lt;/code>&lt;/pr</description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;h2 id="2-使用-upx">2. 使用 &lt;code>UPX&lt;/code>&lt;/h2>
+&lt;p>对直接编译出的二进制使用 &lt;a href="https://github.com/upx/upx">upx&lt;/a> 进一步压缩&lt;/p></description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
 &lt;h2 id="常用过滤日志日志的命令">常用过滤日志日志的命令&lt;/h2>
 &lt;h3 id="根据时间约束过滤日志">根据时间约束过滤日志&lt;/h3>
 &lt;h4 id="获取-2023-01-15-000000-之后的日志">获取 &lt;code>2023-01-15 00:00:00&lt;/code> 之后的日志&lt;/h4>
@@ -751,7 +1267,17 @@ $ ls -lh helloword
 &lt;/code>&lt;/pre>
 &lt;pre>&lt;code class="language-bash">Output
 Archived and active journals take up 3.9G in the file system.
-&lt;/code>&lt;/pr</description></item><item><title>Git Tricks</title><link>/posts/git-tricks/</link><pubDate>Fri, 12 Nov 2021 15:36:19 +0800</pubDate><guid>/posts/git-tricks/</guid><description>&lt;h2 id="暂存当前代码改动">暂存当前代码改动&lt;/h2>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除旧的日志">删除旧的日志&lt;/h2>
+&lt;h3 id="只保留最近-一个月-的日志">只保留最近 &lt;code>一个月&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-time=1month
+&lt;/code>&lt;/pre>
+&lt;h3 id="只保留最近-1g-的日志">只保留最近 &lt;code>1G&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-size=1G
+&lt;/code>&lt;/pre>
+&lt;h2 id="列出所有systemd服务">列出所有systemd服务&lt;/h2>
+&lt;pre>&lt;code class="language-bash">systemctl list-units --type=service --all
+&lt;/code>&lt;/pre></description></item><item><title>Git Tricks</title><link>/posts/git-tricks/</link><pubDate>Fri, 12 Nov 2021 15:36:19 +0800</pubDate><guid>/posts/git-tricks/</guid><description>&lt;h2 id="暂存当前代码改动">暂存当前代码改动&lt;/h2>
 &lt;p>场景是在一个git branch写了不少代码以后发现写错分支了，总不能删了再重新写吧，可以使用 &lt;code>git stash&lt;/code> 命令解决。&lt;/p>
 &lt;pre>&lt;code class="language-bash"># 将当前改动的代码暂存
 git stash

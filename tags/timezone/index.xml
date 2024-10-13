@@ -66,4 +66,5 @@ func initLocal() {
  // Fall back to UTC.
  localLoc.name = &amp;quot;UTC&amp;quot;
 }
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;p>首先检查是否设置了 &lt;code>TZ&lt;/code> 环境变量&lt;/p></description></item></channel></rss>

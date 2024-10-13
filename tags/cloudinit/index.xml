@@ -30,4 +30,32 @@ EOFALL
 &lt;/code>&lt;/pre>
 &lt;h3 id="生成-cloudinit-iso">生成 cloudinit iso&lt;/h3>
 &lt;pre>&lt;code class="language-bash">VM=k8s-node01 bash gen-cloudinit-iso.sh
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h3 id="使用">使用&lt;/h3>
+&lt;p>创建一个k8s节点虚拟机&lt;/p>
+&lt;pre>&lt;code class="language-bash">VM=k8s-node01
+mkdir -p /var/lib/libvirt/disks/${VM}
+qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
+qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk03.qcow2 500G
+
+virt-install \
+ --name ${VM} \
+ --memory 16384 \
+ --vcpus 8 \
+ --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk03.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+ --network bridge=br0 \
+ --import \
+ --os-variant ubuntu22.10 \
+ --noautoconsole
+&lt;/code>&lt;/pre>
+&lt;h2 id="参考">参考&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://cloudinit.readthedocs.io/en/latest/explanation/format.html">https://cloudinit.readthedocs.io/en/latest/explanation/format.html&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go">https://github.com/kubevirt/kubevirt/blob/main/pkg/cloud-init/cloud-init.go&lt;/a>&lt;/li>
+&lt;/ul></description></item></channel></rss>

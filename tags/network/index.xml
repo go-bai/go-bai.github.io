@@ -30,7 +30,23 @@ qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow
 &lt;/code>&lt;/pre>
 &lt;p>我这里将镜像复制到了&lt;code>/var/lib/libvirt/disks/&lt;/code>目录下&lt;/p>
 &lt;pre>&lt;code class="language-bash">qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
-&lt;/code>&lt;/pr</description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>使用&lt;code>virt-install&lt;/code>运行虚拟机, 这里网卡使用&lt;code>virtio&lt;/code>类型并桥接到之前文档里创建的&lt;code>br0&lt;/code>上,
+选择&lt;code>virtio&lt;/code>是因为性能最好, 可以达到&lt;code>10Gbps&lt;/code>以上&lt;/p>
+&lt;pre>&lt;code class="language-bash"># 运行, 这里网络指定的之前文章中创建的网桥网络br0
+virt-install \
+ --name openwrt \
+ --memory 256 \
+ --vcpus 1 \
+ --network bridge=br0,model=virtio \
+ --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide \
+ --import \
+ --autostart \
+ --osinfo detect=on,require=off \
+ --noautoconsole
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置网络">配置网络&lt;/h2>
+&lt;p>连接&lt;code>console&lt;/code>配置网络&lt;/p></description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
 &lt;p>最近经常电脑用着用着就不能联网了，发现&lt;code>enp1s0&lt;/code>总是偶尔冒出一个&lt;code>ipv4&lt;/code>地址，并且路由表会多出一个从&lt;code>enp1s0&lt;/code>出去的&lt;code>default&lt;/code>路由。后来看&lt;code>journalctl&lt;/code>日志发现是&lt;code>dhclient&lt;/code>搞的事情(学艺不精, 没第一时间联系起来)。&lt;/p>
 &lt;p>下面是部分日志：&lt;/p>
 &lt;pre>&lt;code class="language-bash">➜ ~ journalctl -n 1000000 | grep '192.168.1.22\|enp1s0'
@@ -118,4 +134,5 @@ root 157839 0.0 0.0 101232 6112 ? Ssl 10月06 0:06 dhclient
 root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
 root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
 gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item></channel></rss>

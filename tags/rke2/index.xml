@@ -35,4 +35,37 @@ xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on
 EOFALL
 
 chmod +x /usr/bin/gen-cloudinit-iso
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h2 id="创建虚拟机">创建虚拟机&lt;/h2>
+&lt;pre>&lt;code class="language-bash">for vm in &amp;quot;k8s-node01&amp;quot; &amp;quot;k8s-node02&amp;quot;; do
+ export VM=${vm}
+ # prepare cloudinit iso
+ gen-cloudinit-iso
+ # prepare sysdisk and datadisk 
+ qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
+ qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
+ qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
+
+ virt-install \
+ --name ${VM} \
+ --memory 16384 \
+ --vcpus 8 \
+ --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
+ --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
+ --network bridge=br0 \
+ --import \
+ --os-variant ubuntu22.10 \
+ --noautoconsole
+done
+&lt;/code>&lt;/pre>
+&lt;h2 id="安装-rke2">安装 RKE2&lt;/h2>
+&lt;h3 id="脚本在线安装">脚本在线安装&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># TODO 指定 cni
+curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
+systemctl enable rke2-server.service
+systemctl start rke2-server.service
+&lt;/code>&lt;/pre>
+&lt;h3 id="离线安装">离线安装&lt;/h3>
+&lt;p>TODO&lt;/p></description></item></channel></rss>

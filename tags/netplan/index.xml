@@ -30,4 +30,46 @@
  routes:
  - to: &amp;quot;default&amp;quot;
  via: &amp;quot;192.168.1.1&amp;quot;
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;p>由三个文件组成:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>/etc/netplan/01-network-manager-all.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml"># Let NetworkManager manage all devices on this system
+network:
+ version: 2
+ renderer: NetworkManager
+&lt;/code>&lt;/pre>
+&lt;ol start="2">
+&lt;li>&lt;code>/etc/netplan/10-ethernet-enp1s0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ ethernets:
+ enp1s0:
+ dhcp4: false
+ dhcp6: false
+&lt;/code>&lt;/pre>
+&lt;ol start="3">
+&lt;li>&lt;code>/etc/netplan/99-bridged-network-br0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ bridges:
+ br0:
+ dhcp4: false
+ dhcp6: false
+ addresses:
+ - 192.168.1.100/24
+ routes:
+ - to: default
+ via: 192.168.1.1
+ nameservers:
+ addresses: 
+ - 192.168.1.1
+ - 223.5.5.5
+ interfaces:
+ - enp1s0
+ parameters:
+ stp: false
+&lt;/code>&lt;/pre>
+&lt;h2 id="应用网络配置">应用网络配置&lt;/h2>
+&lt;p>容易失联，如果是ssh远程操作请谨慎操作&lt;/p></description></item></channel></rss>

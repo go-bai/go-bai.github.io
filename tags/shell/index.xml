@@ -21,4 +21,16 @@ set -o pipefail
 &lt;h3 id="set--e">&lt;code>set -e&lt;/code>&lt;/h3>
 &lt;p>执行脚本时, Bash遇到错误默认会继续执行, &lt;code>set -e&lt;/code>使得脚本只要发生错误, 就中止执行&lt;/p>
 &lt;h3 id="set--o-pipefail">&lt;code>set -o pipefail&lt;/code>&lt;/h3>
-&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p></description></item></channel></rss>
+&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+set -e
+
+foo | echo a
+echo bar
+&lt;/code>&lt;/pre>
+&lt;p>执行的结果为:&lt;/p>
+&lt;pre>&lt;code class="language-bash">a
+set.sh: line 4: foo: command not found
+bar
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>set -o pipefail&lt;/code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行&lt;/p></description></item></channel></rss>

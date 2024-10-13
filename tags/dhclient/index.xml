@@ -86,4 +86,5 @@ root 157839 0.0 0.0 101232 6112 ? Ssl 10月06 0:06 dhclient
 root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
 root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
 gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item></channel></rss>

@@ -107,4 +107,24 @@ c) Copy remote
 s) Set configuration password
 q) Quit config
 e/n/d/r/c/s/q&amp;gt; q
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h3 id="查看有哪些remote">查看有哪些remote&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># rclone listremotes
+alist:
+&lt;/code>&lt;/pre>
+&lt;h3 id="查看某个remote下的目录或文件">查看某个&lt;code>remote&lt;/code>下的目录或文件&lt;/h3>
+&lt;pre>&lt;code class="language-bash"># rclone lsd alist:/ali/video/诛仙
+ -1 2024-04-02 12:27:23 -1 诛仙.第1季.2022-2023.4K.全26集
+ -1 2024-04-02 12:27:24 -1 诛仙.第2季.2024
+# rclone ls alist:/ali/video/诛仙/诛仙.第2季.2024
+959919343 第27集-Zhu.Xian-2024-03-29-4k-HEVC-H265.AAC-WEB-DL.mkv
+995844543 第28集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+1012470661 第29集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+&lt;/code>&lt;/pre>
+&lt;h2 id="将alist-mount-到目录">将&lt;code>alist&lt;/code> mount 到目录&lt;/h2>
+&lt;pre>&lt;code class="language-bash">sudo mkdir -p /mnt/alist
+sudo chmod 777 /mnt/alist
+# --header &amp;quot;Referer:https://www.aliyundrive.com/&amp;quot; 是必须要有的
+rclone mount --cache-dir=/tmp --vfs-cache-mode=writes --header &amp;quot;Referer:https://www.aliyundrive.com/&amp;quot; alist: /mnt/alist/
+&lt;/code>&lt;/pre>
+&lt;p>配置开机自动挂载&lt;/p></description></item></channel></rss>

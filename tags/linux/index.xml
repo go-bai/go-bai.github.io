@@ -36,7 +36,19 @@ set -o pipefail
 &lt;h3 id="set--e">&lt;code>set -e&lt;/code>&lt;/h3>
 &lt;p>执行脚本时, Bash遇到错误默认会继续执行, &lt;code>set -e&lt;/code>使得脚本只要发生错误, 就中止执行&lt;/p>
 &lt;h3 id="set--o-pipefail">&lt;code>set -o pipefail&lt;/code>&lt;/h3>
-&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p></description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
+&lt;p>&lt;code>set -e&lt;/code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+set -e
+
+foo | echo a
+echo bar
+&lt;/code>&lt;/pre>
+&lt;p>执行的结果为:&lt;/p>
+&lt;pre>&lt;code class="language-bash">a
+set.sh: line 4: foo: command not found
+bar
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>set -o pipefail&lt;/code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行&lt;/p></description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
 &lt;p>先亮个当前的穷人版家庭网络拓扑图&lt;/p>
 &lt;p>&lt;img src="/posts/linux/imgs/home-network-topology-diagram.svg" alt="穷人版家庭网络拓扑图">&lt;/p>
 &lt;h2 id="准备qcow2镜像">准备&lt;code>qcow2&lt;/code>镜像&lt;/h2>
@@ -53,7 +65,23 @@ qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow
 &lt;/code>&lt;/pre>
 &lt;p>我这里将镜像复制到了&lt;code>/var/lib/libvirt/disks/&lt;/code>目录下&lt;/p>
 &lt;pre>&lt;code class="language-bash">qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
-&lt;/code>&lt;/pr</description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>使用&lt;code>virt-install&lt;/code>运行虚拟机, 这里网卡使用&lt;code>virtio&lt;/code>类型并桥接到之前文档里创建的&lt;code>br0&lt;/code>上,
+选择&lt;code>virtio&lt;/code>是因为性能最好, 可以达到&lt;code>10Gbps&lt;/code>以上&lt;/p>
+&lt;pre>&lt;code class="language-bash"># 运行, 这里网络指定的之前文章中创建的网桥网络br0
+virt-install \
+ --name openwrt \
+ --memory 256 \
+ --vcpus 1 \
+ --network bridge=br0,model=virtio \
+ --disk path=/var/lib/libvirt/disks/openwrt.qcow2,bus=ide \
+ --import \
+ --autostart \
+ --osinfo detect=on,require=off \
+ --noautoconsole
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置网络">配置网络&lt;/h2>
+&lt;p>连接&lt;code>console&lt;/code>配置网络&lt;/p></description></item><item><title>dhclient</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
 &lt;p>最近经常电脑用着用着就不能联网了，发现&lt;code>enp1s0&lt;/code>总是偶尔冒出一个&lt;code>ipv4&lt;/code>地址，并且路由表会多出一个从&lt;code>enp1s0&lt;/code>出去的&lt;code>default&lt;/code>路由。后来看&lt;code>journalctl&lt;/code>日志发现是&lt;code>dhclient&lt;/code>搞的事情(学艺不精, 没第一时间联系起来)。&lt;/p>
 &lt;p>下面是部分日志：&lt;/p>
 &lt;pre>&lt;code class="language-bash">➜ ~ journalctl -n 1000000 | grep '192.168.1.22\|enp1s0'
@@ -141,7 +169,8 @@ root 157839 0.0 0.0 101232 6112 ? Ssl 10月06 0:06 dhclient
 root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
 root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
 gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
-&lt;/code>&lt;/pr</description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
 &lt;ol>
 &lt;li>LAN网关 &lt;code>192.168.1.1&lt;/code>&lt;/li>
 &lt;li>子网掩码 &lt;code>255.255.255.0&lt;/code>&lt;/li>
@@ -173,7 +202,49 @@ gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-
  routes:
  - to: &amp;quot;default&amp;quot;
  via: &amp;quot;192.168.1.1&amp;quot;
-&lt;/code>&lt;/pr</description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>&lt;blockquote>
+&lt;/code>&lt;/pre>
+&lt;p>由三个文件组成:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>/etc/netplan/01-network-manager-all.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml"># Let NetworkManager manage all devices on this system
+network:
+ version: 2
+ renderer: NetworkManager
+&lt;/code>&lt;/pre>
+&lt;ol start="2">
+&lt;li>&lt;code>/etc/netplan/10-ethernet-enp1s0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ ethernets:
+ enp1s0:
+ dhcp4: false
+ dhcp6: false
+&lt;/code>&lt;/pre>
+&lt;ol start="3">
+&lt;li>&lt;code>/etc/netplan/99-bridged-network-br0.yaml&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-yaml">network:
+ bridges:
+ br0:
+ dhcp4: false
+ dhcp6: false
+ addresses:
+ - 192.168.1.100/24
+ routes:
+ - to: default
+ via: 192.168.1.1
+ nameservers:
+ addresses: 
+ - 192.168.1.1
+ - 223.5.5.5
+ interfaces:
+ - enp1s0
+ parameters:
+ stp: false
+&lt;/code>&lt;/pre>
+&lt;h2 id="应用网络配置">应用网络配置&lt;/h2>
+&lt;p>容易失联，如果是ssh远程操作请谨慎操作&lt;/p></description></item><item><title>删除分区并扩容另一个分区和根文件系统</title><link>/posts/delete-partition-and-expand-another/</link><pubDate>Mon, 02 Oct 2023 16:54:05 +0800</pubDate><guid>/posts/delete-partition-and-expand-another/</guid><description>&lt;blockquote>
 &lt;p>现在要将 &lt;code>/dev/sda3&lt;/code> 分区删掉并扩容到 &lt;code>/dev/sda2&lt;/code>, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 &lt;code>/&lt;/code> 挂载在 &lt;code>/dev/sda2&lt;/code> 上, 并且 filesystem 是 &lt;code>ext4&lt;/code>)&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="磁盘初始分区和挂载情况">磁盘初始分区和挂载情况&lt;/h2>
@@ -201,7 +272,39 @@ Device Start End Sectors Size Type
 ➜ ~ df -hT /dev/sda2
 Filesystem Type Size Used Avail Use% Mounted on
 /dev/sda2 ext4 97G 28G 64G 31% /
-&lt;/code>&lt;/pr</description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除分区-devsda3">删除分区 &lt;code>/dev/sda3&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash">➜ ~ fdisk /dev/sda
+
+Welcome to fdisk (util-linux 2.36.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Partition number (1-3, default 3): 3
+
+Partition 3 has been deleted.
+
+Command (m for help): p
+Disk /dev/sda: 100 GiB, 107374182400 bytes, 209715200 sectors
+Disk model: BlockVolume 
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 1048576 bytes
+Disklabel type: gpt
+Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039
+
+Device Start End Sectors Size Type
+/dev/sda1 2048 1050623 1048576 512M EFI System
+/dev/sda2 1050624 207714303 206663680 98.5G Linux filesystem
+
+Command (m for help): w # 保存退出
+The partition table has been altered.
+Syncing disks.
+&lt;/code>&lt;/pre>
+&lt;h2 id="扩容分区-devsda2-和-根文件系统">扩容分区 &lt;code>/dev/sda2&lt;/code> 和 根文件系统&lt;/h2>
+&lt;p>使用 &lt;code>fdisk&lt;/code> 扩容 &lt;code>/dev/sda2&lt;/code>, 前提是 &lt;code>/dev/sda2&lt;/code> 后面没有其他分区了，可以这样扩容(先删除不退出并重建分区, 分区 &lt;code>Start&lt;/code> 不变, &lt;code>End&lt;/code> 增大)&lt;/p></description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
 &lt;h2 id="常用过滤日志日志的命令">常用过滤日志日志的命令&lt;/h2>
 &lt;h3 id="根据时间约束过滤日志">根据时间约束过滤日志&lt;/h3>
 &lt;h4 id="获取-2023-01-15-000000-之后的日志">获取 &lt;code>2023-01-15 00:00:00&lt;/code> 之后的日志&lt;/h4>
@@ -221,4 +324,14 @@ Filesystem Type Size Used Avail Use% Mounted on
 &lt;/code>&lt;/pre>
 &lt;pre>&lt;code class="language-bash">Output
 Archived and active journals take up 3.9G in the file system.
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除旧的日志">删除旧的日志&lt;/h2>
+&lt;h3 id="只保留最近-一个月-的日志">只保留最近 &lt;code>一个月&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-time=1month
+&lt;/code>&lt;/pre>
+&lt;h3 id="只保留最近-1g-的日志">只保留最近 &lt;code>1G&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-size=1G
+&lt;/code>&lt;/pre>
+&lt;h2 id="列出所有systemd服务">列出所有systemd服务&lt;/h2>
+&lt;pre>&lt;code class="language-bash">systemctl list-units --type=service --all
+&lt;/code>&lt;/pre></description></item></channel></rss>

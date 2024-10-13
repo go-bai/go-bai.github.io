@@ -26,4 +26,36 @@ Device Start End Sectors Size Type
 ➜ ~ df -hT /dev/sda2
 Filesystem Type Size Used Avail Use% Mounted on
 /dev/sda2 ext4 97G 28G 64G 31% /
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除分区-devsda3">删除分区 &lt;code>/dev/sda3&lt;/code>&lt;/h2>
+&lt;pre>&lt;code class="language-bash">➜ ~ fdisk /dev/sda
+
+Welcome to fdisk (util-linux 2.36.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): d
+Partition number (1-3, default 3): 3
+
+Partition 3 has been deleted.
+
+Command (m for help): p
+Disk /dev/sda: 100 GiB, 107374182400 bytes, 209715200 sectors
+Disk model: BlockVolume 
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 1048576 bytes
+Disklabel type: gpt
+Disk identifier: 40BED670-8B91-4520-9785-DB1F1035C039
+
+Device Start End Sectors Size Type
+/dev/sda1 2048 1050623 1048576 512M EFI System
+/dev/sda2 1050624 207714303 206663680 98.5G Linux filesystem
+
+Command (m for help): w # 保存退出
+The partition table has been altered.
+Syncing disks.
+&lt;/code>&lt;/pre>
+&lt;h2 id="扩容分区-devsda2-和-根文件系统">扩容分区 &lt;code>/dev/sda2&lt;/code> 和 根文件系统&lt;/h2>
+&lt;p>使用 &lt;code>fdisk&lt;/code> 扩容 &lt;code>/dev/sda2&lt;/code>, 前提是 &lt;code>/dev/sda2&lt;/code> 后面没有其他分区了，可以这样扩容(先删除不退出并重建分区, 分区 &lt;code>Start&lt;/code> 不变, &lt;code>End&lt;/code> 增大)&lt;/p></description></item></channel></rss>

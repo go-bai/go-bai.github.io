@@ -18,4 +18,14 @@
 &lt;/code>&lt;/pre>
 &lt;pre>&lt;code class="language-bash">Output
 Archived and active journals take up 3.9G in the file system.
-&lt;/code>&lt;/pr</description></item></channel></rss>
+&lt;/code>&lt;/pre>
+&lt;h2 id="删除旧的日志">删除旧的日志&lt;/h2>
+&lt;h3 id="只保留最近-一个月-的日志">只保留最近 &lt;code>一个月&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-time=1month
+&lt;/code>&lt;/pre>
+&lt;h3 id="只保留最近-1g-的日志">只保留最近 &lt;code>1G&lt;/code> 的日志&lt;/h3>
+&lt;pre>&lt;code class="language-bash">journalctl --vacuum-size=1G
+&lt;/code>&lt;/pre>
+&lt;h2 id="列出所有systemd服务">列出所有systemd服务&lt;/h2>
+&lt;pre>&lt;code class="language-bash">systemctl list-units --type=service --all
+&lt;/code>&lt;/pre></description></item></channel></rss>
