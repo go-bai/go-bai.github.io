@@ -47,7 +47,7 @@ Build 驱动有多种，例如 `docker`、`docker-container`、`kubernetes`、`r
 
 <div style="text-align: center;">* The docker driver doesn't support all cache export options</div>
 
-### 默认的 Builder
+### 默认的 Builder 实例
 
 docker engine 会自动创建一个默认的 builder 实例，例如 `default`。默认的驱动是 `docker`，不支持多平台构建。
 
