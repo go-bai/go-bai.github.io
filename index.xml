@@ -70,7 +70,7 @@
  &lt;/tbody>
 &lt;/table>
 &lt;div style="text-align: center;">* The docker driver doesn't support all cache export options&lt;/div>
-&lt;h3 id="默认的-builder">默认的 Builder&lt;/h3>
+&lt;h3 id="默认的-builder-实例">默认的 Builder 实例&lt;/h3>
 &lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>Libvirt</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">&lt;code>virsh&lt;/code> 命令&lt;/h2>
 &lt;h3 id="virsh-domifaddr-查看虚拟机网卡ip">&lt;code>virsh domifaddr&lt;/code> 查看虚拟机网卡ip&lt;/h3>
 &lt;pre>&lt;code class="language-bash"># virsh domifaddr k3s-node01 --source lease
