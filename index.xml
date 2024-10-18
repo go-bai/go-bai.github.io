@@ -24,48 +24,48 @@
 &lt;table>
  &lt;thead>
  &lt;tr>
- &lt;th style="text-align: left">Feature&lt;/th>
- &lt;th style="text-align: left">docker&lt;/th>
- &lt;th style="text-align: left">docker-container&lt;/th>
- &lt;th style="text-align: left">kubernetes&lt;/th>
- &lt;th style="text-align: left">remote&lt;/th>
+ &lt;th>Feature&lt;/th>
+ &lt;th>docker&lt;/th>
+ &lt;th>docker-container&lt;/th>
+ &lt;th>kubernetes&lt;/th>
+ &lt;th>remote&lt;/th>
  &lt;/tr>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">Automatically load image&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
+ &lt;td>Automatically load image&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">Cache export&lt;/td>
- &lt;td style="text-align: left">✓*&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td>Cache export&lt;/td>
+ &lt;td>✓*&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">Tarball output&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td>Tarball output&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">Multi-arch images&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
+ &lt;td>Multi-arch images&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">BuildKit configuration&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">✅&lt;/td>
- &lt;td style="text-align: left">&lt;/td>
- &lt;td style="text-align: left">Managed externally&lt;/td>
+ &lt;td>BuildKit configuration&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>Managed externally&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
