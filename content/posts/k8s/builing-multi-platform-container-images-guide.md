@@ -104,9 +104,11 @@ http = true
 
 Buildx + Dockerfile 构建多平台镜像有[三种方式](https://github.com/docker/buildx?tab=readme-ov-file#building-multi-platform-images)
 
-1. 在内核中使用QEMU仿真支持
+1. 在内核中使用QEMU仿真支持, 利用的内核的 binfmt_misc 机制提供运行多平台二进制文件的能力
+    - `docker run --privileged --rm tonistiigi/binfmt --install all` 注册所有平台的二进制文件格式到内核中
+    - 上面的命令会将所有平台的二进制文件格式注册到内核中，例如 `linux/arm64`、`linux/amd64` 等, 可以在 `/proc/sys/fs/binfmt_misc/qemu-*` 看到注册的二进制文件格式和对应的解释器路径
 2. 使用相同的构建器实例在多个不同平台节点上构建
-3. 使用Dockerfile中的一个阶段来交叉编译到不同的架构，需要语言支持交叉编译，如Go语言
+3. 使用Dockerfile中的一个阶段来交叉编译到不同的架构，需要语言支持交叉编译(Go语言等)或者平台无关(Java语言和前端静态文件等)
 
 下面是使用 BuildKit 构建多平台镜像时，Dockerfile 中可以使用的ARGs, 参考[Automatic platform args in the global scope](https://docs.docker.com/reference/dockerfile/#automatic-platform-args-in-the-global-scope)
 
@@ -117,7 +119,7 @@ Buildx + Dockerfile 构建多平台镜像有[三种方式](https://github.com/do
 - `TARGETOS` 是目标操作系统的标识符，例如 `linux`
 - `TARGETARCH` 是目标架构的标识符，例如 `arm64`
 
-下面这个实例使用第三种方式，在 Dockerfile 中使用一个阶段来交叉编译到不同的架构。
+使用第一种多平台镜像构建方式是最简单的（如果构建使用的节点支持），下面这个实例使用第三种构建多平台镜像方式，在 Dockerfile 中使用一个阶段来交叉编译到不同的架构。
 
 ```bash
 # Dockerfile
