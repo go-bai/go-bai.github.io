@@ -163,6 +163,17 @@ https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/
 
 ## 安装 kube-prometheus-stack
 
+## 一些常用目录/文件
+
+| 目录/文件 | 说明 |
+| --- | --- |
+| `/var/lib/rancher/rke2/agent/pod-manifests` | static pod 文件 |
+| `/var/lib/rancher/rke2/agent/etc/containerd/config.toml` | containerd配置文件 |
+| `/var/lib/rancher/rke2/agent/containerd/containerd.log` | containerd日志 |
+| `/var/lib/rancher/rke2/agent/logs/kubelet.log` | kubelet日志 |
+| `/var/lib/rancher/rke2/server/db/etcd/config` | etcd配置文件 |
+| `/etc/rancher/rke2/config.yaml` | [rke2配置文件](https://docs.rke2.io/install/configuration#configuration-file) |
+
 ## 参考
 
 - [[RKE2 docs] quickstart](https://docs.rke2.io/zh/install/quickstart)
