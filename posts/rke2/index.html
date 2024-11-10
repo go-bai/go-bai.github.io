@@ -46,7 +46,15 @@ chmod +x /usr/bin/gen-cloudinit-iso
     --os-variant ubuntu22.10 \
     --noautoconsole
 done
-</code></pre><h2 id=安装-rke2>安装 RKE2</h2><h3 id=脚本在线安装>脚本在线安装</h3><pre><code class=language-bash># TODO 指定 cni
+</code></pre><h2 id=安装-rke2>安装 RKE2</h2><h3 id=脚本在线安装>脚本在线安装</h3><pre><code class=language-bash># 初始化 rke2 配置文件
+mkdir -p /etc/rancher/rke2
+cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: &quot;0644&quot;
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: calico
+EOF
+
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service

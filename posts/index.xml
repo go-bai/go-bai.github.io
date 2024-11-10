@@ -213,7 +213,15 @@ done
 &lt;/code>&lt;/pre>
 &lt;h2 id="安装-rke2">安装 RKE2&lt;/h2>
 &lt;h3 id="脚本在线安装">脚本在线安装&lt;/h3>
-&lt;pre>&lt;code class="language-bash"># TODO 指定 cni
+&lt;pre>&lt;code class="language-bash"># 初始化 rke2 配置文件
+mkdir -p /etc/rancher/rke2
+cat &amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: &amp;quot;0644&amp;quot;
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: calico
+EOF
+
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service

@@ -213,7 +213,15 @@ done
 &lt;/code>&lt;/pre>
 &lt;h2 id="安装-rke2">安装 RKE2&lt;/h2>
 &lt;h3 id="脚本在线安装">脚本在线安装&lt;/h3>
-&lt;pre>&lt;code class="language-bash"># TODO 指定 cni
+&lt;pre>&lt;code class="language-bash"># 初始化 rke2 配置文件
+mkdir -p /etc/rancher/rke2
+cat &amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: &amp;quot;0644&amp;quot;
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: calico
+EOF
+
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
@@ -1340,7 +1348,7 @@ git checkout your_workspace_branch
 # 把暂存的代码从堆栈弹出到当前分支
 git stash pop
 &lt;/code>&lt;/pre></description></item><item><title>关于我</title><link>/about/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/about/</guid><description>&lt;blockquote>
-&lt;p>服务端开发工程师，职场新人 喜欢一些“不务正业”的技术&lt;/p>
+&lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>
 &lt;/blockquote>
 &lt;h3 id="目前在学的内容">目前在学的内容&lt;/h3>
 &lt;ul>
@@ -1359,7 +1367,7 @@ git stash pop
 &lt;h3 id="我的设备">我的设备&lt;/h3>
 &lt;ul>
 &lt;li>Macbook Pro 2018 15 inch 16+256&lt;/li>
-&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 32+512
+&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 64G内存+1TB固态
 &lt;ul>
 &lt;li>Ubuntu 22.04 + QEMU/KVM&lt;/li>
 &lt;/ul>
@@ -1369,5 +1377,5 @@ git stash pop
 &lt;li>OnePlus 9R&lt;/li>
 &lt;/ul>
 &lt;h3 id="联系方式">联系方式:&lt;/h3>
-&lt;pre>&lt;code class="language-bash">echo -n NTk5NTAwNjg4QHFxLmNvbQ== | base64 -d
+&lt;pre>&lt;code class="language-bash">echo YWRtaW5AZ29jbi50b3AK | base64 -d
 &lt;/code>&lt;/pre></description></item></channel></rss>
