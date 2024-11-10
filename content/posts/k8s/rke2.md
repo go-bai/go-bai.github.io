@@ -80,7 +80,15 @@ done
 ### 脚本在线安装
 
 ```bash
-# TODO 指定 cni
+# 初始化 rke2 配置文件
+mkdir -p /etc/rancher/rke2
+cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: calico
+EOF
+
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
