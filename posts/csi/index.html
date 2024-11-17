@@ -1,0 +1,64 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>CSI | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>CSI</span></h1><h4 class=date>2024/11/04</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/csi>csi</a></p></div><nav id=TableOfContents><ul><li><a href=#关于-csi>关于 CSI</a></li><li><a href=#关于-sidecar-containers>关于 Sidecar Containers</a><ul><li><a href=#node-driver-registrar>node-driver-registrar</a></li><li><a href=#external-provisioner>external-provisioner</a></li><li><a href=#external-attacher>external-attacher</a></li><li><a href=#external-snapshotter>external-snapshotter</a></li><li><a href=#external-resizer>external-resizer</a></li><li><a href=#livenessprobe>livenessprobe</a></li></ul></li><li><a href=#csi-demo>csi demo</a><ul><li><a href=#kubernetes-csicsi-driver-host-path>kubernetes-csi/csi-driver-host-path</a></li><li><a href=#kubevirthostpath-provisioner>kubevirt/hostpath-provisioner</a></li></ul></li><li><a href=#csi-测试工具-csc>csi 测试工具 <code>csc</code></a><ul><li><a href=#identity>identity</a><ul><li><a href=#getplugininfo>GetPluginInfo</a></li></ul></li><li><a href=#node>node</a><ul><li><a href=#nodegetinfo>NodeGetInfo</a></li></ul></li><li><a href=#controller>controller</a><ul><li><a href=#createvolume>CreateVolume</a></li><li><a href=#listvolumes>ListVolumes</a></li><li><a href=#nodepublishvolume>NodePublishVolume</a></li><li><a href=#deletevolume>DeleteVolume</a></li></ul></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><h2 id=关于-csi>关于 CSI</h2><p>CSI 全称为 <code>Container Storage Interface</code>, 容器存储接口</p><p>要实现一个第三方的 csi driver 需要实现下面的 gRPC service <a href=https://github.com/container-storage-interface/spec/blob/master/lib/go/csi/csi_grpc.pb.go>csi spec</a></p><pre><code class=language-golang>// 如果 NodeServer 和 ControllerServer 对应服务运行在不同 pod 中, 那么两个服务都要实现 IdentityServer
+type IdentityServer interface {
+    // 用来获取插件名称
+	GetPluginInfo(context.Context, *GetPluginInfoRequest) (*GetPluginInfoResponse, error)
+	GetPluginCapabilities(context.Context, *GetPluginCapabilitiesRequest) (*GetPluginCapabilitiesResponse, error)
+	Probe(context.Context, *ProbeRequest) (*ProbeResponse, error)
+	mustEmbedUnimplementedIdentityServer()
+}
+
+type ControllerServer interface {
+    // 创建 volume, 如 ceph 创建一个 rbd 或者 hostpath 创建一个目录
+	CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
+    // 删除 volume, 如 ceph 删除一个 rbd 或者 hostpath 删除一个目录
+	DeleteVolume(context.Context, *DeleteVolumeRequest) (*DeleteVolumeResponse, error)
+    // 将 volume attach 到 node 上, 如 rbd 通过 rbd map 命令 attach, 成功后 node 上会多出一个 rbdx 的 block 设备
+	ControllerPublishVolume(context.Context, *ControllerPublishVolumeRequest) (*ControllerPublishVolumeResponse, error)
+    // 将 volume 从 node 上 detach, 如 rbd 通过 rbd unmap 命令 detach
+	ControllerUnpublishVolume(context.Context, *ControllerUnpublishVolumeRequest) (*ControllerUnpublishVolumeResponse, error)
+	ValidateVolumeCapabilities(context.Context, *ValidateVolumeCapabilitiesRequest) (*ValidateVolumeCapabilitiesResponse, error)
+    // 列出所有 volume
+	ListVolumes(context.Context, *ListVolumesRequest) (*ListVolumesResponse, error)
+	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
+	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
+	CreateSnapshot(context.Context, *CreateSnapshotRequest) (*CreateSnapshotResponse, error)
+	DeleteSnapshot(context.Context, *DeleteSnapshotRequest) (*DeleteSnapshotResponse, error)
+	ListSnapshots(context.Context, *ListSnapshotsRequest) (*ListSnapshotsResponse, error)
+	ControllerExpandVolume(context.Context, *ControllerExpandVolumeRequest) (*ControllerExpandVolumeResponse, error)
+	ControllerGetVolume(context.Context, *ControllerGetVolumeRequest) (*ControllerGetVolumeResponse, error)
+	ControllerModifyVolume(context.Context, *ControllerModifyVolumeRequest) (*ControllerModifyVolumeResponse, error)
+	mustEmbedUnimplementedControllerServer()
+}
+
+// 这些会被 kubelet 调用
+type NodeServer interface {
+    // format (如果没format), mount 到 node 的 global directory
+	NodeStageVolume(context.Context, *NodeStageVolumeRequest) (*NodeStageVolumeResponse, error)
+    // umount
+	NodeUnstageVolume(context.Context, *NodeUnstageVolumeRequest) (*NodeUnstageVolumeResponse, error)
+    // mount --bind 到 pod directory
+	NodePublishVolume(context.Context, *NodePublishVolumeRequest) (*NodePublishVolumeResponse, error)
+    // umount --bind
+	NodeUnpublishVolume(context.Context, *NodeUnpublishVolumeRequest) (*NodeUnpublishVolumeResponse, error)
+	NodeGetVolumeStats(context.Context, *NodeGetVolumeStatsRequest) (*NodeGetVolumeStatsResponse, error)
+	NodeExpandVolume(context.Context, *NodeExpandVolumeRequest) (*NodeExpandVolumeResponse, error)
+	NodeGetCapabilities(context.Context, *NodeGetCapabilitiesRequest) (*NodeGetCapabilitiesResponse, error)
+	NodeGetInfo(context.Context, *NodeGetInfoRequest) (*NodeGetInfoResponse, error)
+	mustEmbedUnimplementedNodeServer()
+}
+</code></pre><h2 id=关于-sidecar-containers>关于 Sidecar Containers</h2><p><a href=https://kubernetes-csi.github.io/docs/sidecar-containers.html>Sidecar Containers</a> 是一系列标准容器，用于简化 CSI 插件的开发和部署</p><p>它们都有共同的逻辑，watch k8s API，调用第三方 csi driver 执行操作，最后对应的更新 k8s API</p><p>这些容器一般作为sidecar和第三方 csi driver 一起部署在同一个 pod 中, 通过 unix socket 通信</p><table><thead><tr><th>容器</th><th>仓库</th><th>文档</th></tr></thead><tbody><tr><td>node-driver-registrar</td><td><a href=https://github.com/kubernetes-csi/node-driver-registrar>kubernetes-csi/node-driver-registrar</a></td><td><a href=https://kubernetes-csi.github.io/docs/node-driver-registrar.html>link</a></td></tr><tr><td>external-provisioner</td><td><a href=https://github.com/kubernetes-csi/external-provisioner>kubernetes-csi/external-provisioner</a></td><td><a href=https://kubernetes-csi.github.io/docs/external-provisioner.html>link</a></td></tr><tr><td>external-attacher</td><td><a href=https://github.com/kubernetes-csi/external-attacher>kubernetes-csi/external-attacher</a></td><td><a href=https://kubernetes-csi.github.io/docs/external-attacher.html>link</a></td></tr><tr><td>external-snapshotter</td><td><a href=https://github.com/kubernetes-csi/external-snapshotter>kubernetes-csi/external-snapshotter</a></td><td><a href=https://kubernetes-csi.github.io/docs/external-snapshotter.html>link</a></td></tr><tr><td>external-resizer</td><td><a href=https://github.com/kubernetes-csi/external-resizer>kubernetes-csi/external-resizer</a></td><td><a href=https://kubernetes-csi.github.io/docs/external-resizer.html>link</a></td></tr><tr><td>livenessprobe</td><td><a href=https://github.com/kubernetes-csi/livenessprobe>kubernetes-csi/livenessprobe</a></td><td><a href=https://kubernetes-csi.github.io/docs/livenessprobe.html>link</a></td></tr></tbody></table><h3 id=node-driver-registrar>node-driver-registrar</h3><p>从 CSI endpoint 拉取 driver 信息(使用 NodeGetInfo), 然后通过 <a href=https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/pluginmanager/pluginwatcher/README.md>kubelet plugin registration mechanism</a> 注册到对应节点的 kubelet 中</p><p>表现形式为</p><pre><code>/var/lib/kubelet/plugins/csi-hostpath/csi.sock
+/var/lib/kubelet/plugins_registry/kubevirt.io.hostpath-provisioner-reg.sock
+</code></pre><h3 id=external-provisioner>external-provisioner</h3><p>watch <code>PersistentVolumeClaim</code> 对象, 如果一个 pvc 引用了一个 <code>StorageClass</code> 并且 <code>StorageClass</code> 的 <code>provisioner</code> 字段
+和从 CSI endpoint 调用 <code>GetPluginInfo</code> 获取到的一致，则执行下面逻辑</p><ul><li>创建 pvc 事件调用 CSI endpoint 执行 <code>CreateVolume</code>, 成功创建 volume 后就会创建代表这个 volume 的 <code>PersistentVolume</code> 对象</li><li>删除 pvc 事件调用 CSI endpoint 执行 <code>DeleteVolume</code>, 成功删除 volume 后也会删除代表这个 volume 的 <code>PersistentVolume</code> 对象</li></ul><p>当 pvc 对应的 sc 的 volumeBindingMode 为 <code>WaitForFirstConsumer</code> 时, 只有使用此 pvc 的 pod 被调度之后才会去创建 pv</p><h3 id=external-attacher>external-attacher</h3><p>watch <code>VolumeAttachment</code> 对象, 如果 attacher 字段和从 CSI endpoint 调用 <code>GetPluginInfo</code> 获取到的一致, 则触发调用 CSI endpoint 执行 <code>Controller[Publish|Unpublish]Volume</code></p><p>一般块存储才会需要 attach/detach 操作, 比如 ceph 的 <code>rbd</code></p><p><code>VolumeAttachment</code> 对象是由 <code>ADController</code>(AttachDetach Controller) 创建, ADController 会不断的检查每一个 pod 对应的 pv 和这个 pod 所调度到的宿主机之间的挂载情况(node.status.volumesAttached), 针对没有挂载的 pv 创建的 <code>VolumeAttachment</code> 中存储以下三个信息</p><ul><li>attacher: csi driver 名称</li><li>nodeName: volume应该attach到的主机名称</li><li>source.persistentVolumeName: 要attach的pv的名称</li></ul><h3 id=external-snapshotter>external-snapshotter</h3><p>TODO</p><h3 id=external-resizer>external-resizer</h3><p>TODO</p><h3 id=livenessprobe>livenessprobe</h3><p>TODO</p><h2 id=csi-demo>csi demo</h2><h3 id=kubernetes-csicsi-driver-host-path>kubernetes-csi/csi-driver-host-path</h3><p><a href=https://github.com/kubevirt/hostpath-provisioner>kubevirt/hostpath-provisioner</a> 是官方提供的 demo</p><h3 id=kubevirthostpath-provisioner>kubevirt/hostpath-provisioner</h3><p><a href=https://github.com/kubernetes-csi/csi-driver-host-path>kubernetes-csi/csi-driver-host-path</a> 是 kubevirt 基于 <code>kubernetes-csi/csi-driver-host-path</code> 开发的, 改动不多, 适合学习和使用</p><h2 id=csi-测试工具-csc>csi 测试工具 <code>csc</code></h2><p><a href=https://github.com/rexray/gocsi/tree/master/csc>csc</a> 是 Container Storage Client</p><h3 id=identity>identity</h3><p>identity service 相关的</p><h4 id=getplugininfo>GetPluginInfo</h4><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock identity plugin-info
+&quot;kubevirt.io.hostpath-provisioner&quot;	&quot;latest&quot;
+</code></pre><h3 id=node>node</h3><p>node service 相关的</p><h4 id=nodegetinfo>NodeGetInfo</h4><p><code>node-driver-registrar</code> 向 <code>kubelet</code> 注册 CSI plugin 时会调用</p><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock node get-info
+test	0	&amp;csi.Topology{Segments:map[string]string{&quot;topology.hostpath.csi/node&quot;:&quot;test&quot;}, XXX_NoUnkeyedLiteral:struct {}{}, XXX_unrecognized:[]uint8(nil), XXX_sizecache:0}
+</code></pre><h3 id=controller>controller</h3><p>controller service 相关的</p><h4 id=createvolume>CreateVolume</h4><p>external-provisioner 监听到有 pvc 创建时会调用</p><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock controller create-volume --params storagePool=local --cap MULTI_NODE_MULTI_WRITER,mount,xfs,uid=500,gid=500 pvc-466a771a-a8c7-473e-bca6-780f7663a6cd
+&quot;pvc-466a771a-a8c7-473e-bca6-780f7663a6cd&quot;	105226698752	&quot;storagePool&quot;=&quot;local&quot;
+</code></pre><h4 id=listvolumes>ListVolumes</h4><p>可以看到刚才创建的</p><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock controller list-volumes
+&quot;pvc-466a771a-a8c7-473e-bca6-780f7663a6cd&quot;	105226698752
+</code></pre><h4 id=nodepublishvolume>NodePublishVolume</h4><p>kubelet 针对 好像不会调用这个 ?</p><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock node publish xxx
+</code></pre><h4 id=deletevolume>DeleteVolume</h4><p>external-provisioner 监听到有 pvc 被删除时会调用</p><pre><code class=language-bash>$ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock controller delete-volume pvc-466a771a-a8c7-473e-bca6-780f7663a6cd
+pvc-466a771a-a8c7-473e-bca6-780f7663a6cd
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://arslan.io/2018/06/21/how-to-write-a-container-storage-interface-csi-plugin/>How to write a Container Storage Interface (CSI) plugin</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
