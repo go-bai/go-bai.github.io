@@ -99,7 +99,7 @@ watch `PersistentVolumeClaim` 对象, 如果一个 pvc 引用了一个 `StorageC
 - 创建 pvc 事件调用 CSI endpoint 执行 `CreateVolume`, 成功创建 volume 后就会创建代表这个 volume 的 `PersistentVolume` 对象
 - 删除 pvc 事件调用 CSI endpoint 执行 `DeleteVolume`, 成功删除 volume 后也会删除代表这个 volume 的 `PersistentVolume` 对象
 
-当 pvc 对应的 sc 的 volumeBindingMode 为 `WaitForFirstConsumer` 时, 只有使用此 pvc 的 pod 被调度之后才会去创建 pv, **`kube-schedule` 调度 pod 后会在 pvc 上增加一个注解 `volume.kubernetes.io/selected-node={pod.spec.nodeName}`** , 通过 pvc 是否包含此注解并不为空来判断是否 provision, 如果 volumeBindingMode 为 `Immediate` 则表示不用等待 pod 调度立即 provision
+当 pvc 对应的 sc 的 volumeBindingMode 为 `WaitForFirstConsumer` 时, 只有使用此 pvc 的 pod 被调度之后才会去创建 pv, **`kube-schedule` 调度 pod 后会在 pvc 上增加一个注解 `volume.kubernetes.io/selected-node={scheduleResult.SuggestedHost}`** , 通过 pvc 是否包含此注解并不为空来判断是否 provision, 如果 volumeBindingMode 为 `Immediate` 则表示不用等待 pod 调度立即 provision
 
 ### external-attacher
 
