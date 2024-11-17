@@ -16,50 +16,50 @@ CSI 全称为 `Container Storage Interface`, 容器存储接口
 // 如果 NodeServer 和 ControllerServer 对应服务运行在不同 pod 中, 那么两个服务都要实现 IdentityServer
 type IdentityServer interface {
     // 用来获取插件名称
-	GetPluginInfo(context.Context, *GetPluginInfoRequest) (*GetPluginInfoResponse, error)
-	GetPluginCapabilities(context.Context, *GetPluginCapabilitiesRequest) (*GetPluginCapabilitiesResponse, error)
-	Probe(context.Context, *ProbeRequest) (*ProbeResponse, error)
-	mustEmbedUnimplementedIdentityServer()
+    GetPluginInfo(context.Context, *GetPluginInfoRequest) (*GetPluginInfoResponse, error)
+    GetPluginCapabilities(context.Context, *GetPluginCapabilitiesRequest) (*GetPluginCapabilitiesResponse, error)
+    Probe(context.Context, *ProbeRequest) (*ProbeResponse, error)
+    mustEmbedUnimplementedIdentityServer()
 }
 
 type ControllerServer interface {
     // 创建 volume, 如 ceph 创建一个 rbd 或者 hostpath 创建一个目录
-	CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
+    CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
     // 删除 volume, 如 ceph 删除一个 rbd 或者 hostpath 删除一个目录
-	DeleteVolume(context.Context, *DeleteVolumeRequest) (*DeleteVolumeResponse, error)
+    DeleteVolume(context.Context, *DeleteVolumeRequest) (*DeleteVolumeResponse, error)
     // 将 volume attach 到 node 上, 如 rbd 通过 rbd map 命令 attach, 成功后 node 上会多出一个 rbdx 的 block 设备
-	ControllerPublishVolume(context.Context, *ControllerPublishVolumeRequest) (*ControllerPublishVolumeResponse, error)
+    ControllerPublishVolume(context.Context, *ControllerPublishVolumeRequest) (*ControllerPublishVolumeResponse, error)
     // 将 volume 从 node 上 detach, 如 rbd 通过 rbd unmap 命令 detach
-	ControllerUnpublishVolume(context.Context, *ControllerUnpublishVolumeRequest) (*ControllerUnpublishVolumeResponse, error)
-	ValidateVolumeCapabilities(context.Context, *ValidateVolumeCapabilitiesRequest) (*ValidateVolumeCapabilitiesResponse, error)
+    ControllerUnpublishVolume(context.Context, *ControllerUnpublishVolumeRequest) (*ControllerUnpublishVolumeResponse, error)
+    ValidateVolumeCapabilities(context.Context, *ValidateVolumeCapabilitiesRequest) (*ValidateVolumeCapabilitiesResponse, error)
     // 列出所有 volume
-	ListVolumes(context.Context, *ListVolumesRequest) (*ListVolumesResponse, error)
-	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
-	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
-	CreateSnapshot(context.Context, *CreateSnapshotRequest) (*CreateSnapshotResponse, error)
-	DeleteSnapshot(context.Context, *DeleteSnapshotRequest) (*DeleteSnapshotResponse, error)
-	ListSnapshots(context.Context, *ListSnapshotsRequest) (*ListSnapshotsResponse, error)
-	ControllerExpandVolume(context.Context, *ControllerExpandVolumeRequest) (*ControllerExpandVolumeResponse, error)
-	ControllerGetVolume(context.Context, *ControllerGetVolumeRequest) (*ControllerGetVolumeResponse, error)
-	ControllerModifyVolume(context.Context, *ControllerModifyVolumeRequest) (*ControllerModifyVolumeResponse, error)
-	mustEmbedUnimplementedControllerServer()
+    ListVolumes(context.Context, *ListVolumesRequest) (*ListVolumesResponse, error)
+    GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
+    ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
+    CreateSnapshot(context.Context, *CreateSnapshotRequest) (*CreateSnapshotResponse, error)
+    DeleteSnapshot(context.Context, *DeleteSnapshotRequest) (*DeleteSnapshotResponse, error)
+    ListSnapshots(context.Context, *ListSnapshotsRequest) (*ListSnapshotsResponse, error)
+    ControllerExpandVolume(context.Context, *ControllerExpandVolumeRequest) (*ControllerExpandVolumeResponse, error)
+    ControllerGetVolume(context.Context, *ControllerGetVolumeRequest) (*ControllerGetVolumeResponse, error)
+    ControllerModifyVolume(context.Context, *ControllerModifyVolumeRequest) (*ControllerModifyVolumeResponse, error)
+    mustEmbedUnimplementedControllerServer()
 }
 
 // 这些会被 kubelet 调用
 type NodeServer interface {
     // format (如果没format), mount 到 node 的 global directory
-	NodeStageVolume(context.Context, *NodeStageVolumeRequest) (*NodeStageVolumeResponse, error)
+    NodeStageVolume(context.Context, *NodeStageVolumeRequest) (*NodeStageVolumeResponse, error)
     // umount
-	NodeUnstageVolume(context.Context, *NodeUnstageVolumeRequest) (*NodeUnstageVolumeResponse, error)
+    NodeUnstageVolume(context.Context, *NodeUnstageVolumeRequest) (*NodeUnstageVolumeResponse, error)
     // mount --bind 到 pod directory
-	NodePublishVolume(context.Context, *NodePublishVolumeRequest) (*NodePublishVolumeResponse, error)
+    NodePublishVolume(context.Context, *NodePublishVolumeRequest) (*NodePublishVolumeResponse, error)
     // umount --bind
-	NodeUnpublishVolume(context.Context, *NodeUnpublishVolumeRequest) (*NodeUnpublishVolumeResponse, error)
-	NodeGetVolumeStats(context.Context, *NodeGetVolumeStatsRequest) (*NodeGetVolumeStatsResponse, error)
-	NodeExpandVolume(context.Context, *NodeExpandVolumeRequest) (*NodeExpandVolumeResponse, error)
-	NodeGetCapabilities(context.Context, *NodeGetCapabilitiesRequest) (*NodeGetCapabilitiesResponse, error)
-	NodeGetInfo(context.Context, *NodeGetInfoRequest) (*NodeGetInfoResponse, error)
-	mustEmbedUnimplementedNodeServer()
+    NodeUnpublishVolume(context.Context, *NodeUnpublishVolumeRequest) (*NodeUnpublishVolumeResponse, error)
+    NodeGetVolumeStats(context.Context, *NodeGetVolumeStatsRequest) (*NodeGetVolumeStatsResponse, error)
+    NodeExpandVolume(context.Context, *NodeExpandVolumeRequest) (*NodeExpandVolumeResponse, error)
+    NodeGetCapabilities(context.Context, *NodeGetCapabilitiesRequest) (*NodeGetCapabilitiesResponse, error)
+    NodeGetInfo(context.Context, *NodeGetInfoRequest) (*NodeGetInfoResponse, error)
+    mustEmbedUnimplementedNodeServer()
 }
 ```
 
