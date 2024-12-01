@@ -1,92 +1,36 @@
 ---
-title: "RKE2"
+title: "使用 RKE2 快速搭建 k8s 集群"
 date: 2024-07-01T21:24:49+08:00
 draft: false
 toc: true
 tags: [k8s,rke2]
 ---
 
-> 通过RKE2快速搭建测试使用的k8s集群环境
+根据[创建 bridge 网络](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/)和[创建虚拟机时使用 cloudinit 初始化](../create-vm-with-cloudinit/)创建虚拟机, 并配置静态ip如下
 
-## 环境准备
-
-1. 准备bridge网络br0
-2. 准备ubuntu 22.04 server qcow2镜像
-3. 准备libvirt环境
-
-### 准备bridge网络
-
-[Creating a bridged network with netplan on Ubuntu 22.04](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/)
-
-### 配置 gen-cloudinit-iso 脚本
-
-```bash
-cat <<EOFALL > /usr/bin/gen-cloudinit-iso
-#!/bin/bash
-
-set -eux
-
-CLOUD_INIT_DIR="/var/lib/libvirt/disks/\${VM}/cloudinit"
-FILENAME="\${CLOUD_INIT_DIR}/init.iso"
-
-mkdir -p \${CLOUD_INIT_DIR}
-
-cat <<EOF > \${CLOUD_INIT_DIR}/meta-data
-instance-id: \${VM}
-local-hostname: \${VM}
-EOF
-
-# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
-cat <<EOF > \${CLOUD_INIT_DIR}/user-data
-#cloud-config
-EOF
-
-# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
-xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
-EOFALL
-
-chmod +x /usr/bin/gen-cloudinit-iso
-```
-
-## 创建虚拟机
-
-```bash
-for vm in "k8s-node01" "k8s-node02"; do
-  export VM=${vm}
-  # prepare cloudinit iso
-  gen-cloudinit-iso
-  # prepare sysdisk and datadisk 
-  qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
-  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
-  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
-
-  virt-install \
-    --name ${VM} \
-    --memory 16384 \
-    --vcpus 8 \
-    --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
-    --network bridge=br0 \
-    --import \
-    --os-variant ubuntu22.10 \
-    --noautoconsole
-done
-```
+| 主机名 | 配置 | ip (域名) | 系统盘 / 数据盘 |
+| --- | --- | --- | --- |
+| k8s-node01 | 8核16G | 192.168.1.218 (`lb.k8s.lan`) | 50GB / 100GB*1 |
+| k8s-node02 | 8核16G | 192.168.1.219 | 50GB / 100GB*1 |
+| k8s-node03 | 8核16G | 192.168.1.220 | 50GB / 100GB*1 |
 
 ## 安装 RKE2
 
-### 脚本在线安装
+### 安装第一个 server 节点
+
+在 k8s-node01 节点执行
 
 ```bash
 # 初始化 rke2 配置文件
 mkdir -p /etc/rancher/rke2
 cat <<EOF > /etc/rancher/rke2/config.yaml
-write-kubeconfig-mode: "0644"
+tls-san:
+  - lb.k8s.lan
+write-kubeconfig-mode: "0600"
 etcd-expose-metrics: true
 disable-cloud-controller: true
-cni: calico
+cni: flannel
+debug: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
@@ -94,11 +38,39 @@ systemctl enable rke2-server.service
 systemctl start rke2-server.service
 ```
 
-### 离线安装
+配置中的 `tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样 apiserver 就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问.
 
-TODO
+### 安装其他 server 节点
 
-### 配置
+初始化 rke2 配置文件, 需要修改 `/etc/rancher/rke2/config.yaml` 中的 token
+
+```bash
+# 从第一个 server 节点的 /var/lib/rancher/rke2/server/node-token 获取
+token=<edit-me>
+mkdir -p /etc/rancher/rke2
+cat <<EOF > /etc/rancher/rke2/config.yaml
+server: https://lb.k8s.lan:9345
+token: $token
+tls-san:
+  - lb.k8s.lan
+write-kubeconfig-mode: "0600"
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: flannel
+EOF
+```
+
+安装
+
+```bash
+curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
+systemctl enable rke2-server.service
+systemctl start rke2-server.service
+```
+
+### 配置节点
+
+server 和 worker 节点都需要执行
 
 ```bash
 # kubectl ctr crictl...
@@ -128,6 +100,8 @@ tar -zxvf helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
 mv linux-amd64/helm /usr/local/bin/helm
 rm -f helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz && rm -rf linux-amd64/
 ```
+
+worker 节点的 kubeconfig `/etc/rancher/rke2/rke2.yaml` 需要从 server 节点上拷贝, 无需修改
 
 ## RKE2架构
 
@@ -165,12 +139,6 @@ containerd进程退出时rke2也会重启, kubelet进程退出时rke2会再拉�
    1852 ?        15:16:04  \_ kube-apiserver
 ```
 
-## 安装 rook ceph
-
-https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/
-
-## 安装 kube-prometheus-stack
-
 ## 一些常用目录/文件
 
 | 目录/文件 | 说明 |
@@ -181,6 +149,28 @@ https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/
 | `/var/lib/rancher/rke2/agent/logs/kubelet.log` | kubelet日志 |
 | `/var/lib/rancher/rke2/server/db/etcd/config` | etcd配置文件 |
 | `/etc/rancher/rke2/config.yaml` | [rke2配置文件](https://docs.rke2.io/install/configuration#configuration-file) |
+
+## 连接 etcd
+
+```bash
+ETCD_CONTAINER_ID=$(crictl ps --label=io.kubernetes.container.name=etcd --quiet)
+ETCD_CA_CERT=/var/lib/rancher/rke2/server/tls/etcd/server-ca.crt
+ETCD_CLIENT_CERT=/var/lib/rancher/rke2/server/tls/etcd/server-client.crt
+ETCD_CLIENT_KEY=/var/lib/rancher/rke2/server/tls/etcd/server-client.key
+```
+
+### 查看 etcd 集群状态
+
+```bash
+$ crictl exec -it $ETCD_CONTAINER_ID etcdctl --cacert $ETCD_CA_CERT --cert $ETCD_CLIENT_CERT --key $ETCD_CLIENT_KEY endpoint status --cluster --write-out=table
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|          ENDPOINT          |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://192.168.1.219:2379 | a6bc98228859ce05 |  3.5.13 |  5.5 MB |     false |      false |         3 |      14026 |              14026 |        |
+| https://192.168.1.220:2379 | b3d0ba8f8abb8a75 |  3.5.13 |  5.4 MB |     false |      false |         3 |      14026 |              14026 |        |
+| https://192.168.1.218:2379 | d61af8cc4ec4d5b1 |  3.5.13 |  8.5 MB |      true |      false |         3 |      14026 |              14026 |        |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+```
 
 ## 参考
 

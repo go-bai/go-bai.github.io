@@ -78,7 +78,7 @@ docker compose -f /etc/prometheus/docker-compose.yml up -d
 修改 `kube-prometheus-stack` chart 配置并更新, 记得修改 `{EDIT_HERE}` 为实际值
 
 ```bash
-cat <<EOF> values.yaml
+cat <<EOF> custom_values.yaml
 # prometheus service
 prometheus:
   prometheusSpec:
@@ -99,5 +99,5 @@ grafana:
     type: NodePort
 EOF
 
-helm upgrade  --install --create-namespace --namespace monitoring kube-prometheus-stack -f values.yaml prometheus-community/kube-prometheus-stack
+helm upgrade  --install --create-namespace --namespace monitoring kube-prometheus-stack -f custom_values.yaml prometheus-community/kube-prometheus-stack
 ```

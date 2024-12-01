@@ -1,5 +1,5 @@
 ---
-title: "CSI"
+title: "CSI 工作原理"
 date: 2024-11-04T22:07:17+08:00
 draft: false
 toc: true
@@ -99,7 +99,19 @@ watch `PersistentVolumeClaim` 对象, 如果一个 pvc 引用了一个 `StorageC
 - 创建 pvc 事件调用 CSI endpoint 执行 `CreateVolume`, 成功创建 volume 后就会创建代表这个 volume 的 `PersistentVolume` 对象
 - 删除 pvc 事件调用 CSI endpoint 执行 `DeleteVolume`, 成功删除 volume 后也会删除代表这个 volume 的 `PersistentVolume` 对象
 
-当 pvc 对应的 sc 的 volumeBindingMode 为 `WaitForFirstConsumer` 时, 只有使用此 pvc 的 pod 被调度之后才会去创建 pv, **`kube-schedule` 调度 pod 后会在 pvc 上增加一个注解 `volume.kubernetes.io/selected-node={scheduleResult.SuggestedHost}`** , 通过 pvc 是否包含此注解并不为空来判断是否 provision, 如果 volumeBindingMode 为 `Immediate` 则表示不用等待 pod 调度立即 provision
+#### 关于 sc.volumeBindingMode
+
+枚举类型, 有 `WaitForFirstConsumer` 和 `Immediate` 两种
+
+- `Immediate`: pvc 创建后立即 provision 并且 bound, 这个是默认模式
+- `WaitForFirstConsumer`: 只有使用此 pvc 的 pod 被调度之后才会去 provision 并且 bound
+    - 调度 pod 后会在 pvc 上增加一个注解 `volume.kubernetes.io/selected-node={scheduleResult.SuggestedHost}`
+    - 通过 pvc 是否包含此注解并不为空来判断是否 provision
+
+`WaitForFirstConsumer` 一般适用于:
+
+1. 本地盘, 防止卷和pod没创建在同一个节点上
+2. 不同 node 对应可用区不同, 需要知道被调度到的 node 对应可用区之后在对应可用区创建存储卷
 
 ### external-attacher
 
@@ -108,6 +120,12 @@ watch `VolumeAttachment` 对象, 如果 attacher 字段和从 CSI endpoint 调�
 一般块存储才会需要 attach/detach 操作, 比如 ceph 的 `rbd`
 
 `VolumeAttachment` 对象是由 `ADController`(AttachDetach Controller) 创建, ADController 会不断的检查每一个 pod 对应的 pv 和这个 pod 所调度到的宿主机之间的挂载情况(node.status.volumesAttached), 针对没有挂载的 pv 创建的 `VolumeAttachment` 中存储以下三个信息
+
+#### 关于 VolumeAttachment
+
+// TODO 
+
+`VolumeAttachment` 对象记录 pv 和 node 的挂载关系, 是由 `ADController`(AttachDetach Controller) 创建和删除
 
 - attacher: csi driver 名称
 - nodeName: volume应该attach到的主机名称
@@ -201,6 +219,83 @@ external-provisioner 监听到有 pvc 被删除时会调用
 $ csc -e /var/lib/kubelet/plugins/csi-hostpath/csi.sock controller delete-volume pvc-466a771a-a8c7-473e-bca6-780f7663a6cd
 pvc-466a771a-a8c7-473e-bca6-780f7663a6cd
 ```
+
+## 其他
+
+### PV Controller 作用
+
+负责协调 PV 和 PVC 状态, 负责根据规则绑定 PV 和 PVC
+
+### AD Controller 作用
+
+AD Controller 全称 AttachDetach Controller, 主要负责
+
+1. 创建和删除 VolumeAttachment 对象
+2. 更新 `node.status.volumesAttached`
+
+> attachdetach controller 的 reconciler 中调用 csi attacher, 负责创建和删除 VolumeAttachment 对象并等待 attach/detach 成功, 最后更新 `node.status.VolumesAttached`
+
+在 attachdetach controller 的 reconciler 中
+
+```golang
+// /pkg/controller/volume/attachdetach/reconciler.go
+func (rc *reconciler) reconcile(ctx context.Context) {
+    for _, attachedVolume := range rc.actualStateOfWorld.GetAttachedVolumes() {
+        // 会调用 Detach
+        err = rc.attacherDetacher.DetachVolume(logger, attachedVolume.AttachedVolume, verifySafeToDetach, rc.actualStateOfWorld)
+    }
+    rc.attachDesiredVolumes(logger)
+
+    // Update Node Status
+    err := rc.nodeStatusUpdater.UpdateNodeStatuses(logger)
+}
+
+func (rc *reconciler) attachDesiredVolumes(logger klog.Logger) {
+    for _, volumeToAttach := range rc.desiredStateOfWorld.GetVolumesToAttach() {
+        // 会调用 Attach
+        err := rc.attacherDetacher.AttachVolume(logger, volumeToAttach.VolumeToAttach, rc.actualStateOfWorld)
+    }
+}
+```
+
+创建和删除 VolumeAttachment 对象, 等待 external-attacher 监听到后调用 CSI endpoint 执行实际的 attach/detach 操作
+
+```golang
+// /pkg/volume/csi/csi_attacher.go
+func (c *csiAttacher) Attach(spec *volume.Spec, nodeName types.NodeName) (string, error) {
+    // 创建 VolumeAttachment 对象
+    _, err = c.k8s.StorageV1().VolumeAttachments().Create(context.TODO(), attachment, metav1.CreateOptions{})
+    // Attach and detach functionality is exclusive to the CSI plugin that runs in the AttachDetachController,
+	// and has access to a VolumeAttachment lister that can be polled for the current status.
+	if err := c.waitForVolumeAttachmentWithLister(spec, pvSrc.VolumeHandle, attachID, c.watchTimeout); err != nil {
+		return "", err
+	}
+    return "", nil
+}
+
+func (c *csiAttacher) Detach(volumeName string, nodeName types.NodeName) error {
+    // 删除 VolumeAttachment 对象
+    if err := c.k8s.StorageV1().VolumeAttachments().Delete(context.TODO(), attachID, metav1.DeleteOptions{}); err != nil {
+    }
+    // Attach and detach functionality is exclusive to the CSI plugin that runs in the AttachDetachController,
+    // and has access to a VolumeAttachment lister that can be polled for the current status.
+	return c.waitForVolumeDetachmentWithLister(volID, attachID, c.watchTimeout)
+}
+```
+
+### kubelet VolumeManager 作用
+
+对于持久卷来说, VolumeManager 负责使用 CSI client 调用 CSI plugin 对 volume 进行 mount/unmount 操作
+
+volume manager 的 reconciler 会先确认该被 unmount 的 volume 被 unmount 掉, 然后确认该被 mount 的 volume 被 mount.
+
+根据 `node.Status.VolumesAttached` 中是否有对应 volume 来判断是否被 attach 成功
+
+### VolumeAttachment 的创建、更新和删除
+
+pod 被调度后，AD Controller 会创建 `VolumeAttachment` 对象，external-attacher 监听到后会执行实际的 attach 操作，操作成功后会更新 `node.Status.VolumesAttached`。
+
+pod 被删除后，如果确认该 volume 不再被该节点上的任何 pod 使用（通过检查 `node.Status.VolumesInUse`），AD Controller 会删除对应的 `VolumeAttachment` 对象，external-attacher 监听到后会执行实际的 detach 操作，操作成功后会从 `node.Status.VolumesAttached` 中移除该记录。
 
 ## 参考
 
