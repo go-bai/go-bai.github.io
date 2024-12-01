@@ -1,64 +1,36 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>RKE2 | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>RKE2</span></h1><h4 class=date>2024/07/01</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/rke2>rke2</a></p></div><nav id=TableOfContents><ul><li><a href=#环境准备>环境准备</a><ul><li><a href=#准备bridge网络>准备bridge网络</a></li><li><a href=#配置-gen-cloudinit-iso-脚本>配置 gen-cloudinit-iso 脚本</a></li></ul></li><li><a href=#创建虚拟机>创建虚拟机</a></li><li><a href=#安装-rke2>安装 RKE2</a><ul><li><a href=#脚本在线安装>脚本在线安装</a></li><li><a href=#离线安装>离线安装</a></li><li><a href=#配置>配置</a></li></ul></li><li><a href=#rke2架构>RKE2架构</a><ul><li><a href=#进程生命周期>进程生命周期</a></li></ul></li><li><a href=#安装-rook-ceph>安装 rook ceph</a></li><li><a href=#安装-kube-prometheus-stack>安装 kube-prometheus-stack</a></li><li><a href=#一些常用目录文件>一些常用目录/文件</a></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>通过RKE2快速搭建测试使用的k8s集群环境</p></blockquote><h2 id=环境准备>环境准备</h2><ol><li>准备bridge网络br0</li><li>准备ubuntu 22.04 server qcow2镜像</li><li>准备libvirt环境</li></ol><h3 id=准备bridge网络>准备bridge网络</h3><p><a href=../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>Creating a bridged network with netplan on Ubuntu 22.04</a></p><h3 id=配置-gen-cloudinit-iso-脚本>配置 gen-cloudinit-iso 脚本</h3><pre><code class=language-bash>cat &lt;&lt;EOFALL &gt; /usr/bin/gen-cloudinit-iso
-#!/bin/bash
-
-set -eux
-
-CLOUD_INIT_DIR=&quot;/var/lib/libvirt/disks/\${VM}/cloudinit&quot;
-FILENAME=&quot;\${CLOUD_INIT_DIR}/init.iso&quot;
-
-mkdir -p \${CLOUD_INIT_DIR}
-
-cat &lt;&lt;EOF &gt; \${CLOUD_INIT_DIR}/meta-data
-instance-id: \${VM}
-local-hostname: \${VM}
-EOF
-
-# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
-cat &lt;&lt;EOF &gt; \${CLOUD_INIT_DIR}/user-data
-#cloud-config
-EOF
-
-# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
-xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
-EOFALL
-
-chmod +x /usr/bin/gen-cloudinit-iso
-</code></pre><h2 id=创建虚拟机>创建虚拟机</h2><pre><code class=language-bash>for vm in &quot;k8s-node01&quot; &quot;k8s-node02&quot;; do
-  export VM=${vm}
-  # prepare cloudinit iso
-  gen-cloudinit-iso
-  # prepare sysdisk and datadisk 
-  qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
-  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
-  qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
-
-  virt-install \
-    --name ${VM} \
-    --memory 16384 \
-    --vcpus 8 \
-    --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
-    --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
-    --network bridge=br0 \
-    --import \
-    --os-variant ubuntu22.10 \
-    --noautoconsole
-done
-</code></pre><h2 id=安装-rke2>安装 RKE2</h2><h3 id=脚本在线安装>脚本在线安装</h3><pre><code class=language-bash># 初始化 rke2 配置文件
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>使用 RKE2 快速搭建 k8s 集群 | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>使用 RKE2 快速搭建 k8s 集群</span></h1><h4 class=date>2024/07/01</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/rke2>rke2</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-rke2>安装 RKE2</a><ul><li><a href=#安装第一个-server-节点>安装第一个 server 节点</a></li><li><a href=#安装其他-server-节点>安装其他 server 节点</a></li><li><a href=#配置节点>配置节点</a></li></ul></li><li><a href=#rke2架构>RKE2架构</a><ul><li><a href=#进程生命周期>进程生命周期</a></li></ul></li><li><a href=#一些常用目录文件>一些常用目录/文件</a></li><li><a href=#连接-etcd>连接 etcd</a><ul><li><a href=#查看-etcd-集群状态>查看 etcd 集群状态</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>根据<a href=../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>创建 bridge 网络</a>和<a href=../create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a>创建虚拟机, 并配置静态ip如下</p><table><thead><tr><th>主机名</th><th>配置</th><th>ip (域名)</th><th>系统盘 / 数据盘</th></tr></thead><tbody><tr><td>k8s-node01</td><td>8核16G</td><td>192.168.1.218 (<code>lb.k8s.lan</code>)</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node02</td><td>8核16G</td><td>192.168.1.219</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node03</td><td>8核16G</td><td>192.168.1.220</td><td>50GB / 100GB*1</td></tr></tbody></table><h2 id=安装-rke2>安装 RKE2</h2><h3 id=安装第一个-server-节点>安装第一个 server 节点</h3><p>在 k8s-node01 节点执行</p><pre><code class=language-bash># 初始化 rke2 配置文件
 mkdir -p /etc/rancher/rke2
 cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
-write-kubeconfig-mode: &quot;0644&quot;
+tls-san:
+  - lb.k8s.lan
+write-kubeconfig-mode: &quot;0600&quot;
 etcd-expose-metrics: true
 disable-cloud-controller: true
-cni: calico
+cni: flannel
+debug: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
-</code></pre><h3 id=离线安装>离线安装</h3><p>TODO</p><h3 id=配置>配置</h3><pre><code class=language-bash># kubectl ctr crictl...
+</code></pre><p>配置中的 <code>tls-san</code> 在 server 的 TLS 证书中增加了多个地址作为 <code>Subject Alternative Name</code>, 这样 apiserver 就可以通过 <code>lb.k8s.lan</code> 和 各个 server 节点 ip 访问.</p><h3 id=安装其他-server-节点>安装其他 server 节点</h3><p>初始化 rke2 配置文件, 需要修改 <code>/etc/rancher/rke2/config.yaml</code> 中的 token</p><pre><code class=language-bash># 从第一个 server 节点的 /var/lib/rancher/rke2/server/node-token 获取
+token=&lt;edit-me&gt;
+mkdir -p /etc/rancher/rke2
+cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
+server: https://lb.k8s.lan:9345
+token: $token
+tls-san:
+  - lb.k8s.lan
+write-kubeconfig-mode: &quot;0600&quot;
+etcd-expose-metrics: true
+disable-cloud-controller: true
+cni: flannel
+EOF
+</code></pre><p>安装</p><pre><code class=language-bash>curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
+systemctl enable rke2-server.service
+systemctl start rke2-server.service
+</code></pre><h3 id=配置节点>配置节点</h3><p>server 和 worker 节点都需要执行</p><pre><code class=language-bash># kubectl ctr crictl...
 CONFIG=&quot;PATH=\$PATH:/var/lib/rancher/rke2/bin/&quot;
 grep &quot;$CONFIG&quot; ~/.bashrc || echo &quot;$CONFIG&quot; &gt;&gt; ~/.bashrc &amp;&amp; source ~/.bashrc
 
@@ -84,7 +56,7 @@ wget https://get.helm.sh/helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
 tar -zxvf helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
 mv linux-amd64/helm /usr/local/bin/helm
 rm -f helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz &amp;&amp; rm -rf linux-amd64/
-</code></pre><h2 id=rke2架构>RKE2架构</h2><p>RKE2 Server 和 Agent 有利用 k3s 的 agent</p><h3 id=进程生命周期>进程生命周期</h3><p>rke2进程使用systemd守护运行, rke2生成containerd进程和kubelet进程, 然后apiserver controller-manager scheduler etcd kube-proxy以static pod的形式被kubelet启动</p><p>containerd进程退出时rke2也会重启, kubelet进程退出时rke2会再拉起一个kubelet进程</p><pre><code class=language-bash># ps -e --forest
+</code></pre><p>worker 节点的 kubeconfig <code>/etc/rancher/rke2/rke2.yaml</code> 需要从 server 节点上拷贝, 无需修改</p><h2 id=rke2架构>RKE2架构</h2><p>RKE2 Server 和 Agent 有利用 k3s 的 agent</p><h3 id=进程生命周期>进程生命周期</h3><p>rke2进程使用systemd守护运行, rke2生成containerd进程和kubelet进程, 然后apiserver controller-manager scheduler etcd kube-proxy以static pod的形式被kubelet启动</p><p>containerd进程退出时rke2也会重启, kubelet进程退出时rke2会再拉起一个kubelet进程</p><pre><code class=language-bash># ps -e --forest
     899 ?        01:32:51 rke2
    1101 ?        01:58:12  \_ containerd
    1123 ?        05:23:44  \_ kubelet
@@ -107,4 +79,16 @@ rm -f helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz &amp;&amp; rm -rf linux-amd
    1801 ?        00:20:15 containerd-shim
    1821 ?        00:00:00  \_ pause
    1852 ?        15:16:04  \_ kube-apiserver
-</code></pre><h2 id=安装-rook-ceph>安装 rook ceph</h2><p><a href=https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/>https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/</a></p><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack</h2><h2 id=一些常用目录文件>一些常用目录/文件</h2><table><thead><tr><th>目录/文件</th><th>说明</th></tr></thead><tbody><tr><td><code>/var/lib/rancher/rke2/agent/pod-manifests</code></td><td>static pod 文件</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/etc/containerd/config.toml</code></td><td>containerd配置文件</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/containerd/containerd.log</code></td><td>containerd日志</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/logs/kubelet.log</code></td><td>kubelet日志</td></tr><tr><td><code>/var/lib/rancher/rke2/server/db/etcd/config</code></td><td>etcd配置文件</td></tr><tr><td><code>/etc/rancher/rke2/config.yaml</code></td><td><a href=https://docs.rke2.io/install/configuration#configuration-file>rke2配置文件</a></td></tr></tbody></table><h2 id=参考>参考</h2><ul><li><a href=https://docs.rke2.io/zh/install/quickstart>[RKE2 docs] quickstart</a></li><li><a href=https://docs.rke2.io/zh/reference/cli_tools>[RKE2 docs] CLI 工具</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+</code></pre><h2 id=一些常用目录文件>一些常用目录/文件</h2><table><thead><tr><th>目录/文件</th><th>说明</th></tr></thead><tbody><tr><td><code>/var/lib/rancher/rke2/agent/pod-manifests</code></td><td>static pod 文件</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/etc/containerd/config.toml</code></td><td>containerd配置文件</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/containerd/containerd.log</code></td><td>containerd日志</td></tr><tr><td><code>/var/lib/rancher/rke2/agent/logs/kubelet.log</code></td><td>kubelet日志</td></tr><tr><td><code>/var/lib/rancher/rke2/server/db/etcd/config</code></td><td>etcd配置文件</td></tr><tr><td><code>/etc/rancher/rke2/config.yaml</code></td><td><a href=https://docs.rke2.io/install/configuration#configuration-file>rke2配置文件</a></td></tr></tbody></table><h2 id=连接-etcd>连接 etcd</h2><pre><code class=language-bash>ETCD_CONTAINER_ID=$(crictl ps --label=io.kubernetes.container.name=etcd --quiet)
+ETCD_CA_CERT=/var/lib/rancher/rke2/server/tls/etcd/server-ca.crt
+ETCD_CLIENT_CERT=/var/lib/rancher/rke2/server/tls/etcd/server-client.crt
+ETCD_CLIENT_KEY=/var/lib/rancher/rke2/server/tls/etcd/server-client.key
+</code></pre><h3 id=查看-etcd-集群状态>查看 etcd 集群状态</h3><pre><code class=language-bash>$ crictl exec -it $ETCD_CONTAINER_ID etcdctl --cacert $ETCD_CA_CERT --cert $ETCD_CLIENT_CERT --key $ETCD_CLIENT_KEY endpoint status --cluster --write-out=table
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|          ENDPOINT          |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://192.168.1.219:2379 | a6bc98228859ce05 |  3.5.13 |  5.5 MB |     false |      false |         3 |      14026 |              14026 |        |
+| https://192.168.1.220:2379 | b3d0ba8f8abb8a75 |  3.5.13 |  5.4 MB |     false |      false |         3 |      14026 |              14026 |        |
+| https://192.168.1.218:2379 | d61af8cc4ec4d5b1 |  3.5.13 |  8.5 MB |      true |      false |         3 |      14026 |              14026 |        |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://docs.rke2.io/zh/install/quickstart>[RKE2 docs] quickstart</a></li><li><a href=https://docs.rke2.io/zh/reference/cli_tools>[RKE2 docs] CLI 工具</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

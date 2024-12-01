@@ -1,0 +1,135 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Rook Ceph 安装部署 | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Rook Ceph 安装部署</span></h1><h4 class=date>2024/11/24</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/rook>rook</a> <a href=/tags/ceph>ceph</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-rook-ceph>安装 rook ceph</a><ul><li><a href=#安装-ceph-operator>安装 ceph operator</a></li><li><a href=#安装-ceph-cluster>安装 ceph cluster</a></li><li><a href=#查看集群状态>查看集群状态</a><ul><li><a href=#访问-ceph-dashboard>访问 ceph dashboard</a></li><li><a href=#连接-s3-服务>连接 s3 服务</a></li></ul></li></ul></li><li><a href=#其他问题>其他问题</a><ul><li><a href=#时间同步问题>时间同步问题</a></li><li><a href=#最近有-crash-问题>最近有 crash 问题</a></li><li><a href=#如果重装-rook-ceph-集群>如果重装 rook ceph 集群</a></li></ul></li></ul></nav><main><p>使用 <a href=../rke2/>RKE2 快速搭建 k8s 集群</a> 创建的集群</p><h2 id=安装-rook-ceph>安装 rook ceph</h2><p>使用 helm charts 安装 rook ceph</p><p><a href=https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/>https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/</a></p><h3 id=安装-ceph-operator>安装 ceph operator</h3><p>我这里禁用了 cephfs 和 nfs 相关功能</p><pre><code class=language-bash>mkdir -p ~/charts/rook-ceph/ceph-operator
+cd ~/charts/rook-ceph/ceph-operator
+helm repo add rook-release https://charts.rook.io/release
+# values.yaml 用来查看默认值
+helm show values rook-release/rook-ceph &gt; values.yaml
+cat &lt;&lt;EOF &gt; custom-values.yaml
+logLevel: DEBUG
+csi:
+  enableCephfsDriver: false
+  enableCephfsSnapshotter: false
+  enableNFSSnapshotter: false
+EOF
+helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
+</code></pre><h3 id=安装-ceph-cluster>安装 ceph cluster</h3><p>添加三个 node 上的三个盘作为 osd</p><pre><code class=language-bash>mkdir -p ~/charts/rook-ceph/ceph-cluster
+cd ~/charts/rook-ceph/ceph-cluster
+helm repo add rook-release https://charts.rook.io/release
+# values.yaml 用来查看默认值
+helm show values rook-release/rook-ceph-cluster &gt; values.yaml
+cat &lt;&lt;EOF &gt; custom-values.yaml
+toolbox:
+  enabled: true
+cephClusterSpec:
+  storage:
+    useAllNodes: false
+    useAllDevices: false
+    nodes:
+      - name: &quot;k8s-node01&quot;
+        devices:
+          - name: &quot;/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-1&quot;
+      - name: &quot;k8s-node02&quot;
+        devices:
+          - name: &quot;/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-1&quot;
+      - name: &quot;k8s-node03&quot;
+        devices:
+          - name: &quot;/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-1&quot;
+cephFileSystems: []
+cephBlockPoolsVolumeSnapshotClass:
+  enabled: true
+EOF
+helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f custom-values.yaml
+</code></pre><h3 id=查看集群状态>查看集群状态</h3><p>进入 toolbox 容器</p><pre><code class=language-bash>toolbox=$(kubectl -n rook-ceph get pods -l app=rook-ceph-tools -o jsonpath=&quot;{.items[0].metadata.name}&quot;)
+kubectl -n rook-ceph exec -it $toolbox -- bash
+</code></pre><p>执行 <code>ceph status</code> 查看集群状态, 看到 <code>HEALTH_OK</code> 表示集群健康</p><pre><code class=language-bash># 查看集群状态
+$ ceph -s
+  cluster:
+    id:     2f7e89df-f919-4eab-9fb2-82273c8da466
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum a,b,c (age 13m)
+    mgr: a(active, since 12m), standbys: b
+    osd: 3 osds: 3 up (since 11m), 3 in (since 12m)
+    rgw: 1 daemon active (1 hosts, 1 zones)
+
+  data:
+    pools:   10 pools, 121 pgs
+    objects: 248 objects, 586 KiB
+    usage:   217 MiB used, 1.5 TiB / 1.5 TiB avail
+    pgs:     121 active+clean
+
+  io:
+    client:   85 B/s rd, 170 B/s wr, 0 op/s rd, 0 op/s wr
+</code></pre><p>其他常用 ceph 命令</p><pre><code class=language-bash># 查看 OSD 状态
+ceph osd status
+ceph osd df
+ceph osd utilization
+ceph osd pool stats
+ceph osd tree
+
+# 查看 Ceph 容量
+ceph df
+
+# 查看 Rados 状态
+rados df
+
+# 查看 PG 状态
+ceph pg stat
+</code></pre><h4 id=访问-ceph-dashboard>访问 ceph dashboard</h4><p>登陆地址获取, 使用 https 访问, 可以通过 nodeport 访问或者直接和集群容器网络打通, 我这里直接在局域网网关上配了静态路由(类似 host-gw 模式), pod 网络被转发到第一个 node 节点上</p><pre><code class=language-bash>kubectl -n rook-ceph get svc rook-ceph-mgr-dashboard
+</code></pre><p>admin 用户名密码获取</p><pre><code class=language-bash>kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath=&quot;{.data.password}&quot; | base64 -d
+</code></pre><h4 id=连接-s3-服务>连接 s3 服务</h4><p>获取地址访问</p><pre><code class=language-bash>kubectl -n rook-ceph get svc rook-ceph-rgw-ceph-objectstore
+</code></pre><p>获取 ak/sk</p><pre><code class=language-bash>toolbox=$(kubectl -n rook-ceph get pods -l app=rook-ceph-tools -o jsonpath=&quot;{.items[0].metadata.name}&quot;)
+ak=$(kubectl -n rook-ceph exec -it $toolbox -- bash -c &quot;radosgw-admin user info --uid rgw-admin-ops-user | jq -r '.keys[0].access_key'&quot;)
+sk=$(kubectl -n rook-ceph exec -it $toolbox -- bash -c &quot;radosgw-admin user info --uid rgw-admin-ops-user | jq -r '.keys[0].secret_key'&quot;)
+echo $ak
+echo $sk
+</code></pre><h2 id=其他问题>其他问题</h2><h3 id=时间同步问题>时间同步问题</h3><blockquote><p>clock skew detected on mon.b, mon.c</p></blockquote><p>如果 k8s node 时间不同步, 会导致 ceph 集群状态异常, 可以通过以下命令同步时间</p><pre><code class=language-bash>$ ceph -s
+  cluster:
+    id:     2f7e89df-f919-4eab-9fb2-82273c8da466
+    health: HEALTH_WARN
+            2 mgr modules have recently crashed
+</code></pre><p>所有节点设置时间同步</p><ol><li>安装 chrony: <code>apt install chrony -y</code></li><li>编辑 <code>/etc/chrony/chrony.conf</code>, 添加内容 <code>pool 192.168.1.99 iburst</code>, 这是我局域网的 ntp server</li><li>重启 chrony: <code>systemctl restart chrony</code></li></ol><h3 id=最近有-crash-问题>最近有 crash 问题</h3><blockquote><p>2 mgr modules have recently crashed</p></blockquote><pre><code class=language-bash>$ ceph -s
+  cluster:
+    id:     2f7e89df-f919-4eab-9fb2-82273c8da466
+    health: HEALTH_WARN
+            2 mgr modules have recently crashed
+</code></pre><p>查看并清理 crash 信息</p><pre><code class=language-bash># 查看 crash 列表
+$ ceph crash ls
+ID                                                                ENTITY  NEW
+2024-11-24T06:08:46.350971Z_23380e67-87a5-492e-bf5c-fd10fd90eb8c  mgr.a    *
+2024-11-24T06:45:19.829015Z_66d90350-1476-4a52-9ffc-2a6248884f1d  mgr.a    *
+# 查看 crash 详情
+$ ceph crash info 2024-11-24T06:08:46.350971Z_23380e67-87a5-492e-bf5c-fd10fd90eb8c
+{
+    &quot;backtrace&quot;: [
+        &quot;  File \&quot;/usr/share/ceph/mgr/nfs/module.py\&quot;, line 189, in cluster_ls\n    return available_clusters(self)&quot;,
+        &quot;  File \&quot;/usr/share/ceph/mgr/nfs/utils.py\&quot;, line 70, in available_clusters\n    completion = mgr.describe_service(service_type='nfs')&quot;,
+        &quot;  File \&quot;/usr/share/ceph/mgr/orchestrator/_interface.py\&quot;, line 1664, in inner\n    completion = self._oremote(method_name, args, kwargs)&quot;,
+        &quot;  File \&quot;/usr/share/ceph/mgr/orchestrator/_interface.py\&quot;, line 1731, in _oremote\n    raise NoOrchestrator()&quot;,
+        &quot;orchestrator._interface.NoOrchestrator: No orchestrator configured (try `ceph orch set backend`)&quot;
+    ],
+    &quot;ceph_version&quot;: &quot;18.2.4&quot;,
+    &quot;crash_id&quot;: &quot;2024-11-24T06:08:46.350971Z_23380e67-87a5-492e-bf5c-fd10fd90eb8c&quot;,
+    &quot;entity_name&quot;: &quot;mgr.a&quot;,
+    &quot;mgr_module&quot;: &quot;nfs&quot;,
+    &quot;mgr_module_caller&quot;: &quot;ActivePyModule::dispatch_remote cluster_ls&quot;,
+    &quot;mgr_python_exception&quot;: &quot;NoOrchestrator&quot;,
+    &quot;os_id&quot;: &quot;centos&quot;,
+    &quot;os_name&quot;: &quot;CentOS Stream&quot;,
+    &quot;os_version&quot;: &quot;9&quot;,
+    &quot;os_version_id&quot;: &quot;9&quot;,
+    &quot;process_name&quot;: &quot;ceph-mgr&quot;,
+    &quot;stack_sig&quot;: &quot;922e03f28672a048b4c876242e1e5b1c28a51719b3a09938b8f19b8435ffacbb&quot;,
+    &quot;timestamp&quot;: &quot;2024-11-24T06:08:46.350971Z&quot;,
+    &quot;utsname_hostname&quot;: &quot;rook-ceph-mgr-a-d959864d7-4cckg&quot;,
+    &quot;utsname_machine&quot;: &quot;x86_64&quot;,
+    &quot;utsname_release&quot;: &quot;5.15.0-125-generic&quot;,
+    &quot;utsname_sysname&quot;: &quot;Linux&quot;,
+    &quot;utsname_version&quot;: &quot;#135-Ubuntu SMP Fri Sep 27 13:53:58 UTC 2024&quot;
+}
+# 清理一天之前的 crash 信息
+$ ceph crash prune 1
+</code></pre><h3 id=如果重装-rook-ceph-集群>如果重装 rook ceph 集群</h3><p><a href=https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/#delete-the-data-on-hosts>https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/#delete-the-data-on-hosts</a></p><p>需要清理 <code>/var/lib/rook</code> 目录并擦除osd盘的文件系统, 如下 <code>sdb</code> 是 osd 盘</p><pre><code class=language-bash>rm -rf /var/lib/rook
+wipefs /dev/sdb -a
+</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

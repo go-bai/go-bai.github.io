@@ -1,0 +1,24 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Kube Prometheus Stack 安装部署 | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Kube Prometheus Stack 安装部署</span></h1><h4 class=date>2024/11/25</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/kube-prometheus-stack>kube-prometheus-stack</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-kube-prometheus-stack>安装 kube-prometheus-stack</a></li><li><a href=#配置-grafana-dashboard>配置 grafana dashboard</a></li></ul></nav><main><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack</h2><p>使用 helm charts 安装 kube-prometheus-stack</p><pre><code class=language-bash>mkdir -p ~/charts/kube-prometheus-stack
+cd ~/charts/kube-prometheus-stack
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+# values.yaml 用来查看默认值
+helm show values prometheus-community/kube-prometheus-stack &gt; values.yaml
+cat &lt;&lt;EOF &gt; custom-values.yaml
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs: []
+  service:
+    type: NodePort
+
+# grafana service
+grafana:
+  service:
+    type: NodePort
+
+alertmanager:
+  enabled: false
+EOF
+helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+</code></pre><h2 id=配置-grafana-dashboard>配置 grafana dashboard</h2><p>导入一个查看 node exporter 的 dashboard</p><p><a href=https://grafana.com/grafana/dashboards/16098-node-exporter-dashboard-20240520-job/>https://grafana.com/grafana/dashboards/16098-node-exporter-dashboard-20240520-job/</a></p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2024 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

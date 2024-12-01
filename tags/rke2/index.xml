@@ -1,79 +1,51 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rke2 on gobai's blog</title><link>/tags/rke2/</link><description>Recent content in Rke2 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 01 Jul 2024 21:24:49 +0800</lastBuildDate><atom:link href="/tags/rke2/index.xml" rel="self" type="application/rss+xml"/><item><title>RKE2</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;blockquote>
-&lt;p>通过RKE2快速搭建测试使用的k8s集群环境&lt;/p>
-&lt;/blockquote>
-&lt;h2 id="环境准备">环境准备&lt;/h2>
-&lt;ol>
-&lt;li>准备bridge网络br0&lt;/li>
-&lt;li>准备ubuntu 22.04 server qcow2镜像&lt;/li>
-&lt;li>准备libvirt环境&lt;/li>
-&lt;/ol>
-&lt;h3 id="准备bridge网络">准备bridge网络&lt;/h3>
-&lt;p>&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">Creating a bridged network with netplan on Ubuntu 22.04&lt;/a>&lt;/p>
-&lt;h3 id="配置-gen-cloudinit-iso-脚本">配置 gen-cloudinit-iso 脚本&lt;/h3>
-&lt;pre>&lt;code class="language-bash">cat &amp;lt;&amp;lt;EOFALL &amp;gt; /usr/bin/gen-cloudinit-iso
-#!/bin/bash
-
-set -eux
-
-CLOUD_INIT_DIR=&amp;quot;/var/lib/libvirt/disks/\${VM}/cloudinit&amp;quot;
-FILENAME=&amp;quot;\${CLOUD_INIT_DIR}/init.iso&amp;quot;
-
-mkdir -p \${CLOUD_INIT_DIR}
-
-cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/meta-data
-instance-id: \${VM}
-local-hostname: \${VM}
-EOF
-
-# 更多配置参照 https://cloudinit.readthedocs.io/en/latest/explanation/format.html
-cat &amp;lt;&amp;lt;EOF &amp;gt; \${CLOUD_INIT_DIR}/user-data
-#cloud-config
-EOF
-
-# 参考 kubevirt /pkg/cloud-init/cloud-init.go:defaultIsoFunc
-xorrisofs -output \$FILENAME -volid cidata -joliet -rock -partition_cyl_align on \${CLOUD_INIT_DIR}/user-data \${CLOUD_INIT_DIR}/meta-data
-EOFALL
-
-chmod +x /usr/bin/gen-cloudinit-iso
-&lt;/code>&lt;/pre>
-&lt;h2 id="创建虚拟机">创建虚拟机&lt;/h2>
-&lt;pre>&lt;code class="language-bash">for vm in &amp;quot;k8s-node01&amp;quot; &amp;quot;k8s-node02&amp;quot;; do
- export VM=${vm}
- # prepare cloudinit iso
- gen-cloudinit-iso
- # prepare sysdisk and datadisk 
- qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/ubuntu.qcow2 /var/lib/libvirt/disks/${VM}/sysdisk.qcow2 200G
- qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk01.qcow2 500G
- qemu-img create -f qcow2 /var/lib/libvirt/disks/${VM}/datadisk02.qcow2 500G
-
- virt-install \
- --name ${VM} \
- --memory 16384 \
- --vcpus 8 \
- --disk /var/lib/libvirt/disks/${VM}/sysdisk.qcow2,device=disk,bus=scsi \
- --disk /var/lib/libvirt/disks/${VM}/datadisk01.qcow2,device=disk,bus=scsi \
- --disk /var/lib/libvirt/disks/${VM}/datadisk02.qcow2,device=disk,bus=scsi \
- --disk /var/lib/libvirt/disks/${VM}/cloudinit/init.iso,device=cdrom,bus=scsi \
- --network bridge=br0 \
- --import \
- --os-variant ubuntu22.10 \
- --noautoconsole
-done
-&lt;/code>&lt;/pre>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rke2 on gobai's blog</title><link>/tags/rke2/</link><description>Recent content in Rke2 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 01 Jul 2024 21:24:49 +0800</lastBuildDate><atom:link href="/tags/rke2/index.xml" rel="self" type="application/rss+xml"/><item><title>使用 RKE2 快速搭建 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>主机名&lt;/th>
+ &lt;th>配置&lt;/th>
+ &lt;th>ip (域名)&lt;/th>
+ &lt;th>系统盘 / 数据盘&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>k8s-node01&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.218 (&lt;code>lb.k8s.lan&lt;/code>)&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>k8s-node02&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.219&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>k8s-node03&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.220&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
 &lt;h2 id="安装-rke2">安装 RKE2&lt;/h2>
-&lt;h3 id="脚本在线安装">脚本在线安装&lt;/h3>
+&lt;h3 id="安装第一个-server-节点">安装第一个 server 节点&lt;/h3>
+&lt;p>在 k8s-node01 节点执行&lt;/p>
 &lt;pre>&lt;code class="language-bash"># 初始化 rke2 配置文件
 mkdir -p /etc/rancher/rke2
 cat &amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
-write-kubeconfig-mode: &amp;quot;0644&amp;quot;
+tls-san:
+ - lb.k8s.lan
+write-kubeconfig-mode: &amp;quot;0600&amp;quot;
 etcd-expose-metrics: true
 disable-cloud-controller: true
-cni: calico
+cni: flannel
+debug: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
 &lt;/code>&lt;/pre>
-&lt;h3 id="离线安装">离线安装&lt;/h3>
-&lt;p>TODO&lt;/p></description></item></channel></rss>
+&lt;p>配置中的 &lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样 apiserver 就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问.&lt;/p></description></item></channel></rss>
