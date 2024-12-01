@@ -29,6 +29,7 @@ tls-san:
 write-kubeconfig-mode: "0600"
 etcd-expose-metrics: true
 disable-cloud-controller: true
+# 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
 EOF
