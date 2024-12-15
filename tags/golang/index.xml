@@ -3,7 +3,7 @@
 &lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
 &lt;pre>&lt;code class="language-bash">docker run -d --name pgsql \
  -e POSTGRES_USER=admin \
- -e POSTGRES_PASSWORD=passwd \
+ -e POSTGRES_PASSWORD=admin \
  -e POSTGRES_DB=testdb \
  -p 15432:5432 \
  postgres:16.2

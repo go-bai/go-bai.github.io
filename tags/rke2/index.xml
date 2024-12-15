@@ -43,6 +43,9 @@ disable-cloud-controller: true
 # 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
+# 指定 kube-scheduler debug 日志级别
+kube-scheduler-arg:
+ - v=4
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -

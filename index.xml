@@ -294,6 +294,9 @@ disable-cloud-controller: true
 # 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
+# 指定 kube-scheduler debug 日志级别
+kube-scheduler-arg:
+ - v=4
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
@@ -792,7 +795,7 @@ bar
 &lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
 &lt;pre>&lt;code class="language-bash">docker run -d --name pgsql \
  -e POSTGRES_USER=admin \
- -e POSTGRES_PASSWORD=passwd \
+ -e POSTGRES_PASSWORD=admin \
  -e POSTGRES_DB=testdb \
  -p 15432:5432 \
  postgres:16.2
