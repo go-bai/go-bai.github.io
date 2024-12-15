@@ -15,7 +15,7 @@ tags: [golang,sqlx,golang,database,sql]
 ```bash
 docker run -d --name pgsql \
   -e POSTGRES_USER=admin \
-  -e POSTGRES_PASSWORD=passwd \
+  -e POSTGRES_PASSWORD=admin \
   -e POSTGRES_DB=testdb \
   -p 15432:5432 \
   postgres:16.2
