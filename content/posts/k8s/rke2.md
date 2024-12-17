@@ -27,14 +27,17 @@ cat <<EOF > /etc/rancher/rke2/config.yaml
 tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: "0600"
-etcd-expose-metrics: true
 disable-cloud-controller: true
 # 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
-# 指定 kube-scheduler debug 日志级别
+# 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
   - v=4
+  - bind-address=0.0.0.0
+kube-controller-manager-arg:
+  - bind-address=0.0.0.0
+etcd-expose-metrics: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
@@ -42,7 +45,62 @@ systemctl enable rke2-server.service
 systemctl start rke2-server.service
 ```
 
-配置中的 `tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样 apiserver 就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问.
+#### 配置介绍
+
+##### `tls-san`
+
+`tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样 apiserver 就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问.
+
+##### `etcd-expose-metrics`
+
+默认为 `false`, `rke2` 会使用 `k3s` 代码 `pkg/etcd/etcd.go` 中的 `func (e *ETCD) cluster(ctx context.Context, reset bool, options executor.InitialOptions) error` 生成 `/var/lib/rancher/rke2/server/db/etcd/config` 文件存储 etcd 启动需要的参数, 其中就包含 `listen-metrics-urls: http://127.0.0.1:2381,http://192.168.1.218:2381`, 如果只监听了 `loopback` 地址, 那么 prometheus 抓不到对应的 metrics 数据, 如下是代码部分
+
+```golang
+// cluster calls the executor to start etcd running with the provided configuration.
+func (e *ETCD) cluster(ctx context.Context, reset bool, options executor.InitialOptions) error {
+	ctx, e.cancel = context.WithCancel(ctx)
+	return executor.ETCD(ctx, executor.ETCDConfig{
+		Name:                e.name,
+		InitialOptions:      options,
+		ForceNewCluster:     reset,
+		ListenClientURLs:    e.listenClientURLs(reset),
+		ListenMetricsURLs:   e.listenMetricsURLs(reset), // 这里指定 metrics 监听的端口
+		ListenPeerURLs:      e.listenPeerURLs(reset),
+		AdvertiseClientURLs: e.advertiseClientURLs(reset),
+		DataDir:             dbDir(e.config),
+		ServerTrust: executor.ServerTrust{
+			CertFile:       e.config.Runtime.ServerETCDCert,
+			KeyFile:        e.config.Runtime.ServerETCDKey,
+			ClientCertAuth: true,
+			TrustedCAFile:  e.config.Runtime.ETCDServerCA,
+		},
+		PeerTrust: executor.PeerTrust{
+			CertFile:       e.config.Runtime.PeerServerClientETCDCert,
+			KeyFile:        e.config.Runtime.PeerServerClientETCDKey,
+			ClientCertAuth: true,
+			TrustedCAFile:  e.config.Runtime.ETCDPeerCA,
+		},
+		SnapshotCount:                   10000,
+		ElectionTimeout:                 5000,
+		HeartbeatInterval:               500,
+		Logger:                          "zap",
+		LogOutputs:                      []string{"stderr"},
+		ExperimentalInitialCorruptCheck: true,
+		ListenClientHTTPURLs:            e.listenClientHTTPURLs(),
+	}, e.config.ExtraEtcdArgs)
+}
+
+// listenMetricsURLs returns a list of URLs to bind to for metrics connections.
+func (e *ETCD) listenMetricsURLs(reset bool) string {
+	metricsURLs := fmt.Sprintf("http://%s:2381", e.config.Loopback(true))
+	if !reset && e.config.EtcdExposeMetrics { // 如果设置为 true 则增加监听主机 host 地址
+		metricsURLs += "," + fmt.Sprintf("http://%s", net.JoinHostPort(e.address, "2381"))
+	}
+	return metricsURLs
+}
+```
+
+生成 etcd 配置文件之后, etcd 的 static pod manifest 中的启动命令就是 `etcd --config-file=/var/lib/rancher/rke2/server/db/etcd/config`, 配置文件通过 hostPath 方式挂载.
 
 ### 安装其他 server 节点
 
@@ -58,9 +116,14 @@ token: $token
 tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: "0600"
-etcd-expose-metrics: true
 disable-cloud-controller: true
 cni: flannel
+debug: true
+# 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
+kube-scheduler-arg:
+  - v=4
+  - bind-address=0.0.0.0
+etcd-expose-metrics: true
 EOF
 ```
 
