@@ -38,18 +38,23 @@ cat &amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
 tls-san:
  - lb.k8s.lan
 write-kubeconfig-mode: &amp;quot;0600&amp;quot;
-etcd-expose-metrics: true
 disable-cloud-controller: true
 # 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
-# 指定 kube-scheduler debug 日志级别
+# 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
  - v=4
+ - bind-address=0.0.0.0
+kube-controller-manager-arg:
+ - bind-address=0.0.0.0
+etcd-expose-metrics: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
 &lt;/code>&lt;/pre>
-&lt;p>配置中的 &lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样 apiserver 就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问.&lt;/p></description></item></channel></rss>
+&lt;h4 id="配置介绍">配置介绍&lt;/h4>
+&lt;h5 id="tls-san">&lt;code>tls-san&lt;/code>&lt;/h5>
+&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样 apiserver 就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问.&lt;/p></description></item></channel></rss>

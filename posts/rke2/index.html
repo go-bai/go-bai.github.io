@@ -1,24 +1,69 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>使用 RKE2 快速搭建 k8s 集群 | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>使用 RKE2 快速搭建 k8s 集群</span></h1><h4 class=date>2024/07/01</h4><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/rke2>rke2</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-rke2>安装 RKE2</a><ul><li><a href=#安装第一个-server-节点>安装第一个 server 节点</a></li><li><a href=#安装其他-server-节点>安装其他 server 节点</a></li><li><a href=#配置节点>配置节点</a></li></ul></li><li><a href=#rke2架构>RKE2架构</a><ul><li><a href=#进程生命周期>进程生命周期</a></li></ul></li><li><a href=#一些常用目录文件>一些常用目录/文件</a></li><li><a href=#连接-etcd>连接 etcd</a><ul><li><a href=#查看-etcd-集群状态>查看 etcd 集群状态</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>根据<a href=../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>创建 bridge 网络</a>和<a href=../create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a>创建虚拟机, 并配置静态ip如下</p><table><thead><tr><th>主机名</th><th>配置</th><th>ip (域名)</th><th>系统盘 / 数据盘</th></tr></thead><tbody><tr><td>k8s-node01</td><td>8核16G</td><td>192.168.1.218 (<code>lb.k8s.lan</code>)</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node02</td><td>8核16G</td><td>192.168.1.219</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node03</td><td>8核16G</td><td>192.168.1.220</td><td>50GB / 100GB*1</td></tr></tbody></table><h2 id=安装-rke2>安装 RKE2</h2><h3 id=安装第一个-server-节点>安装第一个 server 节点</h3><p>在 k8s-node01 节点执行</p><pre><code class=language-bash># 初始化 rke2 配置文件
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>使用 RKE2 快速搭建 k8s 集群</span></h1><p class=date>2024/07/01</p><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/rke2>rke2</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-rke2>安装 RKE2</a><ul><li><a href=#安装第一个-server-节点>安装第一个 server 节点</a><ul><li><a href=#配置介绍>配置介绍</a><ul><li><a href=#tls-san><code>tls-san</code></a></li><li><a href=#etcd-expose-metrics><code>etcd-expose-metrics</code></a></li></ul></li></ul></li><li><a href=#安装其他-server-节点>安装其他 server 节点</a></li><li><a href=#配置节点>配置节点</a></li></ul></li><li><a href=#rke2架构>RKE2架构</a><ul><li><a href=#进程生命周期>进程生命周期</a></li></ul></li><li><a href=#一些常用目录文件>一些常用目录/文件</a></li><li><a href=#连接-etcd>连接 etcd</a><ul><li><a href=#查看-etcd-集群状态>查看 etcd 集群状态</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><p>根据<a href=../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>创建 bridge 网络</a>和<a href=../create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a>创建虚拟机, 并配置静态ip如下</p><table><thead><tr><th>主机名</th><th>配置</th><th>ip (域名)</th><th>系统盘 / 数据盘</th></tr></thead><tbody><tr><td>k8s-node01</td><td>8核16G</td><td>192.168.1.218 (<code>lb.k8s.lan</code>)</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node02</td><td>8核16G</td><td>192.168.1.219</td><td>50GB / 100GB*1</td></tr><tr><td>k8s-node03</td><td>8核16G</td><td>192.168.1.220</td><td>50GB / 100GB*1</td></tr></tbody></table><h2 id=安装-rke2>安装 RKE2</h2><h3 id=安装第一个-server-节点>安装第一个 server 节点</h3><p>在 k8s-node01 节点执行</p><pre><code class=language-bash># 初始化 rke2 配置文件
 mkdir -p /etc/rancher/rke2
 cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
 tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: &quot;0600&quot;
-etcd-expose-metrics: true
 disable-cloud-controller: true
 # 为了节省资源使用的 flannel, 也可以使用 calico
 cni: flannel
 debug: true
-# 指定 kube-scheduler debug 日志级别
+# 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
   - v=4
+  - bind-address=0.0.0.0
+kube-controller-manager-arg:
+  - bind-address=0.0.0.0
+etcd-expose-metrics: true
 EOF
 
 curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
 systemctl start rke2-server.service
-</code></pre><p>配置中的 <code>tls-san</code> 在 server 的 TLS 证书中增加了多个地址作为 <code>Subject Alternative Name</code>, 这样 apiserver 就可以通过 <code>lb.k8s.lan</code> 和 各个 server 节点 ip 访问.</p><h3 id=安装其他-server-节点>安装其他 server 节点</h3><p>初始化 rke2 配置文件, 需要修改 <code>/etc/rancher/rke2/config.yaml</code> 中的 token</p><pre><code class=language-bash># 从第一个 server 节点的 /var/lib/rancher/rke2/server/node-token 获取
+</code></pre><h4 id=配置介绍>配置介绍</h4><h5 id=tls-san><code>tls-san</code></h5><p><code>tls-san</code> 在 server 的 TLS 证书中增加了多个地址作为 <code>Subject Alternative Name</code>, 这样 apiserver 就可以通过 <code>lb.k8s.lan</code> 和 各个 server 节点 ip 访问.</p><h5 id=etcd-expose-metrics><code>etcd-expose-metrics</code></h5><p>默认为 <code>false</code>, <code>rke2</code> 会使用 <code>k3s</code> 代码 <code>pkg/etcd/etcd.go</code> 中的 <code>func (e *ETCD) cluster(ctx context.Context, reset bool, options executor.InitialOptions) error</code> 生成 <code>/var/lib/rancher/rke2/server/db/etcd/config</code> 文件存储 etcd 启动需要的参数, 其中就包含 <code>listen-metrics-urls: http://127.0.0.1:2381,http://192.168.1.218:2381</code>, 如果只监听了 <code>loopback</code> 地址, 那么 prometheus 抓不到对应的 metrics 数据, 如下是代码部分</p><pre><code class=language-golang>// cluster calls the executor to start etcd running with the provided configuration.
+func (e *ETCD) cluster(ctx context.Context, reset bool, options executor.InitialOptions) error {
+	ctx, e.cancel = context.WithCancel(ctx)
+	return executor.ETCD(ctx, executor.ETCDConfig{
+		Name:                e.name,
+		InitialOptions:      options,
+		ForceNewCluster:     reset,
+		ListenClientURLs:    e.listenClientURLs(reset),
+		ListenMetricsURLs:   e.listenMetricsURLs(reset), // 这里指定 metrics 监听的端口
+		ListenPeerURLs:      e.listenPeerURLs(reset),
+		AdvertiseClientURLs: e.advertiseClientURLs(reset),
+		DataDir:             dbDir(e.config),
+		ServerTrust: executor.ServerTrust{
+			CertFile:       e.config.Runtime.ServerETCDCert,
+			KeyFile:        e.config.Runtime.ServerETCDKey,
+			ClientCertAuth: true,
+			TrustedCAFile:  e.config.Runtime.ETCDServerCA,
+		},
+		PeerTrust: executor.PeerTrust{
+			CertFile:       e.config.Runtime.PeerServerClientETCDCert,
+			KeyFile:        e.config.Runtime.PeerServerClientETCDKey,
+			ClientCertAuth: true,
+			TrustedCAFile:  e.config.Runtime.ETCDPeerCA,
+		},
+		SnapshotCount:                   10000,
+		ElectionTimeout:                 5000,
+		HeartbeatInterval:               500,
+		Logger:                          &quot;zap&quot;,
+		LogOutputs:                      []string{&quot;stderr&quot;},
+		ExperimentalInitialCorruptCheck: true,
+		ListenClientHTTPURLs:            e.listenClientHTTPURLs(),
+	}, e.config.ExtraEtcdArgs)
+}
+
+// listenMetricsURLs returns a list of URLs to bind to for metrics connections.
+func (e *ETCD) listenMetricsURLs(reset bool) string {
+	metricsURLs := fmt.Sprintf(&quot;http://%s:2381&quot;, e.config.Loopback(true))
+	if !reset &amp;&amp; e.config.EtcdExposeMetrics { // 如果设置为 true 则增加监听主机 host 地址
+		metricsURLs += &quot;,&quot; + fmt.Sprintf(&quot;http://%s&quot;, net.JoinHostPort(e.address, &quot;2381&quot;))
+	}
+	return metricsURLs
+}
+</code></pre><p>生成 etcd 配置文件之后, etcd 的 static pod manifest 中的启动命令就是 <code>etcd --config-file=/var/lib/rancher/rke2/server/db/etcd/config</code>, 配置文件通过 hostPath 方式挂载.</p><h3 id=安装其他-server-节点>安装其他 server 节点</h3><p>初始化 rke2 配置文件, 需要修改 <code>/etc/rancher/rke2/config.yaml</code> 中的 token</p><pre><code class=language-bash># 从第一个 server 节点的 /var/lib/rancher/rke2/server/node-token 获取
 token=&lt;edit-me&gt;
 mkdir -p /etc/rancher/rke2
 cat &lt;&lt;EOF &gt; /etc/rancher/rke2/config.yaml
@@ -27,9 +72,14 @@ token: $token
 tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: &quot;0600&quot;
-etcd-expose-metrics: true
 disable-cloud-controller: true
 cni: flannel
+debug: true
+# 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
+kube-scheduler-arg:
+  - v=4
+  - bind-address=0.0.0.0
+etcd-expose-metrics: true
 EOF
 </code></pre><p>安装</p><pre><code class=language-bash>curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR=cn sh -
 systemctl enable rke2-server.service
