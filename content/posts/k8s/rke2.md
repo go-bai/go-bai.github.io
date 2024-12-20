@@ -49,7 +49,7 @@ systemctl start rke2-server.service
 
 ##### `tls-san`
 
-`tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样 apiserver 就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问.
+`tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问 apiserver 服务.
 
 ##### `etcd-expose-metrics`
 
