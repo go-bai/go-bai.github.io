@@ -57,4 +57,4 @@ systemctl start rke2-server.service
 &lt;/code>&lt;/pre>
 &lt;h4 id="配置介绍">配置介绍&lt;/h4>
 &lt;h5 id="tls-san">&lt;code>tls-san&lt;/code>&lt;/h5>
-&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样 apiserver 就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问.&lt;/p></description></item></channel></rss>
+&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item></channel></rss>
