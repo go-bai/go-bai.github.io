@@ -1,51 +1,33 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on gobai's blog</title><link>/posts/</link><description>Recent content in Posts on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 25 Nov 2024 14:56:03 +0800</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Kube Prometheus Stack 安装部署</title><link>/posts/kube-prometheus-stack/</link><pubDate>Mon, 25 Nov 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;h2 id="安装-kube-prometheus-stack">安装 kube-prometheus-stack&lt;/h2>
-&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
-&lt;pre>&lt;code class="language-bash">mkdir -p ~/charts/kube-prometheus-stack
-cd ~/charts/kube-prometheus-stack
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-# values.yaml 用来查看默认值
-helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
-cat &amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
-prometheus:
- prometheusSpec:
- additionalScrapeConfigs: []
- service:
- type: NodePort
-
-# grafana service
-grafana:
- service:
- type: NodePort
-
-alertmanager:
- enabled: false
-EOF
-helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
-&lt;/code>&lt;/pre>
-&lt;h2 id="配置-grafana-dashboard">配置 grafana dashboard&lt;/h2>
-&lt;p>导入一个查看 node exporter 的 dashboard&lt;/p></description></item><item><title>Rook Ceph 安装部署</title><link>/posts/rook-ceph/</link><pubDate>Sun, 24 Nov 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
-&lt;h2 id="安装-rook-ceph">安装 rook ceph&lt;/h2>
-&lt;p>使用 helm charts 安装 rook ceph&lt;/p>
-&lt;p>&lt;a href="https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/">https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/&lt;/a>&lt;/p>
-&lt;h3 id="安装-ceph-operator">安装 ceph operator&lt;/h3>
-&lt;p>我这里禁用了 cephfs 和 nfs 相关功能&lt;/p>
-&lt;pre>&lt;code class="language-bash">mkdir -p ~/charts/rook-ceph/ceph-operator
-cd ~/charts/rook-ceph/ceph-operator
-helm repo add rook-release https://charts.rook.io/release
-# values.yaml 用来查看默认值
-helm show values rook-release/rook-ceph &amp;gt; values.yaml
-cat &amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
-logLevel: DEBUG
-csi:
- enableCephfsDriver: false
- enableCephfsSnapshotter: false
- enableNFSSnapshotter: false
-EOF
-helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
-&lt;/code>&lt;/pre>
-&lt;h3 id="安装-ceph-cluster">安装 ceph cluster&lt;/h3>
-&lt;p>添加三个 node 上的三个盘作为 osd&lt;/p></description></item><item><title>CSI 工作原理</title><link>/posts/csi/</link><pubDate>Mon, 04 Nov 2024 22:07:17 +0800</pubDate><guid>/posts/csi/</guid><description>&lt;h2 id="关于-csi">关于 CSI&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on gobai's blog</title><link>/posts/</link><description>Recent content in Posts on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 01 Jan 2025 13:11:35 +0800</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">关于&lt;/h2>
+&lt;p>&lt;a href="https://github.com/flannel-io/flannel">flannel&lt;/a> 是由 CoreOS 开发的一个简单易用的容器网络插件&lt;/p>
+&lt;p>网络是 k8s 中至关重要的一部分, 这里以简单的 flannel 为例做深入分析&lt;/p>
+&lt;h3 id="工作原理">工作原理&lt;/h3>
+&lt;blockquote>
+&lt;p>以下介绍在 chart 方式部署的 flannel&lt;/p>
+&lt;/blockquote>
+&lt;p>flanneld 进程以 daemonset/kube-flannel-ds 方式运行在所有 node 上, 负责从提前配置好的网络池中分配子网租约 (subnet lease) 给 node.&lt;/p>
+&lt;p>flanneld 使用 k8s api 或者 etcd 存储网络配置、分配的子网和任何补充数据(如 node 的 public ip), 在 k8s 中使用一般不会单独提供 etcd 去存储这些数据.&lt;/p>
+&lt;ul>
+&lt;li>网络配置存储在 configmap 中, kube-flannel ns 下的 cm/kube-flannel-cfg 中&lt;/li>
+&lt;li>分配的子网存储在 PodCIDR 中&lt;/li>
+&lt;/ul>
+&lt;p>flannel 通过 informer 去 list/watch node 资源来动态设置网络, 主要是设置 route, arp 和 fdb 网络配置.&lt;/p>
+&lt;p>flannel 支持多种 pod 之间数据的转发后端(&lt;code>backend&lt;/code>), 一旦设置 &lt;code>backend&lt;/code> 就不应该在运行中更改, 推荐使用 &lt;code>VXLAN&lt;/code>&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">关于 CNI&lt;/h2>
+&lt;p>CNI 全称 &lt;code>Container Network Interface&lt;/code>, 容器网络接口, cni 插件是可执行文件, 一般位于 &lt;code>/opt/cni/bin/&lt;/code> 目录&lt;/p>
+&lt;p>在 k8s 中, kubelet 调用 cri 创建 sandbox 时(RunPodSandbox)会先去创建 network namespace, 然后创建 pause 和 其他容器并将容器加入到同一个 network namespace 中&lt;/p>
+&lt;p>cni spec 文档: &lt;a href="https://www.cni.dev/docs/spec/">https://www.cni.dev/docs/spec/&lt;/a>&lt;/p>
+&lt;p>有如下&lt;a href="https://www.cni.dev/docs/spec/#parameters">环境变量参数&lt;/a>:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>CNI_COMMAND&lt;/code>: 对应操作 &lt;code>ADD&lt;/code>, &lt;code>DEL&lt;/code>, &lt;code>CHECK&lt;/code>, or &lt;code>VERSION&lt;/code>.&lt;/li>
+&lt;li>&lt;code>CNI_CONTAINERID&lt;/code>: 容器 id&lt;/li>
+&lt;li>&lt;code>CNI_NETNS&lt;/code>: 如 &lt;code>/var/run/netns/[nsname]&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_IFNAME&lt;/code>: 要在容器中创建的接口名称, 一般容器中都是 &lt;code>eth0&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_ARGS&lt;/code>: 额外的 kv 参数, 如 &lt;code>FOO=BAR;ABC=123&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_PATH&lt;/code>: 搜索 cni plugin 可执行文件的目录&lt;/li>
+&lt;/ul>
+&lt;h2 id="插件分析">插件分析&lt;/h2>
+&lt;h3 id="bridge">bridge&lt;/h3>
+&lt;p>主要是 &lt;code>cmdAdd&lt;/code> 和 &lt;code>cmdDel&lt;/code> 两个函数, 对应 CNI spec 中的 &lt;code>ADD&lt;/code> 和 &lt;code>DEL&lt;/code> 两个主要操作&lt;/p></description></item><item><title>CSI 工作原理</title><link>/posts/csi/</link><pubDate>Mon, 04 Nov 2024 22:07:17 +0800</pubDate><guid>/posts/csi/</guid><description>&lt;h2 id="关于-csi">关于 CSI&lt;/h2>
 &lt;p>CSI 全称为 &lt;code>Container Storage Interface&lt;/code>, 容器存储接口&lt;/p>
 &lt;p>要实现一个第三方的 csi driver 需要实现下面的 gRPC service &lt;a href="https://github.com/container-storage-interface/spec/blob/master/lib/go/csi/csi_grpc.pb.go">csi spec&lt;/a>&lt;/p>
 &lt;pre>&lt;code class="language-golang">// 如果 NodeServer 和 ControllerServer 对应服务运行在不同 pod 中, 那么两个服务都要实现 IdentityServer
@@ -98,61 +80,7 @@ type NodeServer interface {
 }
 &lt;/code>&lt;/pre>
 &lt;h2 id="关于-sidecar-containers">关于 Sidecar Containers&lt;/h2>
-&lt;p>&lt;a href="https://kubernetes-csi.github.io/docs/sidecar-containers.html">Sidecar Containers&lt;/a> 是一系列标准容器，用于简化 CSI 插件的开发和部署&lt;/p></description></item><item><title>Node Exporter</title><link>/posts/node-exporter/</link><pubDate>Wed, 23 Oct 2024 22:39:59 +0800</pubDate><guid>/posts/node-exporter/</guid><description>&lt;h2 id="node-exporter-安装">node-exporter 安装&lt;/h2>
-&lt;h3 id="生成账号密码的-bcrypt-hash">生成账号密码的 bcrypt hash&lt;/h3>
-&lt;pre>&lt;code class="language-bash">apt install apache2-utils -y
-&lt;/code>&lt;/pre>
-&lt;p>生成一个账号密码的 bcrypt hash&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>-B&lt;/code> 强制使用 bcrypt 算法&lt;/li>
-&lt;li>&lt;code>-C 10&lt;/code> 指定 bcrypt 的 cost 值为 10, golang bcrypt 默认 cost 值也为 10&lt;/li>
-&lt;/ul>
-&lt;p>注意修改下面的 &lt;code>username&lt;/code> 和 &lt;code>password&lt;/code> 为你要设置的账号密码&lt;/p>
-&lt;pre>&lt;code class="language-bash"># htpasswd -nbBC 10 username password
-username:$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
-&lt;/code>&lt;/pre>
-&lt;h4 id="关于-bcrypt">关于 bcrypt&lt;/h4>
-&lt;p>格式为 &lt;code>$2&amp;lt;a/b/x/y&amp;gt;$[cost]$[22 character salt][31 character hash]&lt;/code>&lt;/p>
-&lt;p>例如&lt;/p>
-&lt;pre>&lt;code class="language-bash">$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
-\__/\/ \____________________/\_____________________________/
-Alg Cost Salt Hash
-&lt;/code>&lt;/pre>
-&lt;h3 id="运行-node-exporter">运行 node-exporter&lt;/h3>
-&lt;ol>
-&lt;li>创建 &lt;code>prometheus&lt;/code> 配置文件 &lt;code>/etc/prometheus/web.yml&lt;/code>&lt;/li>
-&lt;li>创建 &lt;code>docker-compose.yml&lt;/code> 文件&lt;/li>
-&lt;li>运行 docker compose&lt;/li>
-&lt;/ol>
-&lt;pre>&lt;code class="language-bash">PASS='$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO'
-mkdir -p /etc/prometheus
-
-cat &amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/web.yml
-basic_auth_users:
- # username: password
- prometheus: ${PASS}
-EOF
-
-cat &amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/docker-compose.yml
-services:
- node-exporter:
- image: quay.io/prometheus/node-exporter:latest
- container_name: node-exporter
- command: 
- - &amp;quot;--path.rootfs=/host&amp;quot;
- - &amp;quot;--web.config.file=/etc/prometheus/web.yml&amp;quot;
- network_mode: &amp;quot;host&amp;quot;
- pid: host
- restart: always
- volumes:
- - '/:/host:ro,rslave'
- - /etc/prometheus/web.yml:/etc/prometheus/web.yml
-EOF
-
-docker compose -f /etc/prometheus/docker-compose.yml up -d
-&lt;/code>&lt;/pre>
-&lt;h2 id="修改-kube-prometheus-stack-chart-配置">修改 kube-prometheus-stack chart 配置&lt;/h2>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>构建多平台容器镜像</title><link>/posts/builing-multi-platform-container-images-guide/</link><pubDate>Sun, 13 Oct 2024 11:27:56 +0800</pubDate><guid>/posts/builing-multi-platform-container-images-guide/</guid><description>&lt;blockquote>
+&lt;p>&lt;a href="https://kubernetes-csi.github.io/docs/sidecar-containers.html">Sidecar Containers&lt;/a> 是一系列标准容器，用于简化 CSI 插件的开发和部署&lt;/p></description></item><item><title>构建多平台容器镜像</title><link>/posts/builing-multi-platform-container-images-guide/</link><pubDate>Sun, 13 Oct 2024 11:27:56 +0800</pubDate><guid>/posts/builing-multi-platform-container-images-guide/</guid><description>&lt;blockquote>
 &lt;p>构建多平台容器镜像&lt;/p>
 &lt;/blockquote>
 &lt;h2 id="docker-buildx-插件子命令">Docker buildx 插件/子命令&lt;/h2>
@@ -249,7 +177,108 @@ docker compose -f /etc/prometheus/docker-compose.yml up -d
  vethe1841f6e ce:79:fc:e1:1e:0b N/A N/A
  veth464995dc 82:a9:3b:a6:b5:49 N/A N/A
  veth2370e2ac 4a:c8:32:5c:fb:34 N/A N/A
-&lt;/code>&lt;/pre></description></item><item><title>使用 RKE2 快速搭建 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
+&lt;/code>&lt;/pre></description></item><item><title>Node Exporter</title><link>/posts/node-exporter/</link><pubDate>Wed, 03 Jul 2024 22:39:59 +0800</pubDate><guid>/posts/node-exporter/</guid><description>&lt;h2 id="node-exporter-安装">node-exporter 安装&lt;/h2>
+&lt;h3 id="生成账号密码的-bcrypt-hash">生成账号密码的 bcrypt hash&lt;/h3>
+&lt;pre>&lt;code class="language-bash">apt install apache2-utils -y
+&lt;/code>&lt;/pre>
+&lt;p>生成一个账号密码的 bcrypt hash&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>-B&lt;/code> 强制使用 bcrypt 算法&lt;/li>
+&lt;li>&lt;code>-C 10&lt;/code> 指定 bcrypt 的 cost 值为 10, golang bcrypt 默认 cost 值也为 10&lt;/li>
+&lt;/ul>
+&lt;p>注意修改下面的 &lt;code>username&lt;/code> 和 &lt;code>password&lt;/code> 为你要设置的账号密码&lt;/p>
+&lt;pre>&lt;code class="language-bash"># htpasswd -nbBC 10 username password
+username:$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+&lt;/code>&lt;/pre>
+&lt;h4 id="关于-bcrypt">关于 bcrypt&lt;/h4>
+&lt;p>格式为 &lt;code>$2&amp;lt;a/b/x/y&amp;gt;$[cost]$[22 character salt][31 character hash]&lt;/code>&lt;/p>
+&lt;p>例如&lt;/p>
+&lt;pre>&lt;code class="language-bash">$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+\__/\/ \____________________/\_____________________________/
+Alg Cost Salt Hash
+&lt;/code>&lt;/pre>
+&lt;h3 id="运行-node-exporter">运行 node-exporter&lt;/h3>
+&lt;ol>
+&lt;li>创建 &lt;code>prometheus&lt;/code> 配置文件 &lt;code>/etc/prometheus/web.yml&lt;/code>&lt;/li>
+&lt;li>创建 &lt;code>docker-compose.yml&lt;/code> 文件&lt;/li>
+&lt;li>运行 docker compose&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code class="language-bash">PASS='$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO'
+mkdir -p /etc/prometheus
+
+cat &amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/web.yml
+basic_auth_users:
+ # username: password
+ prometheus: ${PASS}
+EOF
+
+cat &amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/docker-compose.yml
+services:
+ node-exporter:
+ image: quay.io/prometheus/node-exporter:latest
+ container_name: node-exporter
+ command: 
+ - &amp;quot;--path.rootfs=/host&amp;quot;
+ - &amp;quot;--web.config.file=/etc/prometheus/web.yml&amp;quot;
+ network_mode: &amp;quot;host&amp;quot;
+ pid: host
+ restart: always
+ volumes:
+ - '/:/host:ro,rslave'
+ - /etc/prometheus/web.yml:/etc/prometheus/web.yml
+EOF
+
+docker compose -f /etc/prometheus/docker-compose.yml up -d
+&lt;/code>&lt;/pre>
+&lt;h2 id="修改-kube-prometheus-stack-chart-配置">修改 kube-prometheus-stack chart 配置&lt;/h2>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>安装 Kube Prometheus Stack</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;h2 id="安装-kube-prometheus-stack">安装 kube-prometheus-stack&lt;/h2>
+&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
+&lt;pre>&lt;code class="language-bash">mkdir -p ~/charts/kube-prometheus-stack
+cd ~/charts/kube-prometheus-stack
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+# values.yaml 用来查看默认值
+helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
+cat &amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+prometheus:
+ prometheusSpec:
+ additionalScrapeConfigs: []
+ service:
+ type: NodePort
+
+# grafana service
+grafana:
+ service:
+ type: NodePort
+
+alertmanager:
+ enabled: false
+EOF
+helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+&lt;/code>&lt;/pre>
+&lt;h2 id="配置-grafana-dashboard">配置 grafana dashboard&lt;/h2>
+&lt;p>导入一个查看 node exporter 的 dashboard&lt;/p></description></item><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
+&lt;h2 id="安装-rook-ceph">安装 rook ceph&lt;/h2>
+&lt;p>使用 helm charts 安装 rook ceph&lt;/p>
+&lt;p>&lt;a href="https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/">https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/&lt;/a>&lt;/p>
+&lt;h3 id="安装-ceph-operator">安装 ceph operator&lt;/h3>
+&lt;p>我这里禁用了 cephfs 和 nfs 相关功能&lt;/p>
+&lt;pre>&lt;code class="language-bash">mkdir -p ~/charts/rook-ceph/ceph-operator
+cd ~/charts/rook-ceph/ceph-operator
+helm repo add rook-release https://charts.rook.io/release
+# values.yaml 用来查看默认值
+helm show values rook-release/rook-ceph &amp;gt; values.yaml
+cat &amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+logLevel: DEBUG
+csi:
+ enableCephfsDriver: false
+ enableCephfsSnapshotter: false
+ enableNFSSnapshotter: false
+EOF
+helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
+&lt;/code>&lt;/pre>
+&lt;h3 id="安装-ceph-cluster">安装 ceph cluster&lt;/h3>
+&lt;p>添加三个 node 上的三个盘作为 osd&lt;/p></description></item><item><title>RKE2 安装 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -290,8 +319,8 @@ tls-san:
  - lb.k8s.lan
 write-kubeconfig-mode: &amp;quot;0600&amp;quot;
 disable-cloud-controller: true
-# 为了节省资源使用的 flannel, 也可以使用 calico
-cni: flannel
+# cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
+cni: none
 debug: true
 # 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
@@ -372,14 +401,14 @@ done
 &lt;/blockquote>
 &lt;h2 id="介绍informer">介绍informer&lt;/h2>
 &lt;p>带着问题看&lt;/p>
-&lt;h2 id="开发crd时想到的一些问题">开发CRD时想到的一些问题&lt;/h2>
-&lt;h3 id="更新local-store缓存和触发reconcile是否有先后顺序">更新local store缓存和触发reconcile是否有先后顺序&lt;/h3>
-&lt;h3 id="同一个crd-object会不会同时被reconcile">同一个crd object会不会同时被reconcile&lt;/h3>
+&lt;h2 id="开发-crd-controller-时想到的一些问题">开发 CRD Controller 时想到的一些问题&lt;/h2>
+&lt;h3 id="更新-local-store-缓存和触发reconcile是否有先后顺序">更新 local store 缓存和触发reconcile是否有先后顺序&lt;/h3>
+&lt;h3 id="同一个-crd-object-会不会同时被-reconcile">同一个 crd object 会不会同时被 reconcile&lt;/h3>
 &lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
 &lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
 &lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
 &lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
-&lt;h3 id="如何解决进入reconcile之后读到的是旧数据的问题">如何解决进入reconcile之后读到的是旧数据的问题&lt;/h3>
+&lt;h3 id="如何解决进入-reconcile-之后读到的是旧数据的问题">如何解决进入 reconcile 之后读到的是旧数据的问题&lt;/h3>
 &lt;p>读到旧数据是否说明是先出发reconcile再更新local store的&lt;/p>
 &lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p>
 &lt;p>在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新&lt;/p>
@@ -1020,7 +1049,7 @@ root 170251 0.0 0.0 101232 6184 ? Ssl 10月06 0:08 dhclient
 root 237127 0.0 0.0 101232 6012 ? Ssl 10月07 0:06 dhclient
 gobai 322905 0.0 0.0 12308 2816 pts/5 S+ 21:49 0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox dhclient
 &lt;/code>&lt;/pre>
-&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item><item><title>Creating a bridged network with netplan on Ubuntu 22.04</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
+&lt;p>对比上面五个进程(&lt;code>DHCP Client&lt;/code>)和日志发现，五个进程都干了同样的事：&lt;/p></description></item><item><title>在 Ubuntu 22.04 使用 netplan 创建桥接网络</title><link>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</link><pubDate>Wed, 04 Oct 2023 13:01:59 +0800</pubDate><guid>/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/</guid><description>&lt;p>本地LAN环境&lt;/p>
 &lt;ol>
 &lt;li>LAN网关 &lt;code>192.168.1.1&lt;/code>&lt;/li>
 &lt;li>子网掩码 &lt;code>255.255.255.0&lt;/code>&lt;/li>

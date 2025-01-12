@@ -3,14 +3,14 @@
 &lt;/blockquote>
 &lt;h2 id="介绍informer">介绍informer&lt;/h2>
 &lt;p>带着问题看&lt;/p>
-&lt;h2 id="开发crd时想到的一些问题">开发CRD时想到的一些问题&lt;/h2>
-&lt;h3 id="更新local-store缓存和触发reconcile是否有先后顺序">更新local store缓存和触发reconcile是否有先后顺序&lt;/h3>
-&lt;h3 id="同一个crd-object会不会同时被reconcile">同一个crd object会不会同时被reconcile&lt;/h3>
+&lt;h2 id="开发-crd-controller-时想到的一些问题">开发 CRD Controller 时想到的一些问题&lt;/h2>
+&lt;h3 id="更新-local-store-缓存和触发reconcile是否有先后顺序">更新 local store 缓存和触发reconcile是否有先后顺序&lt;/h3>
+&lt;h3 id="同一个-crd-object-会不会同时被-reconcile">同一个 crd object 会不会同时被 reconcile&lt;/h3>
 &lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
 &lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
 &lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
 &lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
-&lt;h3 id="如何解决进入reconcile之后读到的是旧数据的问题">如何解决进入reconcile之后读到的是旧数据的问题&lt;/h3>
+&lt;h3 id="如何解决进入-reconcile-之后读到的是旧数据的问题">如何解决进入 reconcile 之后读到的是旧数据的问题&lt;/h3>
 &lt;p>读到旧数据是否说明是先出发reconcile再更新local store的&lt;/p>
 &lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p>
 &lt;p>在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新&lt;/p>

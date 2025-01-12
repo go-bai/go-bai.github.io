@@ -1,0 +1,77 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>CNI 工作原理 | gobai's blog</title>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>博客</a></li><li><a href=/about/>关于我</a></li><li><a href=/links/>友链</a></li><li><a href=/tags/>标签</a></li><li><a href=/index.xml>订阅</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>CNI 工作原理</span></h1><p class=date>2024/11/17</p><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/cni>cni</a></p></div><nav id=TableOfContents><ul><li><a href=#关于-cni>关于 CNI</a></li><li><a href=#插件分析>插件分析</a><ul><li><a href=#bridge>bridge</a><ul><li><a href=#cmdadd>cmdAdd</a></li></ul></li></ul></li><li><a href=#cni-测试工具-cnitool>cni 测试工具 <code>cnitool</code></a><ul><li><a href=#创建-netns-testing>创建 netns testing</a></li><li><a href=#创建-bridge-static>创建 bridge-static</a></li><li><a href=#将-bridge-static-添加至-testing-netns>将 bridge-static 添加至 testing netns</a></li><li><a href=#检查-netns-里是否成功配置网络>检查 netns 里是否成功配置网络</a></li></ul></li></ul></nav><main><h2 id=关于-cni>关于 CNI</h2><p>CNI 全称 <code>Container Network Interface</code>, 容器网络接口, cni 插件是可执行文件, 一般位于 <code>/opt/cni/bin/</code> 目录</p><p>在 k8s 中, kubelet 调用 cri 创建 sandbox 时(RunPodSandbox)会先去创建 network namespace, 然后创建 pause 和 其他容器并将容器加入到同一个 network namespace 中</p><p>cni spec 文档: <a href=https://www.cni.dev/docs/spec/>https://www.cni.dev/docs/spec/</a></p><p>有如下<a href=https://www.cni.dev/docs/spec/#parameters>环境变量参数</a>:</p><ul><li><code>CNI_COMMAND</code>: 对应操作 <code>ADD</code>, <code>DEL</code>, <code>CHECK</code>, or <code>VERSION</code>.</li><li><code>CNI_CONTAINERID</code>: 容器 id</li><li><code>CNI_NETNS</code>: 如 <code>/var/run/netns/[nsname]</code></li><li><code>CNI_IFNAME</code>: 要在容器中创建的接口名称, 一般容器中都是 <code>eth0</code></li><li><code>CNI_ARGS</code>: 额外的 kv 参数, 如 <code>FOO=BAR;ABC=123</code></li><li><code>CNI_PATH</code>: 搜索 cni plugin 可执行文件的目录</li></ul><h2 id=插件分析>插件分析</h2><h3 id=bridge>bridge</h3><p>主要是 <code>cmdAdd</code> 和 <code>cmdDel</code> 两个函数, 对应 CNI spec 中的 <code>ADD</code> 和 <code>DEL</code> 两个主要操作</p><h4 id=cmdadd>cmdAdd</h4><p>TODO: 分析代码</p><ol><li>setupBridge 确保机器上存储对应的 bridge</li><li>setupVeth 在对应的 netns 下创建 veth</li><li>执行 ipam.ExecAdd(n.IPAM.Type, args.StdinData) 获取 ip 地址</li><li>执行 ipam.ConfigureIface(args.IfName, result) 将 ip 地址设知道对应的 veth 上</li></ol><h2 id=cni-测试工具-cnitool>cni 测试工具 <code>cnitool</code></h2><p><a href=https://www.cni.dev/docs/cnitool/>https://www.cni.dev/docs/cnitool/</a></p><h3 id=创建-netns-testing>创建 netns testing</h3><pre><code class=language-bash>$ ip netns add testing
+$ ip netns list
+testing
+</code></pre><h3 id=创建-bridge-static>创建 bridge-static</h3><pre><code class=language-bash>cat &lt;&lt;EOF &gt; /etc/cni/net.d/999-bridge-static.conf
+{
+  &quot;cniVersion&quot;: &quot;0.4.0&quot;,
+  &quot;name&quot;: &quot;bridge-static&quot;,
+  &quot;type&quot;: &quot;bridge&quot;,
+  &quot;bridge&quot;: &quot;br0&quot;,
+  &quot;ipam&quot;: {
+    &quot;type&quot;: &quot;static&quot;,
+    &quot;routes&quot;: [
+      {
+        &quot;dst&quot;: &quot;0.0.0.0/0&quot;,
+        &quot;gw&quot;: &quot;192.168.1.99&quot;
+      }
+    ],
+    &quot;addresses&quot;: [
+      {
+        &quot;address&quot;: &quot;192.168.1.67/24&quot;
+      }
+    ]
+  }
+}
+EOF
+</code></pre><h3 id=将-bridge-static-添加至-testing-netns>将 bridge-static 添加至 testing netns</h3><pre><code class=language-bash>$ CNI_PATH=/opt/cni/bin cnitool add bridge-static /var/run/netns/testing
+{
+    &quot;cniVersion&quot;: &quot;0.4.0&quot;,
+    &quot;interfaces&quot;: [
+        {
+            &quot;name&quot;: &quot;br0&quot;,
+            &quot;mac&quot;: &quot;b2:0c:ce:e1:37:1e&quot;
+        },
+        {
+            &quot;name&quot;: &quot;veth56b82c3a&quot;,
+            &quot;mac&quot;: &quot;c6:44:a7:57:57:2d&quot;
+        },
+        {
+            &quot;name&quot;: &quot;eth0&quot;,
+            &quot;mac&quot;: &quot;1e:d1:07:6b:a2:6a&quot;,
+            &quot;sandbox&quot;: &quot;/var/run/netns/testing&quot;
+        }
+    ],
+    &quot;ips&quot;: [
+        {
+            &quot;version&quot;: &quot;4&quot;,
+            &quot;interface&quot;: 2,
+            &quot;address&quot;: &quot;192.168.1.67/24&quot;
+        }
+    ],
+    &quot;routes&quot;: [
+        {
+            &quot;dst&quot;: &quot;0.0.0.0/0&quot;,
+            &quot;gw&quot;: &quot;192.168.1.99&quot;
+        }
+    ],
+    &quot;dns&quot;: {}
+}
+</code></pre><h3 id=检查-netns-里是否成功配置网络>检查 netns 里是否成功配置网络</h3><pre><code class=language-bash>$ ip -n testing addr
+1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0@if18: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default
+    link/ether 1e:d1:07:6b:a2:6a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.1.67/24 brd 192.168.1.255 scope global eth0
+       valid_lft forever preferred_lft forever
+$ ip -n testing route
+default via 192.168.1.99 dev eth0
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.67
+$ ip netns exec testing ping -c 1 192.168.1.99
+PING 192.168.1.99 (192.168.1.99) 56(84) bytes of data.
+64 bytes from 192.168.1.99: icmp_seq=1 ttl=64 time=0.725 ms
+
+--- 192.168.1.99 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.725/0.725/0.725/0.000 ms
+</code></pre></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2025 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
