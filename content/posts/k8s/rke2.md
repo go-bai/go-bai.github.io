@@ -1,5 +1,5 @@
 ---
-title: "使用 RKE2 快速搭建 k8s 集群"
+title: "RKE2 安装 k8s 集群"
 date: 2024-07-01T21:24:49+08:00
 draft: false
 toc: true
@@ -28,8 +28,8 @@ tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: "0600"
 disable-cloud-controller: true
-# 为了节省资源使用的 flannel, 也可以使用 calico
-cni: flannel
+# cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
+cni: none
 debug: true
 # 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
@@ -102,6 +102,10 @@ func (e *ETCD) listenMetricsURLs(reset bool) string {
 
 生成 etcd 配置文件之后, etcd 的 static pod manifest 中的启动命令就是 `etcd --config-file=/var/lib/rancher/rke2/server/db/etcd/config`, 配置文件通过 hostPath 方式挂载.
 
+### 安装 cni
+
+查看 [《深入了解 Kubernetes CNI 网络插件 Flannel》](../flannel) 安装 flannel cni
+
 ### 安装其他 server 节点
 
 初始化 rke2 配置文件, 需要修改 `/etc/rancher/rke2/config.yaml` 中的 token
@@ -117,7 +121,8 @@ tls-san:
   - lb.k8s.lan
 write-kubeconfig-mode: "0600"
 disable-cloud-controller: true
-cni: flannel
+# cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
+cni: none
 debug: true
 # 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
 kube-scheduler-arg:
@@ -210,12 +215,13 @@ containerd进程退出时rke2也会重启, kubelet进程退出时rke2会再拉�
 
 | 目录/文件 | 说明 |
 | --- | --- |
-| `/var/lib/rancher/rke2/agent/pod-manifests` | static pod 文件 |
+| `/etc/rancher/rke2/config.yaml` | [rke2配置文件](https://docs.rke2.io/install/configuration#configuration-file) |
+| `/var/lib/rancher/rke2/agent/pod-manifests` | static pod 文件, rke2 启动时根据配置文件自动生成 |
 | `/var/lib/rancher/rke2/agent/etc/containerd/config.toml` | containerd配置文件 |
 | `/var/lib/rancher/rke2/agent/containerd/containerd.log` | containerd日志 |
 | `/var/lib/rancher/rke2/agent/logs/kubelet.log` | kubelet日志 |
 | `/var/lib/rancher/rke2/server/db/etcd/config` | etcd配置文件 |
-| `/etc/rancher/rke2/config.yaml` | [rke2配置文件](https://docs.rke2.io/install/configuration#configuration-file) |
+| `/var/lib/rancher/rke2/server/manifests` | 生成的 coredns 等 helm chart 文件 |
 
 ## 连接 etcd
 

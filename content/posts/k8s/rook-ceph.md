@@ -1,6 +1,6 @@
 ---
-title: "Rook Ceph 安装部署"
-date: 2024-11-24T14:56:03+08:00
+title: "安装 Rook Ceph"
+date: 2024-07-02T14:56:03+08:00
 draft: false
 toc: true
 tags: [k8s, rook, ceph]

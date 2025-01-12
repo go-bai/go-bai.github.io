@@ -12,16 +12,18 @@ permalinks:
 
 menu:
   main:
-    - name: Home
+    - name: 博客
       url: ""
       weight: 1
-    - name: About
+    - name: 关于我
       url: "about/"
       weight: 2
-    - name: Tags
+    - name: 标签
       url: "tags/"
+    - name: 友链
+      url: "links/"
       weight: 3
-    - name: Subscribe
+    - name: 订阅
       url: "index.xml"
 
 params:

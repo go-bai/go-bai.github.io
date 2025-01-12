@@ -1,6 +1,6 @@
 ---
-title: "Kube Prometheus Stack 安装部署"
-date: 2024-11-25T14:56:03+08:00
+title: "安装 Kube Prometheus Stack"
+date: 2024-07-03T14:56:03+08:00
 draft: false
 toc: true
 tags: [k8s, kube-prometheus-stack]

@@ -1,6 +1,6 @@
 ---
 title: "Node Exporter"
-date: 2024-10-23T22:39:59+08:00
+date: 2024-07-03T22:39:59+08:00
 draft: false
 toc: true
 tags: [prometheus, node-exporter]

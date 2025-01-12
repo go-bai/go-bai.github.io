@@ -12,11 +12,11 @@ tags: [informer,controller,workqueue]
 
 带着问题看
 
-## 开发CRD时想到的一些问题
+## 开发 CRD Controller 时想到的一些问题
 
-### 更新local store缓存和触发reconcile是否有先后顺序
+### 更新 local store 缓存和触发reconcile是否有先后顺序
 
-### 同一个crd object会不会同时被reconcile
+### 同一个 crd object 会不会同时被 reconcile
 
 这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object
 
@@ -25,7 +25,7 @@ https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue
 
 有几种队列，Queue，DelayingQueue，RateLimitingQueue
 
-### 如何解决进入reconcile之后读到的是旧数据的问题
+### 如何解决进入 reconcile 之后读到的是旧数据的问题
 
 读到旧数据是否说明是先出发reconcile再更新local store的
 
