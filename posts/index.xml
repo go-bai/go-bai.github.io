@@ -11,8 +11,12 @@
 &lt;li>网络配置存储在 configmap 中, kube-flannel ns 下的 cm/kube-flannel-cfg 中&lt;/li>
 &lt;li>分配的子网存储在 PodCIDR 中&lt;/li>
 &lt;/ul>
-&lt;p>flannel 通过 informer 去 list/watch node 资源来动态设置网络, 主要是设置 route, arp 和 fdb 网络配置.&lt;/p>
-&lt;p>flannel 支持多种 pod 之间数据的转发后端(&lt;code>backend&lt;/code>), 一旦设置 &lt;code>backend&lt;/code> 就不应该在运行中更改, 推荐使用 &lt;code>VXLAN&lt;/code>&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">关于 CNI&lt;/h2>
+&lt;p>几个名词解释:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>subnet&lt;/code>: 对应 &lt;code>node.spec.podCIDR&lt;/code>。&lt;/li>
+&lt;li>&lt;code>backend&lt;/code>: 负责 &lt;code>node&lt;/code> 之间 &lt;code>pod&lt;/code> 通讯的后端。&lt;/li>
+&lt;/ol>
+&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">关于 CNI&lt;/h2>
 &lt;p>CNI 全称 &lt;code>Container Network Interface&lt;/code>, 容器网络接口, cni 插件是可执行文件, 一般位于 &lt;code>/opt/cni/bin/&lt;/code> 目录&lt;/p>
 &lt;p>在 k8s 中, kubelet 调用 cri 创建 sandbox 时(RunPodSandbox)会先去创建 network namespace, 然后创建 pause 和 其他容器并将容器加入到同一个 network namespace 中&lt;/p>
 &lt;p>cni spec 文档: &lt;a href="https://www.cni.dev/docs/spec/">https://www.cni.dev/docs/spec/&lt;/a>&lt;/p>
@@ -399,21 +403,20 @@ done
 &lt;/ul></description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
 &lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime&lt;/a>是在&lt;a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">client-go/tools/cache&lt;/a>和&lt;a href="https://github.com/kubernetes/client-go/tree/master/util/workqueue">client-go/util/workqueue&lt;/a>的基础上实现的, 了解&lt;code>client-go/tools/cache&lt;/code>和&lt;code>client-go/util/workqueue&lt;/code>对理解&lt;code>controller-runtime&lt;/code>很有帮助&lt;/p>
 &lt;/blockquote>
-&lt;h2 id="介绍informer">介绍informer&lt;/h2>
-&lt;p>带着问题看&lt;/p>
-&lt;h2 id="开发-crd-controller-时想到的一些问题">开发 CRD Controller 时想到的一些问题&lt;/h2>
-&lt;h3 id="更新-local-store-缓存和触发reconcile是否有先后顺序">更新 local store 缓存和触发reconcile是否有先后顺序&lt;/h3>
+&lt;h2 id="informer-的工作机制是什么">informer 的工作机制是什么&lt;/h2>
+&lt;ol>
+&lt;li>&lt;code>Reflector&lt;/code> 从 &lt;code>kube-apiserver&lt;/code> 中获取资源对象, 更新到 &lt;code>DeltaFIFO&lt;/code> 中&lt;/li>
+&lt;li>Informer 从 DeltaFIFO 中获取资源对象, 更新到 &lt;code>local cache&lt;/code> 中, 然后执行注册的 EventHandler&lt;/li>
+&lt;/ol>
+&lt;p>自定义控制器会注册 &lt;code>AddFunc&lt;/code>, &lt;code>UpdateFunc&lt;/code>, &lt;code>DeleteFunc&lt;/code> 等事件处理器, 这些事件会添加对象到 WorkQueue 中, 然后从 WorkQueue 中获取对象, 触发 reconcile&lt;/p>
 &lt;h3 id="同一个-crd-object-会不会同时被-reconcile">同一个 crd object 会不会同时被 reconcile&lt;/h3>
 &lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
 &lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
 &lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
 &lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
-&lt;h3 id="如何解决进入-reconcile-之后读到的是旧数据的问题">如何解决进入 reconcile 之后读到的是旧数据的问题&lt;/h3>
-&lt;p>读到旧数据是否说明是先出发reconcile再更新local store的&lt;/p>
-&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p>
-&lt;p>在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新&lt;/p>
-&lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that">https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that&lt;/a>&lt;/p>
-&lt;p>&lt;a href="https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520">https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520&lt;/a>&lt;/p></description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">简介&lt;/h2>
+&lt;h3 id="reconcile-时会读到旧数据吗如何解决">&lt;code>reconcile&lt;/code> 时会读到旧数据吗，如何解决&lt;/h3>
+&lt;p>因为读写分离，更新是直接更新 &lt;code>kube-apiserver&lt;/code>，读是从 &lt;code>indexer(local cache)&lt;/code> 中，所以读到的有可能是陈旧的数据。&lt;/p>
+&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p></description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">简介&lt;/h2>
 &lt;h3 id="背景">背景&lt;/h3>
 &lt;blockquote>
 &lt;p>在kubevirt中, 通过vmi的spec没办法涵盖所有的&lt;a href="https://libvirt.org/formatdomain.html">libvirt domain xml&lt;/a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML&lt;/p>

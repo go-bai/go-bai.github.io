@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Controller on gobai's blog</title><link>/tags/controller/</link><description>Recent content in Controller on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 01 Jun 2024 10:42:13 +0800</lastBuildDate><atom:link href="/tags/controller/index.xml" rel="self" type="application/rss+xml"/><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
 &lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime&lt;/a>是在&lt;a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">client-go/tools/cache&lt;/a>和&lt;a href="https://github.com/kubernetes/client-go/tree/master/util/workqueue">client-go/util/workqueue&lt;/a>的基础上实现的, 了解&lt;code>client-go/tools/cache&lt;/code>和&lt;code>client-go/util/workqueue&lt;/code>对理解&lt;code>controller-runtime&lt;/code>很有帮助&lt;/p>
 &lt;/blockquote>
-&lt;h2 id="介绍informer">介绍informer&lt;/h2>
-&lt;p>带着问题看&lt;/p>
-&lt;h2 id="开发-crd-controller-时想到的一些问题">开发 CRD Controller 时想到的一些问题&lt;/h2>
-&lt;h3 id="更新-local-store-缓存和触发reconcile是否有先后顺序">更新 local store 缓存和触发reconcile是否有先后顺序&lt;/h3>
+&lt;h2 id="informer-的工作机制是什么">informer 的工作机制是什么&lt;/h2>
+&lt;ol>
+&lt;li>&lt;code>Reflector&lt;/code> 从 &lt;code>kube-apiserver&lt;/code> 中获取资源对象, 更新到 &lt;code>DeltaFIFO&lt;/code> 中&lt;/li>
+&lt;li>Informer 从 DeltaFIFO 中获取资源对象, 更新到 &lt;code>local cache&lt;/code> 中, 然后执行注册的 EventHandler&lt;/li>
+&lt;/ol>
+&lt;p>自定义控制器会注册 &lt;code>AddFunc&lt;/code>, &lt;code>UpdateFunc&lt;/code>, &lt;code>DeleteFunc&lt;/code> 等事件处理器, 这些事件会添加对象到 WorkQueue 中, 然后从 WorkQueue 中获取对象, 触发 reconcile&lt;/p>
 &lt;h3 id="同一个-crd-object-会不会同时被-reconcile">同一个 crd object 会不会同时被 reconcile&lt;/h3>
 &lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
 &lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
 &lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
 &lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
-&lt;h3 id="如何解决进入-reconcile-之后读到的是旧数据的问题">如何解决进入 reconcile 之后读到的是旧数据的问题&lt;/h3>
-&lt;p>读到旧数据是否说明是先出发reconcile再更新local store的&lt;/p>
-&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p>
-&lt;p>在更新或patch status之后，通过wait.Pool(100ms, 2s, func()(bool, error))校验cache中的本object数据直至更新&lt;/p>
-&lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that">https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md#q-my-cache-might-be-stale-if-i-read-from-a-cache-how-should-i-deal-with-that&lt;/a>&lt;/p>
-&lt;p>&lt;a href="https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520">https://github.com/kubernetes/test-infra/blob/8f0f19a905a20ed6f76386e5e11343d4bc2446a7/prow/plank/reconciler.go#L516-L520&lt;/a>&lt;/p></description></item></channel></rss>
+&lt;h3 id="reconcile-时会读到旧数据吗如何解决">&lt;code>reconcile&lt;/code> 时会读到旧数据吗，如何解决&lt;/h3>
+&lt;p>因为读写分离，更新是直接更新 &lt;code>kube-apiserver&lt;/code>，读是从 &lt;code>indexer(local cache)&lt;/code> 中，所以读到的有可能是陈旧的数据。&lt;/p>
+&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p></description></item></channel></rss>

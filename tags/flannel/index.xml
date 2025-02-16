@@ -11,5 +11,9 @@
 &lt;li>网络配置存储在 configmap 中, kube-flannel ns 下的 cm/kube-flannel-cfg 中&lt;/li>
 &lt;li>分配的子网存储在 PodCIDR 中&lt;/li>
 &lt;/ul>
-&lt;p>flannel 通过 informer 去 list/watch node 资源来动态设置网络, 主要是设置 route, arp 和 fdb 网络配置.&lt;/p>
-&lt;p>flannel 支持多种 pod 之间数据的转发后端(&lt;code>backend&lt;/code>), 一旦设置 &lt;code>backend&lt;/code> 就不应该在运行中更改, 推荐使用 &lt;code>VXLAN&lt;/code>&lt;/p></description></item></channel></rss>
+&lt;p>几个名词解释:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>subnet&lt;/code>: 对应 &lt;code>node.spec.podCIDR&lt;/code>。&lt;/li>
+&lt;li>&lt;code>backend&lt;/code>: 负责 &lt;code>node&lt;/code> 之间 &lt;code>pod&lt;/code> 通讯的后端。&lt;/li>
+&lt;/ol>
+&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item></channel></rss>
