@@ -22,9 +22,26 @@ flanneld 使用 k8s api 或者 etcd 存储网络配置、分配的子网和任�
 - 网络配置存储在 configmap 中, kube-flannel ns 下的 cm/kube-flannel-cfg 中
 - 分配的子网存储在 PodCIDR 中
 
-flannel 通过 informer 去 list/watch node 资源来动态设置网络, 主要是设置 route, arp 和 fdb 网络配置.
+几个名词解释:
+
+1. `subnet`: 对应 `node.spec.podCIDR`。
+2. `backend`: 负责 `node` 之间 `pod` 通讯的后端。
+
+flanneld 进程通过监听 `node` 资源来生成 `subnet event`, 然后在对应 `backend` 的 `handleSubnetEvents` 方法中处理逻辑，对于 `vxlan backend` 主要是按顺序设置 `arp`, `fdb` 和 `route` 来实现pod跨节点通讯。
 
 flannel 支持多种 pod 之间数据的转发后端(`backend`), 一旦设置 `backend` 就不应该在运行中更改, 推荐使用 `VXLAN`
+
+#### node 子网信息从哪里来
+
+我对于这个问题之前困惑了挺久，在 `flannel` 代码中也没找到相关代码。
+
+后来发现子网信息是从 `node.Spec.podCIDR` 中获取的。
+
+当 `kube-controller-manager` 设置了 `allocate-node-cidrs` 和 `cluster-cidr` 参数时，`kube-controller-manager` 会为每个 `node` 确定 `podCIDR`。`flanneld` 刚启动时，在 `RegisterNetwork`（调用 `kubeSubnetManager.AcquireLease`）中获取当前 `node` 的 `spec.podCIDR`，并把需要的一些信息写入到 `node` 的 `annotation`。再把子网信息写入到 `/run/flannel/subnet.env`，由 `flannel CNI` 读取，用于分配 `pod ip`。
+
+#### 数据转发流程
+
+TODO
 
 #### 推荐的 backend
 
@@ -35,6 +52,8 @@ flannel 支持多种 pod 之间数据的转发后端(`backend`), 一旦设置 `b
 VXLAN 协议是一个隧道协议, 用来解决 VLAN ID 在 IEEE 802.1q 中限制只能有 4096(12bit) 个的问题. 在 VXLAN 中, VXLAN 标识符(VNI)的大小扩展至 16777216(24bit).
 
 VXLAN 由 [IETF RFC7348](https://datatracker.ietf.org/doc/html/rfc7348) 描述, 并且被很多厂商实现(如linux kernel vxlan module)了, 该协议使用单个目的端口(一般是`4789`)运行在 UDP 之上.
+
+VXLAN 采用 MAC in UDP 的封装方式.
 
 ##### host-gw
 

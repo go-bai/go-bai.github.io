@@ -99,6 +99,8 @@ watch `PersistentVolumeClaim` 对象, 如果一个 pvc 引用了一个 `StorageC
 - 创建 pvc 事件调用 CSI endpoint 执行 `CreateVolume`, 成功创建 volume 后就会创建代表这个 volume 的 `PersistentVolume` 对象
 - 删除 pvc 事件调用 CSI endpoint 执行 `DeleteVolume`, 成功删除 volume 后也会删除代表这个 volume 的 `PersistentVolume` 对象
 
+创建 pv 时会设置 `pv.spec.claimRef` 字段, 指向对应的 pvc, 随后 pvcontroller 会监听到 pv 的 `claimRef` 字段被设置然后将 pvc 和 pv 绑定(都变成bound状态).
+
 #### 关于 sc.volumeBindingMode
 
 枚举类型, 有 `WaitForFirstConsumer` 和 `Immediate` 两种

@@ -8,13 +8,12 @@ tags: [informer,controller,workqueue]
 
 > [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime)是在[client-go/tools/cache](https://github.com/kubernetes/client-go/tree/master/tools/cache)和[client-go/util/workqueue](https://github.com/kubernetes/client-go/tree/master/util/workqueue)的基础上实现的, 了解`client-go/tools/cache`和`client-go/util/workqueue`对理解`controller-runtime`很有帮助
 
-## 介绍informer
+## informer 的工作机制是什么
 
-带着问题看
+1. `Reflector` 从 `kube-apiserver` 中获取资源对象, 更新到 `DeltaFIFO` 中
+2. Informer 从 DeltaFIFO 中获取资源对象, 更新到 `local cache` 中, 然后执行注册的 EventHandler
 
-## 开发 CRD Controller 时想到的一些问题
-
-### 更新 local store 缓存和触发reconcile是否有先后顺序
+自定义控制器会注册 `AddFunc`, `UpdateFunc`, `DeleteFunc` 等事件处理器, 这些事件会添加对象到 WorkQueue 中, 然后从 WorkQueue 中获取对象, 触发 reconcile
 
 ### 同一个 crd object 会不会同时被 reconcile
 
@@ -25,9 +24,9 @@ https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue
 
 有几种队列，Queue，DelayingQueue，RateLimitingQueue
 
-### 如何解决进入 reconcile 之后读到的是旧数据的问题
+### `reconcile` 时会读到旧数据吗，如何解决
 
-读到旧数据是否说明是先出发reconcile再更新local store的
+因为读写分离，更新是直接更新 `kube-apiserver`，读是从 `indexer(local cache)` 中，所以读到的有可能是陈旧的数据。
 
 My cache might be stale if I read from a cache! How should I deal with that?
 
