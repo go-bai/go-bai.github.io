@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>安装 Kube Prometheus Stack | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>博客</a></li><li><a href=/about/>关于我</a></li><li><a href=/links/>友链</a></li><li><a href=/tags/>标签</a></li><li><a href=/index.xml>订阅</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>安装 Kube Prometheus Stack</span></h1><p class=date>2024/07/03</p><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/kube-prometheus-stack>kube-prometheus-stack</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-kube-prometheus-stack>安装 kube-prometheus-stack</a></li><li><a href=#配置-grafana-dashboard>配置 grafana dashboard</a></li></ul></nav><main><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack</h2><p>使用 helm charts 安装 kube-prometheus-stack</p><pre><code class=language-bash>mkdir -p ~/charts/kube-prometheus-stack
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>博客</a></li><li><a href=/about/>关于我</a></li><li><a href=/links/>友链</a></li><li><a href=/tags/>标签</a></li><li><a href=/index.xml>订阅</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>安装 Kube Prometheus Stack</span></h1><p class=date>2024/07/03</p><p class=terms>Tags: <a href=/tags/k8s>k8s</a> <a href=/tags/kube-prometheus-stack>kube-prometheus-stack</a></p></div><nav id=TableOfContents><ul><li><a href=#安装-kube-prometheus-stack>安装 kube-prometheus-stack</a><ul><li><a href=#配置说明>配置说明</a></li></ul></li><li><a href=#配置-grafana-dashboard>配置 grafana dashboard</a></li></ul></nav><main><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack</h2><p>使用 helm charts 安装 kube-prometheus-stack</p><pre><code class=language-bash>mkdir -p ~/charts/kube-prometheus-stack
 cd ~/charts/kube-prometheus-stack
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -9,6 +9,11 @@ cat &lt;&lt;EOF &gt; custom-values.yaml
 prometheus:
   prometheusSpec:
     additionalScrapeConfigs: []
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
   service:
     type: NodePort
 
@@ -21,4 +26,39 @@ alertmanager:
   enabled: false
 EOF
 helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+</code></pre><h3 id=配置说明>配置说明</h3><p>有一个相关 issue 讨论：<a href=https://github.com/prometheus-operator/kube-prometheus/issues/1392>servicemonitor not being discovered</a></p><pre><code class=language-yaml>prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+</code></pre><p>如果没有配置上面这些，在相关 selector 为空时，就会使用 <code>release: kube-prometheus-stack</code> 作为默认的，自己创建的 <code>ServiceMonitor</code> 等资源如果没有设置此 label 就会被会被自动服务发现。比较坑人!!!</p><pre><code class=language-yaml># kubectl -n monitoring get prometheus -oyaml
+apiVersion: v1
+items:
+- apiVersion: monitoring.coreos.com/v1
+  kind: Prometheus
+    name: kube-prometheus-stack-prometheus
+    namespace: monitoring
+  spec:
+    podMonitorNamespaceSelector: {}
+    podMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    probeNamespaceSelector: {}
+    probeSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    ruleNamespaceSelector: {}
+    ruleSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    scrapeConfigNamespaceSelector: {}
+    scrapeConfigSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    serviceMonitorNamespaceSelector: {}
+    serviceMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack
 </code></pre><h2 id=配置-grafana-dashboard>配置 grafana dashboard</h2><p>导入一个查看 node exporter 的 dashboard</p><p><a href=https://grafana.com/grafana/dashboards/16098-node-exporter-dashboard-20240520-job/>https://grafana.com/grafana/dashboards/16098-node-exporter-dashboard-20240520-job/</a></p></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2025 | <a href=https://github.com/go-bai>Github</a></footer></body></html>

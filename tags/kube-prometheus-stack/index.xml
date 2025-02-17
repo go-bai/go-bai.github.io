@@ -10,6 +10,11 @@ cat &amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
 prometheus:
  prometheusSpec:
  additionalScrapeConfigs: []
+ podMonitorSelectorNilUsesHelmValues: false
+ ruleSelectorNilUsesHelmValues: false
+ probeSelectorNilUsesHelmValues: false
+ scrapeConfigSelectorNilUsesHelmValues: false
+ serviceMonitorSelectorNilUsesHelmValues: false
  service:
  type: NodePort
 
@@ -23,5 +28,5 @@ alertmanager:
 EOF
 helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
 &lt;/code>&lt;/pre>
-&lt;h2 id="配置-grafana-dashboard">配置 grafana dashboard&lt;/h2>
-&lt;p>导入一个查看 node exporter 的 dashboard&lt;/p></description></item></channel></rss>
+&lt;h3 id="配置说明">配置说明&lt;/h3>
+&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item></channel></rss>
