@@ -73,9 +73,11 @@ EOF
 docker compose -f /etc/prometheus/docker-compose.yml up -d
 ```
 
-## 修改 kube-prometheus-stack chart 配置
+## 在 prometheus 中配置指标收集
 
-修改 `kube-prometheus-stack` chart 配置并更新, 记得修改 `{EDIT_HERE}` 为实际值
+### 方式一：直接修改 prometheus 配置
+
+修改 `kube-prometheus-stack` chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 `{EDIT_HERE}` 为实际值
 
 ```bash
 cat <<EOF> custom_values.yaml
@@ -83,9 +85,9 @@ cat <<EOF> custom_values.yaml
 prometheus:
   prometheusSpec:
     additionalScrapeConfigs:
-      - job_name: 'host-node-exporter'
+      - job_name: 'node-exporter-external'
         basic_auth:
-          username: {EDIT_HERE}
+          username: {EDIT_HERE} # 这里是明文账号密码
           password: {EDIT_HERE}
         static_configs:
           - targets:
@@ -99,5 +101,78 @@ grafana:
     type: NodePort
 EOF
 
-helm upgrade  --install --create-namespace --namespace monitoring kube-prometheus-stack -f custom_values.yaml prometheus-community/kube-prometheus-stack
+helm upgrade  --install --create-namespace --namespace monitoring kube-prometheus-stack -f custom-values.yaml prometheus-community/kube-prometheus-stack
+```
+
+## 配置 `ServiceMonitor` 进行自动服务发现
+
+把拉取 metrics 时需要的认证信息保存在 secret 中，然后创建 smon(ServiceMonitor)
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: node-exporter-external
+  namespace: monitoring
+data:
+  username: {EDIT_HERE} # 这里是 base64 后的账号密码
+  password: {EDIT_HERE}
+type: Opaque
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: node-exporter-external
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  selector:
+    matchLabels:
+      app: node-exporter-external
+  jobLabel: app
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 5s
+    basicAuth:
+      username:
+        name: node-exporter-external
+        key: username
+      password:
+        name: node-exporter-external
+        key: password
+```
+
+然后创建指向 node-expoter 服务的 endpoint 和同名 service
+
+```yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  labels:
+    app: node-exporter-external # 用来被 smon select
+  name: node-exporter-external
+  namespace: monitoring
+subsets: # 所有 node exporter 地址信息
+- addresses:
+  - ip: 192.168.1.100
+    nodeName: home
+  ports:
+  - name: metrics
+    port: 9100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: node-exporter-external # 用来设置 job 名称
+  name: node-exporter-external
+  namespace: monitoring
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: metrics
 ```
