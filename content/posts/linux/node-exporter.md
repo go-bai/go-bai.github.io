@@ -104,7 +104,7 @@ EOF
 helm upgrade  --install --create-namespace --namespace monitoring kube-prometheus-stack -f custom-values.yaml prometheus-community/kube-prometheus-stack
 ```
 
-## 配置 `ServiceMonitor` 进行自动服务发现
+### 方式二：配置 `ServiceMonitor` 进行自动服务发现
 
 把拉取 metrics 时需要的认证信息保存在 secret 中，然后创建 smon(ServiceMonitor)
 
