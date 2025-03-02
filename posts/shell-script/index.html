@@ -1,158 +1,267 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Shell Script | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>博客</a></li><li><a href=/about/>关于我</a></li><li><a href=/links/>友链</a></li><li><a href=/tags/>标签</a></li><li><a href=/index.xml>订阅</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>Shell Script</span></h1><p class=date>2024/03/23</p><p class=terms>Tags: <a href=/tags/shell>shell</a> <a href=/tags/bash>bash</a> <a href=/tags/linux>linux</a></p></div><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#单引号和双引号>单引号<code>''</code>和双引号<code>""</code></a></li><li><a href=#-here-document><code>&lt;&lt;</code> here document</a><ul><li><a href=#cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</a></li><li><a href=#kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></a></li></ul></li><li><a href=#sed-stream-editor><code>sed</code> (stream editor)</a><ul><li><a href=#s命令替换字符串><code>s</code>命令替换字符串</a><ul><li><a href=#将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></a></li><li><a href=#只替换行中匹配到的某一个>只替换行中匹配到的某一个</a></li><li><a href=#只替换部分行字符串>只替换部分行字符串</a></li></ul></li><li><a href=#一些sed中常用的正则的语法>一些<code>sed</code>中常用的正则的语法</a></li><li><a href=#圆括号匹配>圆括号匹配</a><ul><li><a href=#将version后面的版本替换>将<code>VERSION</code>后面的版本替换</a></li></ul></li></ul></li><li><a href=#echo命令><code>echo</code>命令</a><ul><li><a href=#echo--n><code>echo -n</code></a></li><li><a href=#echo--e和echo--e><code>echo -e</code>和<code>echo -E</code></a></li></ul></li><li><a href=#grep命令><code>grep</code>命令</a><ul><li><a href=#grep--e><code>grep -E</code></a></li><li><a href=#grep--i><code>grep -i</code></a></li><li><a href=#grep--v><code>grep -v</code></a></li><li><a href=#grep--n><code>grep -n</code></a></li><li><a href=#grep--r><code>grep -r</code></a><ul><li><a href=#在当前目录递归遍历匹配字符串并打印行号>在当前目录递归遍历匹配字符串并打印行号</a></li></ul></li></ul></li><li><a href=#xargs命令><code>xargs</code>命令</a></li><li><a href=#awk命令><code>awk</code>命令</a></li><li><a href=#ldd命令><code>ldd</code>命令</a><ul><li><a href=#离线有动态链接库的程序>离线有动态链接库的程序</a></li></ul></li><li><a href=#mcminio-client><code>mc</code>(minio client)</a><ul><li><a href=#设置alias>设置alias</a></li><li><a href=#设置匿名用户对某bucket权限>设置匿名用户对某bucket权限</a></li></ul></li><li><a href=#jq命令><code>jq</code>命令</a><ul><li><a href=#select过滤数组><code>select</code>过滤数组</a></li></ul></li><li><a href=#tar命令><code>tar</code>命令</a><ul><li><a href=#压缩文件>压缩文件</a><ul><li><a href=#使用pigz加速压缩>使用<code>pigz</code>加速压缩</a></li></ul></li><li><a href=#解压文件>解压文件</a></li></ul></li><li><a href=#docker命令><code>docker</code>命令</a><ul><li><a href=#导出镜像到压缩包>导出镜像到压缩包</a></li><li><a href=#从压缩包导入镜像>从压缩包导入镜像</a></li></ul></li><li><a href=#todo>TODO</a></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.</p></blockquote><h2 id=binbash><code>#!/bin/bash</code></h2><p><code>#!/bin/bash</code>被称为<code>shebang line</code>, 指定执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><pre><code class=language-bash># echo $SHELL
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="
+最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.
+
+  #!/bin/bash
+  #
+
+#!/bin/bash被称为shebang line, 指定执行此脚本文件时使用/bin/bash做为shell解释器程序
+很多主流操作系统默认的shell解释器也是bash
+# echo $SHELL
 /bin/bash
-</code></pre><h2 id=set><code>set</code></h2><p><code>set</code>命令用来修改shell环境的运行参数, 完整的可定制的<a href=https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html>官方手册</a></p><p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:</p><pre><code class=language-bash>#!/bin/bash
+
+  set
+  #
+
+set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
+下面是我常用的几个, 可以合并为如下内容写在脚本开头:
+#!/bin/bash
 set -uxe
 set -o pipefail
-</code></pre><h3 id=set--u><code>set -u</code></h3><p>执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, <code>set -u</code>可以让脚本读到不存在变量时报错</p><h3 id=set--x><code>set -x</code></h3><p>命令执行前会先打印出来, 行首以<code>+</code>表示, 在调试脚本时非常有帮助</p><h3 id=set--e><code>set -e</code></h3><p>执行脚本时, Bash遇到错误默认会继续执行, <code>set -e</code>使得脚本只要发生错误, 就中止执行</p><h3 id=set--o-pipefail><code>set -o pipefail</code></h3><p><code>set -e</code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出</p><pre><code class=language-bash>#!/bin/bash
+
+  set -u
+  #
+
+执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, set -u可以让脚本读到不存在变量时报错
+
+  set -x
+  #
+
+命令执行前会先打印出来, 行首以+表示, 在调试脚本时非常有帮助
+
+  set -e
+  #
+
+执行脚本时, Bash遇到错误默认会继续执行, set -e使得脚本只要发生错误, 就中止执行
+
+  set -o pipefail
+  #
+
+set -e有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出
+#!/bin/bash
 set -e
 
 foo | echo a
 echo bar
-</code></pre><p>执行的结果为:</p><pre><code class=language-bash>a
-set.sh: line 4: foo: command not found
-bar
-</code></pre><p><code>set -o pipefail</code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</p><pre><code class=language-bash>#!/bin/bash
-set -eo pipefail
-
-foo | echo a
-echo bar
-</code></pre><p>执行的结果为:</p><pre><code class=language-bash>a
-set.sh: line 4: foo: command not found
-</code></pre><h2 id=单引号和双引号>单引号<code>''</code>和双引号<code>""</code></h2><p>双引号会将<code>$var</code>解析成本身的值, 单引号不会解析</p><pre><code class=language-bash># var=1
-# echo &quot;$var&quot;
-1
-# echo '$var'
-$var
-</code></pre><h2 id=-here-document><code>&lt;&lt;</code> here document</h2><p>一般使用<code>Here Document</code>作为标准输入喂给<code>kubectl apply -f -</code>或者重定向到文件里.</p><pre><code class=language-bash>#!/bin/bash
-
-# 标识符或限定符IDENT一般使用EOF表示
-COMMAND &lt;&lt;IDENT
-this is ...
-IDENT
-</code></pre><h3 id=cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</h3><p><code>cat</code>一般用来查看文件内容, <code>cat &lt;&lt;EOF</code>可以用来将多行内容打印到标准输出重定向写入到文件里, 这里<code>限定符</code>使用<code>EOF</code>.</p><pre><code class=language-bash>cat &lt;&lt;EOF &gt; doc.md
-# this is ...
-EOF
-</code></pre><h3 id=kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></h3><p>使用<code>kubectl</code>直接不创建文件去<code>apply</code>一个yaml</p><pre><code class=language-bash>kubectl apply -f - &lt;&lt;EOF
-apiVersion: &quot;k8s.cni.cncf.io/v1&quot;
-kind: NetworkAttachmentDefinition
-metadata:
-  name: macvlan-conf-2
-EOF
-</code></pre><h2 id=sed-stream-editor><code>sed</code> (stream editor)</h2><p><code>sed</code>全名<code>stream editor</code>, 会流式的一行一行编辑文件, <a href=https://www.gnu.org/software/sed/manual/sed.html>sed手册</a></p><p>下面的修改都是打印到标准输出, 加上<code>-i</code>参数<code>sed -i 'xxx' filename</code>就可以直接更新到文件了</p><h3 id=s命令替换字符串><code>s</code>命令替换字符串</h3><p>结合上面的<code>here document</code>一起演示, 这样就不用再单独创建文件了</p><h4 id=将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></h4><pre><code class=language-bash>sed 's/latest/v1.1.1/g' - &lt;&lt;EOF
-ecr.gobai.top/example:latest
-EOF
-</code></pre><blockquote><p><code>s</code>表示替换命令, <code>/latest/</code>表示匹配<code>latest</code>, <code>/v1.1.1/</code>表示将匹配到的替换为<code>v1.1.1</code>, <code>/g</code>表示每一行中匹配到的全部替换, 没有<code>g</code>只会替换每一行中的第一个.</p></blockquote><h4 id=只替换行中匹配到的某一个>只替换行中匹配到的某一个</h4><pre><code class=language-bash># 替换第1个
-sed 's/latest/v1.1.1/1' - &lt;&lt;EOF
-ecr.gobai.top/example:latest latest latest
-EOF
-
-# 替换第2个
-sed 's/latest/v1.1.1/2' - &lt;&lt;EOF
-ecr.gobai.top/example:latest latest latest
-EOF
-
-# 替换第2个和之后的
-sed 's/latest/v1.1.1/2g' - &lt;&lt;EOF
-ecr.gobai.top/example:latest latest latest
-EOF
-</code></pre><h4 id=只替换部分行字符串>只替换部分行字符串</h4><pre><code class=language-bash># 只替换第2行
-sed '2s/latest/v1.1.1/g' - &lt;&lt;EOF
-ecr.gobai.top/example:latest
-ecr.gobai.top/example:latest
-ecr.gobai.top/example:latest
-EOF
-
-# 只替换2-3行
-sed '2,3s/latest/v1.1.1/g' - &lt;&lt;EOF
-ecr.gobai.top/example:latest
-ecr.gobai.top/example:latest
-ecr.gobai.top/example:latest
-EOF
-</code></pre><blockquote><p>更复杂的涉及很多正则的场景我一般直接丢给<code>ChatGPT</code>去写, 知道<code>sed</code>可以完成这些任务就可以了!!!</p></blockquote><h3 id=一些sed中常用的正则的语法>一些<code>sed</code>中常用的正则的语法</h3><p>大部分都是通用的, 在其他需要正则匹配的地方也可以使用, 如在<code>grep -e</code>或<code>grep -E</code>中也可以使用</p><p><a href=https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html>https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html</a></p><table><thead><tr><th style=text-align:left>字符</th><th style=text-align:left>含义</th></tr></thead><tbody><tr><td style=text-align:left></td><td style=text-align:left>单个普通字符匹配自身</td></tr><tr><td style=text-align:left><code>*</code></td><td style=text-align:left>匹配<code>*</code>前面正则表达式的零个或多个匹配项</td></tr><tr><td style=text-align:left><code>\+</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配至少一个</td></tr><tr><td style=text-align:left><code>\?</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配零个或一个</td></tr><tr><td style=text-align:left><code>\{i\}</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配<code>i</code>个</td></tr><tr><td style=text-align:left><code>\{i,\}</code></td><td style=text-align:left>类似<code>*</code>, 匹配至少<code>i</code>个</td></tr><tr><td style=text-align:left><code>\(regexp\)</code></td><td style=text-align:left>将内部的<code>regexp</code>作为一个整体分组</td></tr><tr><td style=text-align:left><code>.</code></td><td style=text-align:left>匹配任意单个字符, 包括换行</td></tr><tr><td style=text-align:left><code>^</code></td><td style=text-align:left>匹配开始处的<code>null</code>字符串</td></tr><tr><td style=text-align:left><code>$</code></td><td style=text-align:left>匹配结尾处的<code>null</code>字符串</td></tr><tr><td style=text-align:left><code>[list]</code></td><td style=text-align:left>匹配方括号中的字符列表中的任意一个</td></tr><tr><td style=text-align:left><code>[^list]</code></td><td style=text-align:left>匹配<code>非</code>方括号中的字符列表中的任意一个</td></tr><tr><td style=text-align:left><code>regexp1|regexp2</code></td><td style=text-align:left>匹配<code>regexp1</code>或<code>regexp2</code></td></tr><tr><td style=text-align:left><code>regexp1regexp2</code></td><td style=text-align:left>匹配<code>regexp1</code>和<code>regexp2</code>的连接结果</td></tr><tr><td style=text-align:left><code>\digit</code></td><td style=text-align:left>匹配正则表达式中第<code>digit</code>个圆括号<code>\(...\)</code>子表达式</td></tr><tr><td style=text-align:left><code>\n</code></td><td style=text-align:left>匹配换行符</td></tr><tr><td style=text-align:left><code>\char</code></td><td style=text-align:left>匹配<code>char</code>字符, <code>char</code>可以是<code>$</code> <code>*</code> <code>.</code> <code>[</code> <code>\</code> 或者 <code>^</code></td></tr></tbody></table><p>一些注意点:</p><ol><li>虽然<code>.</code>可以匹配换行符, 但是有的命令是一行一行处理, 所以正则匹配不到换行, 如<code>sed</code>命令</li></ol><h3 id=圆括号匹配>圆括号匹配</h3><p>圆括号括起来的正则表达式所匹配的字符串可以当成变量来使用, 通过<code>\1</code>或<code>\2</code>来引用</p><h4 id=将version后面的版本替换>将<code>VERSION</code>后面的版本替换</h4><pre><code class=language-bash>V=&quot;1.1.1&quot;
-sed &quot;s/\(^VERSION:\s*\)[0-9.]\+/\1$V/&quot; - &lt;&lt;EOF
-VERSION: 0.0.1
-EOF
-</code></pre><blockquote><p>圆括号<code>()</code>需要转义<code>\(\)</code>, 并且因为有变量<code>$V</code>, 单引号需要改为双引号, <code>^</code>代表行的开始, <code>VERSION:</code>匹配文本字符串, <code>\s*</code>匹配0或多个空白字符,
-<code>[0-9.]\+</code>匹配一个或多个数字或<code>.</code>, <code>\(^VERSION:\s*\)</code>匹配到了版本号前面的内容作为变量<code>1</code>, <code>\1$V</code>代表将匹配到的所有内容替换为版本好前面的内容+新的版本号<code>$V</code></p></blockquote><h2 id=echo命令><code>echo</code>命令</h2><h3 id=echo--n><code>echo -n</code></h3><pre><code class=language-bash>-n     do not output the trailing newline
-</code></pre><p>在结尾处不自动添加换行符</p><h3 id=echo--e和echo--e><code>echo -e</code>和<code>echo -E</code></h3><pre><code class=language-bash>-e     enable interpretation of backslash escapes # 激活转义字符
--E     disable interpretation of backslash escapes (default)
-</code></pre><h2 id=grep命令><code>grep</code>命令</h2><p><code>grep</code>应该是特别常见的命令了, <code>grep</code>支持从标准输入<code>stdin</code>作为参数, 如<code>echo 'abc' | grep abc</code>, 也可以从命令行输入参数, 如<code>grep abc demo.md</code></p><h3 id=grep--e><code>grep -E</code></h3><p>正则匹配</p><pre><code class=language-bash># str=$(echo '1. aaa\n2. bbb')
-# echo $str | grep -E 'a|b'
-1. aaa
-2. bbb
-</code></pre><h3 id=grep--i><code>grep -i</code></h3><p>忽略大小写</p><pre><code class=language-bash># str=$(echo '1. aaa\n2. bbb')
-# echo $str | grep -i -E 'A|B'
-1. aaa
-2. bbb
-</code></pre><h3 id=grep--v><code>grep -v</code></h3><pre><code class=language-bash>-v, --invert-match # 反向匹配, 选择不匹配的行
-    Invert the sense of matching, to select non-matching lines.
-</code></pre><p>获取不包含<code>a</code>的行</p><pre><code class=language-bash># str=$(echo '1. aaa\n2. bbb')
-# echo $str | grep -v a    
-2. bbb
-</code></pre><h3 id=grep--n><code>grep -n</code></h3><pre><code class=language-bash>-n, --line-number # 打印匹配到的行在输入中的行号
-    Prefix each line of output with the 1-based line number within its input file.
-</code></pre><p>打印匹配到的行的行号</p><pre><code class=language-bash># echo $str | grep -n -E 'a|b'
-1:1. aaa
-2:2. bbb
-</code></pre><h3 id=grep--r><code>grep -r</code></h3><pre><code class=language-bash>-r, --recursive # 递归读取目录下的文件
-    Read all files under each directory, recursively, following symbolic links only if they are on the command line.  Note that if no file operand is
-    given, B&lt;grep&gt; searches the working directory.  This is equivalent to the -d recurse option.
-</code></pre><h4 id=在当前目录递归遍历匹配字符串并打印行号>在当前目录递归遍历匹配字符串并打印行号</h4><pre><code class=language-bash>grep -rn &quot;string&quot; .
-</code></pre><h2 id=xargs命令><code>xargs</code>命令</h2><p>TODO</p><h2 id=awk命令><code>awk</code>命令</h2><p><code>awk</code>也是依次处理文件的每一行, 适合处理每一行格式相同的数据</p><p>基本用法</p><pre><code class=language-bash># 格式
-awk 动作 文件名
-
-# 示例
-awk '{print $0}' - &lt;&lt;EOF
-abc 123 666
-bcd 234 777
-EOF
-</code></pre><blockquote><p>大括号<code>{}</code>内部是处理当前行的动作, <code>$0</code>代表当前行, 最终效果就是原样打印所有行.
-<code>awk</code>会根据<code>空格</code>或<code>制表符</code>将每一行分成若干字段, 通过<code>$1</code> <code>$2</code> <code>$3</code>代表每一个字段, 也可以通过<code>awk -F ':' '{print $1}' xxx</code>手动指定每一列之间的分隔符为<code>:</code></p></blockquote><h2 id=ldd命令><code>ldd</code>命令</h2><p><code>ldd</code>可以查看一个可执行文件依赖哪些动态链接库</p><h3 id=离线有动态链接库的程序>离线有动态链接库的程序</h3><p>查看<code>jq</code>命令依赖哪些动态链接库,</p><pre><code class=language-bash># ldd $(which jq)
-        linux-vdso.so.1 (0x00007fff12b9f000)
-        libjq.so.1 =&gt; /lib/x86_64-linux-gnu/libjq.so.1 (0x00007fc42d080000)
-        libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fc42ce00000)
-        libm.so.6 =&gt; /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc42cd19000)
-        libonig.so.5 =&gt; /lib/x86_64-linux-gnu/libonig.so.5 (0x00007fc42cc86000)
-        /lib64/ld-linux-x86-64.so.2 (0x00007fc42d0e9000)
-</code></pre><p>如果要离线一个脚本, 只需要将<code>=></code>后面的文件复制一份打包即可, 这时<code>awk</code>命令就能派上用场了</p><pre><code class=language-bash>APP_NAME=&quot;jq&quot;
-mkdir ${APP_NAME}_archive &amp;&amp; cd ${APP_NAME}_archive
-mkdir libs
-ldd $(which ${APP_NAME}) | awk '{print $3}' | xargs -i cp -L {} libs
-</code></pre><p>这样只需要再把可执行文件也离线, 就可以离线安装运行了</p><p>不过还有最后一步, 这些lib文件不适合直接都放入<code>/lib/</code>目录下?, 因为有可能这些lib目录下有和当前程序冲突的版本, 所以直接把程序依赖的lib放在一个目录下然后启动时设置<code>LD_LIBRARY_PATH</code>目录让程序去找正确版本的lib库是更稳妥的.</p><pre><code class=language-bash>cp $(which ${APP_NAME}) .
-cat &lt;&lt;EOF &gt; app_${APP_NAME}.sh
-#!/bin/bash
-INSTALL_DIR=&quot;/opt/app_archives&quot;
-APP_NAME=&quot;${APP_NAME}&quot;
-export LD_LIBRARY_PATH=&quot;\${INSTALL_DIR}/\${APP_NAME}_archive/libs&quot;
-\${INSTALL_DIR}/\${APP_NAME}_archive/\${APP_NAME}  &quot;\$@&quot;
-EOF
-chmod +x app_${APP_NAME}.sh
-</code></pre><p>最终的文件如下</p><pre><code class=language-bash># tree .                     
-.
-├── app_jq.sh
-├── jq
-└── libs
-    ├── libc.so.6
-    ├── libjq.so.1
-    ├── libm.so.6
-    └── libonig.so.5
-
-1 directory, 6 files
-</code></pre><p>安装时, 只需要将<code>${APP_NAME}_archive</code>目录放在<code>/opt/app_archives</code>目录下, 然后创建一个如下的软链即可</p><pre><code class=language-bash>ln -nsf /opt/app_archives/\${APP_NAME}_archive/app_\${APP_NAME}.sh /usr/bin/\${APP_NAME}
-</code></pre><h2 id=mcminio-client><code>mc</code>(minio client)</h2><h3 id=设置alias>设置alias</h3><pre><code class=language-bash>mc alias set {NAME} http://minio.lan:9000 {USER} {PASSWORD}
-</code></pre><h3 id=设置匿名用户对某bucket权限>设置匿名用户对某bucket权限</h3><p>权限有<code>download</code>, <code>upload</code> 和 <code>public(download+upload)</code></p><p>设置匿名用户可以下载某个bucket下的文件</p><pre><code class=language-bash># mc anonymous set download minio/app
-Access permission for `minio/app` is set to `download`
-</code></pre><p>查看匿名用户对某bucket的权限</p><pre><code class=language-bash># mc anonymous get minio/app
-Access permission for `minio/app` is `download`
-</code></pre><h2 id=jq命令><code>jq</code>命令</h2><blockquote><p><code>jq</code>用来处理json数据还是超级强大的</p></blockquote><h3 id=select过滤数组><code>select</code>过滤数组</h3><p>下面的命令用到了<code>jq</code>中的管道操作<code>|</code>和过滤操作<code>select</code></p><pre><code class=language-bash># echo '[{&quot;name&quot;:&quot;compute&quot;,&quot;image&quot;:&quot;c-image&quot;},{&quot;name&quot;:&quot;log&quot;}]' | jq '.[] | select(.name == &quot;compute&quot;) | .image'
-&quot;c-image&quot;
-</code></pre><p>有时不想要字符串两边的双引号, 这时就需要用到上面用到的<code>sed</code>命令了, 思路是正则匹配整个字符串, 然后双引号中间的使用圆括号匹配作为变量<code>\1</code>, 最后将整个字符串替换为<code>\1</code>即可</p><pre><code class=language-bash># str=$(echo '[{&quot;name&quot;:&quot;compute&quot;,&quot;image&quot;:&quot;c-image&quot;},{&quot;name&quot;:&quot;log&quot;}]' | jq '.[] | select(.name == &quot;compute&quot;) | .image')
-# echo $str | sed 's/^&quot;\(.*\)&quot;$/\1/'
-c-image
-</code></pre><h2 id=tar命令><code>tar</code>命令</h2><h3 id=压缩文件>压缩文件</h3><pre><code class=language-bash>tar -czvf name.tar.gz name
-</code></pre><h4 id=使用pigz加速压缩>使用<code>pigz</code>加速压缩</h4><p>如果没安装<code>pigz</code>需要先安装<code>apt install pigz -y</code></p><pre><code class=language-bash>tar -I pigz -czvf name.tar.gz name
-</code></pre><h3 id=解压文件>解压文件</h3><pre><code class=language-bash>tar -xzvf name.tar.gz
-</code></pre><h2 id=docker命令><code>docker</code>命令</h2><h3 id=导出镜像到压缩包>导出镜像到压缩包</h3><pre><code class=language-bash>docker save -o all.tar image-a:1.0.0 image-b:1.0.0 image-c:1.0.0
-</code></pre><h3 id=从压缩包导入镜像>从压缩包导入镜像</h3><pre><code class=language-bash>docker load &lt; all.tar
-</code></pre><h2 id=todo>TODO</h2><ul><li>看一下 <a href=https://github.com/jlevy/the-art-of-command-line>the art of command line</a> 然后融入进这片文档</li><li>增加 shell 常用的控制循环和条件判断语法</li></ul><h2 id=参考>参考</h2><ul><li><a href=https://www.ruanyifeng.com/blog/2018/11/awk.html>awk</a></li><li><a href=https://github.com/jlevy/the-art-of-command-line>the art of command line</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2025 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+执行的结果为:"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/posts/shell-script/"><meta property="og:site_name" content="gobai's blog"><meta property="og:title" content="Shell Script"><meta property="og:description" content="最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.
+#!/bin/bash # #!/bin/bash被称为shebang line, 指定执行此脚本文件时使用/bin/bash做为shell解释器程序
+很多主流操作系统默认的shell解释器也是bash
+# echo $SHELL /bin/bash set # set命令用来修改shell环境的运行参数, 完整的可定制的官方手册
+下面是我常用的几个, 可以合并为如下内容写在脚本开头:
+#!/bin/bash set -uxe set -o pipefail set -u # 执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, set -u可以让脚本读到不存在变量时报错
+set -x # 命令执行前会先打印出来, 行首以+表示, 在调试脚本时非常有帮助
+set -e # 执行脚本时, Bash遇到错误默认会继续执行, set -e使得脚本只要发生错误, 就中止执行
+set -o pipefail # set -e有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出
+#!/bin/bash set -e foo | echo a echo bar 执行的结果为:"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-03-23T09:43:34+08:00"><meta property="article:modified_time" content="2025-03-03T00:08:35+08:00"><title>Shell Script | gobai's blog</title>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/shell-script/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.2d7343f7ad832e081ecba88fc9b1e7b83132fd3f25ba51c9e24716866b2ba73c.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's blog</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><input type=checkbox id=section-2817774238063d11f9fedc418e8bcf3f class=toggle>
+<label for=section-2817774238063d11f9fedc418e8bcf3f class="flex justify-between"><a role=button>Golang</a></label><ul><li><a href=/posts/sqlx-vs-xorm/>sqlx vs xorm</a></li><li><a href=/posts/solve-timezone-issue-in-go-application-in-container/>解决Go应用在容器中的时区问题</a></li><li><a href=/posts/go-app-reduce-size/>减小go程序编译后的体积</a></li></ul></li><li><input type=checkbox id=section-f91fe725fab4dcbef0dd504359ff7b63 class=toggle checked>
+<label for=section-f91fe725fab4dcbef0dd504359ff7b63 class="flex justify-between"><a role=button>Linux</a></label><ul><li><a href=/posts/node-exporter/>Node Exporter</a></li><li><a href=/posts/rclone/>Rclone 使用笔记</a></li><li><a href=/posts/multi-bootable-usb/>Multi-Bootable USB</a></li><li><a href=/posts/shell-script/ class=active>Shell Script</a></li><li><a href=/posts/delete-partition-and-expand-another/>删除分区并扩容另一个分区和根文件系统</a></li><li><a href=/posts/ubuntu-config/>Ubuntu Config</a></li><li><a href=/posts/systemd-journal/>About Systemd</a></li><li><input type=checkbox id=section-176ad016ae09a9f0440dca17617492cb class=toggle>
+<label for=section-176ad016ae09a9f0440dca17617492cb class="flex justify-between"><a role=button>Network</a></label><ul><li><a href=/posts/linux-iptables/>Linux iptables</a></li><li><a href=/posts/wireless-to-wired-network/>无线转有线网络</a></li><li><a href=/posts/openwrt/>OpenWrt</a></li><li><a href=/posts/dhclient/>dhclient</a></li><li><a href=/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>在 Ubuntu 22.04 使用 netplan 创建桥接网络</a></li></ul></li></ul></li><li><input type=checkbox id=section-db6ac5e9808e911c643d4dada0e07ebd class=toggle>
+<label for=section-db6ac5e9808e911c643d4dada0e07ebd class="flex justify-between"><a role=button>Kubernetes</a></label><ul><li><a href=/posts/flannel/>深入了解 Kubernetes CNI 网络插件 Flannel</a></li><li><a href=/posts/cni/>CNI 工作原理</a></li><li><a href=/posts/csi/>CSI 工作原理</a></li><li><a href=/posts/builing-multi-platform-container-images-guide/>构建多平台容器镜像</a></li><li><a href=/posts/kube-prometheus-stack/>安装 Kube Prometheus Stack</a></li><li><a href=/posts/rook-ceph/>安装 Rook Ceph</a></li><li><a href=/posts/rke2/>RKE2 安装 k8s 集群</a></li><li><a href=/posts/controller-runtime/>Controller Runtime</a></li><li><a href=/posts/kubevirt-sidecar/>Kubevirt Hook Sidecar</a></li></ul></li><li><input type=checkbox id=section-45ed28834a9c7fe37d3e4d15606fec65 class=toggle>
+<label for=section-45ed28834a9c7fe37d3e4d15606fec65 class="flex justify-between"><a href=/posts/db/>Database</a></label><ul><li><a href=/posts/sqlite3/>SQLite3</a></li></ul></li><li><input type=checkbox id=section-71066de79af329dead5f497549dd47db class=toggle>
+<label for=section-71066de79af329dead5f497549dd47db class="flex justify-between"><a role=button>Virtualization</a></label><ul><li><a href=/posts/libvirt/>Libvirt 使用笔记</a></li><li><a href=/posts/create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a></li></ul></li><li><input type=checkbox id=section-11b3445850a0f3882808ba1894e9cf94 class=toggle>
+<label for=section-11b3445850a0f3882808ba1894e9cf94 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li><li class=book-section-flat><span>&lt;&lt; 链接 >></span><ul><li><a href=/posts/about/>关于我</a></li><li><a href=/posts/links/>友链</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>Shell Script</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#单引号和双引号>单引号<code>''</code>和双引号<code>""</code></a></li><li><a href=#-here-document><code>&lt;&lt;</code> here document</a><ul><li><a href=#cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</a></li><li><a href=#kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></a></li></ul></li><li><a href=#sed-stream-editor><code>sed</code> (stream editor)</a><ul><li><a href=#s命令替换字符串><code>s</code>命令替换字符串</a><ul><li><a href=#将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></a></li><li><a href=#只替换行中匹配到的某一个>只替换行中匹配到的某一个</a></li><li><a href=#只替换部分行字符串>只替换部分行字符串</a></li></ul></li><li><a href=#一些sed中常用的正则的语法>一些<code>sed</code>中常用的正则的语法</a></li><li><a href=#圆括号匹配>圆括号匹配</a><ul><li><a href=#将version后面的版本替换>将<code>VERSION</code>后面的版本替换</a></li></ul></li></ul></li><li><a href=#echo命令><code>echo</code>命令</a><ul><li><a href=#echo--n><code>echo -n</code></a></li><li><a href=#echo--e和echo--e><code>echo -e</code>和<code>echo -E</code></a></li></ul></li><li><a href=#grep命令><code>grep</code>命令</a><ul><li><a href=#grep--e><code>grep -E</code></a></li><li><a href=#grep--i><code>grep -i</code></a></li><li><a href=#grep--v><code>grep -v</code></a></li><li><a href=#grep--n><code>grep -n</code></a></li><li><a href=#grep--r><code>grep -r</code></a><ul><li><a href=#在当前目录递归遍历匹配字符串并打印行号>在当前目录递归遍历匹配字符串并打印行号</a></li></ul></li></ul></li><li><a href=#xargs命令><code>xargs</code>命令</a></li><li><a href=#awk命令><code>awk</code>命令</a></li><li><a href=#ldd命令><code>ldd</code>命令</a><ul><li><a href=#离线有动态链接库的程序>离线有动态链接库的程序</a></li></ul></li><li><a href=#mcminio-client><code>mc</code>(minio client)</a><ul><li><a href=#设置alias>设置alias</a></li><li><a href=#设置匿名用户对某bucket权限>设置匿名用户对某bucket权限</a></li></ul></li><li><a href=#jq命令><code>jq</code>命令</a><ul><li><a href=#select过滤数组><code>select</code>过滤数组</a></li></ul></li><li><a href=#tar命令><code>tar</code>命令</a><ul><li><a href=#压缩文件>压缩文件</a><ul><li><a href=#使用pigz加速压缩>使用<code>pigz</code>加速压缩</a></li></ul></li><li><a href=#解压文件>解压文件</a></li></ul></li><li><a href=#docker命令><code>docker</code>命令</a><ul><li><a href=#导出镜像到压缩包>导出镜像到压缩包</a></li><li><a href=#从压缩包导入镜像>从压缩包导入镜像</a></li></ul></li><li><a href=#todo>TODO</a></li><li><a href=#参考>参考</a></li></ul></nav></aside></header><article class="markdown book-post"><h2>Shell Script</h2><div class="flex align-center text-small book-post-date"><img src=/svg/calendar.svg class=book-icon alt>
+<span>2024-03-23</span></div><div class=book-post-content><blockquote><p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.</p></blockquote><h2 id=binbash><code>#!/bin/bash</code>
+<a class=anchor href=#binbash>#</a></h2><p><code>#!/bin/bash</code>被称为<code>shebang line</code>, 指定执行此脚本文件时使用<code>/bin/bash</code>做为shell解释器程序</p><p>很多主流操作系统默认的shell解释器也是bash</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># echo $SHELL</span>
+</span></span><span style=display:flex><span>/bin/bash
+</span></span></code></pre></div><h2 id=set><code>set</code>
+<a class=anchor href=#set>#</a></h2><p><code>set</code>命令用来修改shell环境的运行参数, 完整的可定制的<a href=https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html>官方手册</a></p><p>下面是我常用的几个, 可以合并为如下内容写在脚本开头:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>set -uxe
+</span></span><span style=display:flex><span>set -o pipefail
+</span></span></code></pre></div><h3 id=set--u><code>set -u</code>
+<a class=anchor href=#set--u>#</a></h3><p>执行脚本时, 如果遇到不存在的变量, Bash默认会忽略, <code>set -u</code>可以让脚本读到不存在变量时报错</p><h3 id=set--x><code>set -x</code>
+<a class=anchor href=#set--x>#</a></h3><p>命令执行前会先打印出来, 行首以<code>+</code>表示, 在调试脚本时非常有帮助</p><h3 id=set--e><code>set -e</code>
+<a class=anchor href=#set--e>#</a></h3><p>执行脚本时, Bash遇到错误默认会继续执行, <code>set -e</code>使得脚本只要发生错误, 就中止执行</p><h3 id=set--o-pipefail><code>set -o pipefail</code>
+<a class=anchor href=#set--o-pipefail>#</a></h3><p><code>set -e</code>有一个例外情况, 就是不适用于管道命令, 比如下面的不会退出</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>set -e
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>foo | echo a
+</span></span><span style=display:flex><span>echo bar
+</span></span></code></pre></div><p>执行的结果为:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>a
+</span></span><span style=display:flex><span>set.sh: line 4: foo: command not found
+</span></span><span style=display:flex><span>bar
+</span></span></code></pre></div><p><code>set -o pipefail</code>可以解决这个问题, 只要一个子命令失败, 整个管道命令就失败, 脚本就会终止执行</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>set -eo pipefail
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>foo | echo a
+</span></span><span style=display:flex><span>echo bar
+</span></span></code></pre></div><p>执行的结果为:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>a
+</span></span><span style=display:flex><span>set.sh: line 4: foo: command not found
+</span></span></code></pre></div><h2 id=单引号和双引号>单引号<code>''</code>和双引号<code>""</code>
+<a class=anchor href=#%e5%8d%95%e5%bc%95%e5%8f%b7%e5%92%8c%e5%8f%8c%e5%bc%95%e5%8f%b7>#</a></h2><p>双引号会将<code>$var</code>解析成本身的值, 单引号不会解析</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># var=1</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo &#34;$var&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo &#39;$var&#39;</span>
+</span></span><span style=display:flex><span>$var
+</span></span></code></pre></div><h2 id=-here-document><code>&lt;&lt;</code> here document
+<a class=anchor href=#-here-document>#</a></h2><p>一般使用<code>Here Document</code>作为标准输入喂给<code>kubectl apply -f -</code>或者重定向到文件里.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 标识符或限定符IDENT一般使用EOF表示</span>
+</span></span><span style=display:flex><span>COMMAND <span style=color:#e6db74>&lt;&lt;IDENT
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>this is ...
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>IDENT</span>
+</span></span></code></pre></div><h3 id=cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件
+<a class=anchor href=#cat-eof%e5%86%99%e5%85%a5%e5%88%b0%e6%96%87%e4%bb%b6>#</a></h3><p><code>cat</code>一般用来查看文件内容, <code>cat &lt;&lt;EOF</code>可以用来将多行内容打印到标准输出重定向写入到文件里, 这里<code>限定符</code>使用<code>EOF</code>.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>cat <span style=color:#e6db74>&lt;&lt;EOF &gt; doc.md
+</span></span></span><span style=display:flex><span><span style=color:#e6db74># this is ...
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><h3 id=kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code>
+<a class=anchor href=#kubectl-apply--f---eof>#</a></h3><p>使用<code>kubectl</code>直接不创建文件去<code>apply</code>一个yaml</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>kubectl apply -f - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>apiVersion: &#34;k8s.cni.cncf.io/v1&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>kind: NetworkAttachmentDefinition
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>metadata:
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  name: macvlan-conf-2
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><h2 id=sed-stream-editor><code>sed</code> (stream editor)
+<a class=anchor href=#sed-stream-editor>#</a></h2><p><code>sed</code>全名<code>stream editor</code>, 会流式的一行一行编辑文件, <a href=https://www.gnu.org/software/sed/manual/sed.html>sed手册</a></p><p>下面的修改都是打印到标准输出, 加上<code>-i</code>参数<code>sed -i 'xxx' filename</code>就可以直接更新到文件了</p><h3 id=s命令替换字符串><code>s</code>命令替换字符串
+<a class=anchor href=#s%e5%91%bd%e4%bb%a4%e6%9b%bf%e6%8d%a2%e5%ad%97%e7%ac%a6%e4%b8%b2>#</a></h3><p>结合上面的<code>here document</code>一起演示, 这样就不用再单独创建文件了</p><h4 id=将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code>
+<a class=anchor href=#%e5%b0%86%e9%95%9c%e5%83%8ftaglatest%e6%94%b9%e4%b8%bav111>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>sed <span style=color:#e6db74>&#39;s/latest/v1.1.1/g&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><blockquote><p><code>s</code>表示替换命令, <code>/latest/</code>表示匹配<code>latest</code>, <code>/v1.1.1/</code>表示将匹配到的替换为<code>v1.1.1</code>, <code>/g</code>表示每一行中匹配到的全部替换, 没有<code>g</code>只会替换每一行中的第一个.</p></blockquote><h4 id=只替换行中匹配到的某一个>只替换行中匹配到的某一个
+<a class=anchor href=#%e5%8f%aa%e6%9b%bf%e6%8d%a2%e8%a1%8c%e4%b8%ad%e5%8c%b9%e9%85%8d%e5%88%b0%e7%9a%84%e6%9f%90%e4%b8%80%e4%b8%aa>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 替换第1个</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#39;s/latest/v1.1.1/1&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest latest latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 替换第2个</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#39;s/latest/v1.1.1/2&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest latest latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 替换第2个和之后的</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#39;s/latest/v1.1.1/2g&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest latest latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><h4 id=只替换部分行字符串>只替换部分行字符串
+<a class=anchor href=#%e5%8f%aa%e6%9b%bf%e6%8d%a2%e9%83%a8%e5%88%86%e8%a1%8c%e5%ad%97%e7%ac%a6%e4%b8%b2>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 只替换第2行</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#39;2s/latest/v1.1.1/g&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 只替换2-3行</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#39;2,3s/latest/v1.1.1/g&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>ecr.gobai.top/example:latest
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><blockquote><p>更复杂的涉及很多正则的场景我一般直接丢给<code>ChatGPT</code>去写, 知道<code>sed</code>可以完成这些任务就可以了!!!</p></blockquote><h3 id=一些sed中常用的正则的语法>一些<code>sed</code>中常用的正则的语法
+<a class=anchor href=#%e4%b8%80%e4%ba%9bsed%e4%b8%ad%e5%b8%b8%e7%94%a8%e7%9a%84%e6%ad%a3%e5%88%99%e7%9a%84%e8%af%ad%e6%b3%95>#</a></h3><p>大部分都是通用的, 在其他需要正则匹配的地方也可以使用, 如在<code>grep -e</code>或<code>grep -E</code>中也可以使用</p><p><a href=https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html>https://www.gnu.org/software/sed/manual/html_node/Regular-Expressions.html</a></p><table><thead><tr><th style=text-align:left>字符</th><th style=text-align:left>含义</th></tr></thead><tbody><tr><td style=text-align:left></td><td style=text-align:left>单个普通字符匹配自身</td></tr><tr><td style=text-align:left><code>*</code></td><td style=text-align:left>匹配<code>*</code>前面正则表达式的零个或多个匹配项</td></tr><tr><td style=text-align:left><code>\+</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配至少一个</td></tr><tr><td style=text-align:left><code>\?</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配零个或一个</td></tr><tr><td style=text-align:left><code>\{i\}</code></td><td style=text-align:left>类似<code>*</code>, 但是匹配<code>i</code>个</td></tr><tr><td style=text-align:left><code>\{i,\}</code></td><td style=text-align:left>类似<code>*</code>, 匹配至少<code>i</code>个</td></tr><tr><td style=text-align:left><code>\(regexp\)</code></td><td style=text-align:left>将内部的<code>regexp</code>作为一个整体分组</td></tr><tr><td style=text-align:left><code>.</code></td><td style=text-align:left>匹配任意单个字符, 包括换行</td></tr><tr><td style=text-align:left><code>^</code></td><td style=text-align:left>匹配开始处的<code>null</code>字符串</td></tr><tr><td style=text-align:left><code>$</code></td><td style=text-align:left>匹配结尾处的<code>null</code>字符串</td></tr><tr><td style=text-align:left><code>[list]</code></td><td style=text-align:left>匹配方括号中的字符列表中的任意一个</td></tr><tr><td style=text-align:left><code>[^list]</code></td><td style=text-align:left>匹配<code>非</code>方括号中的字符列表中的任意一个</td></tr><tr><td style=text-align:left><code>regexp1|regexp2</code></td><td style=text-align:left>匹配<code>regexp1</code>或<code>regexp2</code></td></tr><tr><td style=text-align:left><code>regexp1regexp2</code></td><td style=text-align:left>匹配<code>regexp1</code>和<code>regexp2</code>的连接结果</td></tr><tr><td style=text-align:left><code>\digit</code></td><td style=text-align:left>匹配正则表达式中第<code>digit</code>个圆括号<code>\(...\)</code>子表达式</td></tr><tr><td style=text-align:left><code>\n</code></td><td style=text-align:left>匹配换行符</td></tr><tr><td style=text-align:left><code>\char</code></td><td style=text-align:left>匹配<code>char</code>字符, <code>char</code>可以是<code>$</code> <code>*</code> <code>.</code> <code>[</code> <code>\</code> 或者 <code>^</code></td></tr></tbody></table><p>一些注意点:</p><ol><li>虽然<code>.</code>可以匹配换行符, 但是有的命令是一行一行处理, 所以正则匹配不到换行, 如<code>sed</code>命令</li></ol><h3 id=圆括号匹配>圆括号匹配
+<a class=anchor href=#%e5%9c%86%e6%8b%ac%e5%8f%b7%e5%8c%b9%e9%85%8d>#</a></h3><p>圆括号括起来的正则表达式所匹配的字符串可以当成变量来使用, 通过<code>\1</code>或<code>\2</code>来引用</p><h4 id=将version后面的版本替换>将<code>VERSION</code>后面的版本替换
+<a class=anchor href=#%e5%b0%86version%e5%90%8e%e9%9d%a2%e7%9a%84%e7%89%88%e6%9c%ac%e6%9b%bf%e6%8d%a2>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>V<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;1.1.1&#34;</span>
+</span></span><span style=display:flex><span>sed <span style=color:#e6db74>&#34;s/\(^VERSION:\s*\)[0-9.]\+/\1</span>$V<span style=color:#e6db74>/&#34;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>VERSION: 0.0.1
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><blockquote><p>圆括号<code>()</code>需要转义<code>\(\)</code>, 并且因为有变量<code>$V</code>, 单引号需要改为双引号, <code>^</code>代表行的开始, <code>VERSION:</code>匹配文本字符串, <code>\s*</code>匹配0或多个空白字符,
+<code>[0-9.]\+</code>匹配一个或多个数字或<code>.</code>, <code>\(^VERSION:\s*\)</code>匹配到了版本号前面的内容作为变量<code>1</code>, <code>\1$V</code>代表将匹配到的所有内容替换为版本好前面的内容+新的版本号<code>$V</code></p></blockquote><h2 id=echo命令><code>echo</code>命令
+<a class=anchor href=#echo%e5%91%bd%e4%bb%a4>#</a></h2><h3 id=echo--n><code>echo -n</code>
+<a class=anchor href=#echo--n>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>-n     <span style=color:#66d9ef>do</span> not output the trailing newline
+</span></span></code></pre></div><p>在结尾处不自动添加换行符</p><h3 id=echo--e和echo--e><code>echo -e</code>和<code>echo -E</code>
+<a class=anchor href=#echo--e%e5%92%8cecho--e>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>-e     enable interpretation of backslash escapes <span style=color:#75715e># 激活转义字符</span>
+</span></span><span style=display:flex><span>-E     disable interpretation of backslash escapes <span style=color:#f92672>(</span>default<span style=color:#f92672>)</span>
+</span></span></code></pre></div><h2 id=grep命令><code>grep</code>命令
+<a class=anchor href=#grep%e5%91%bd%e4%bb%a4>#</a></h2><p><code>grep</code>应该是特别常见的命令了, <code>grep</code>支持从标准输入<code>stdin</code>作为参数, 如<code>echo 'abc' | grep abc</code>, 也可以从命令行输入参数, 如<code>grep abc demo.md</code></p><h3 id=grep--e><code>grep -E</code>
+<a class=anchor href=#grep--e>#</a></h3><p>正则匹配</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># str=$(echo &#39;1. aaa\n2. bbb&#39;)</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo $str | grep -E &#39;a|b&#39;</span>
+</span></span><span style=display:flex><span>1. aaa
+</span></span><span style=display:flex><span>2. bbb
+</span></span></code></pre></div><h3 id=grep--i><code>grep -i</code>
+<a class=anchor href=#grep--i>#</a></h3><p>忽略大小写</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># str=$(echo &#39;1. aaa\n2. bbb&#39;)</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo $str | grep -i -E &#39;A|B&#39;</span>
+</span></span><span style=display:flex><span>1. aaa
+</span></span><span style=display:flex><span>2. bbb
+</span></span></code></pre></div><h3 id=grep--v><code>grep -v</code>
+<a class=anchor href=#grep--v>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>-v, --invert-match <span style=color:#75715e># 反向匹配, 选择不匹配的行</span>
+</span></span><span style=display:flex><span>    Invert the sense of matching, to <span style=color:#66d9ef>select</span> non-matching lines.
+</span></span></code></pre></div><p>获取不包含<code>a</code>的行</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># str=$(echo &#39;1. aaa\n2. bbb&#39;)</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo $str | grep -v a    </span>
+</span></span><span style=display:flex><span>2. bbb
+</span></span></code></pre></div><h3 id=grep--n><code>grep -n</code>
+<a class=anchor href=#grep--n>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>-n, --line-number <span style=color:#75715e># 打印匹配到的行在输入中的行号</span>
+</span></span><span style=display:flex><span>    Prefix each line of output with the 1-based line number within its input file.
+</span></span></code></pre></div><p>打印匹配到的行的行号</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># echo $str | grep -n -E &#39;a|b&#39;</span>
+</span></span><span style=display:flex><span>1:1. aaa
+</span></span><span style=display:flex><span>2:2. bbb
+</span></span></code></pre></div><h3 id=grep--r><code>grep -r</code>
+<a class=anchor href=#grep--r>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>-r, --recursive <span style=color:#75715e># 递归读取目录下的文件</span>
+</span></span><span style=display:flex><span>    Read all files under each directory, recursively, following symbolic links only <span style=color:#66d9ef>if</span> they are on the command line.  Note that <span style=color:#66d9ef>if</span> no file operand is
+</span></span><span style=display:flex><span>    given, B&lt;grep&gt; searches the working directory.  This is equivalent to the -d recurse option.
+</span></span></code></pre></div><h4 id=在当前目录递归遍历匹配字符串并打印行号>在当前目录递归遍历匹配字符串并打印行号
+<a class=anchor href=#%e5%9c%a8%e5%bd%93%e5%89%8d%e7%9b%ae%e5%bd%95%e9%80%92%e5%bd%92%e9%81%8d%e5%8e%86%e5%8c%b9%e9%85%8d%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%b9%b6%e6%89%93%e5%8d%b0%e8%a1%8c%e5%8f%b7>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>grep -rn <span style=color:#e6db74>&#34;string&#34;</span> .
+</span></span></code></pre></div><h2 id=xargs命令><code>xargs</code>命令
+<a class=anchor href=#xargs%e5%91%bd%e4%bb%a4>#</a></h2><p>TODO</p><h2 id=awk命令><code>awk</code>命令
+<a class=anchor href=#awk%e5%91%bd%e4%bb%a4>#</a></h2><p><code>awk</code>也是依次处理文件的每一行, 适合处理每一行格式相同的数据</p><p>基本用法</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 格式</span>
+</span></span><span style=display:flex><span>awk 动作 文件名
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 示例</span>
+</span></span><span style=display:flex><span>awk <span style=color:#e6db74>&#39;{print $0}&#39;</span> - <span style=color:#e6db74>&lt;&lt;EOF
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>abc 123 666
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>bcd 234 777
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span></code></pre></div><blockquote><p>大括号<code>{}</code>内部是处理当前行的动作, <code>$0</code>代表当前行, 最终效果就是原样打印所有行.
+<code>awk</code>会根据<code>空格</code>或<code>制表符</code>将每一行分成若干字段, 通过<code>$1</code> <code>$2</code> <code>$3</code>代表每一个字段, 也可以通过<code>awk -F ':' '{print $1}' xxx</code>手动指定每一列之间的分隔符为<code>:</code></p></blockquote><h2 id=ldd命令><code>ldd</code>命令
+<a class=anchor href=#ldd%e5%91%bd%e4%bb%a4>#</a></h2><p><code>ldd</code>可以查看一个可执行文件依赖哪些动态链接库</p><h3 id=离线有动态链接库的程序>离线有动态链接库的程序
+<a class=anchor href=#%e7%a6%bb%e7%ba%bf%e6%9c%89%e5%8a%a8%e6%80%81%e9%93%be%e6%8e%a5%e5%ba%93%e7%9a%84%e7%a8%8b%e5%ba%8f>#</a></h3><p>查看<code>jq</code>命令依赖哪些动态链接库,</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># ldd $(which jq)</span>
+</span></span><span style=display:flex><span>        linux-vdso.so.1 <span style=color:#f92672>(</span>0x00007fff12b9f000<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>        libjq.so.1 <span style=color:#f92672>=</span>&gt; /lib/x86_64-linux-gnu/libjq.so.1 <span style=color:#f92672>(</span>0x00007fc42d080000<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>        libc.so.6 <span style=color:#f92672>=</span>&gt; /lib/x86_64-linux-gnu/libc.so.6 <span style=color:#f92672>(</span>0x00007fc42ce00000<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>        libm.so.6 <span style=color:#f92672>=</span>&gt; /lib/x86_64-linux-gnu/libm.so.6 <span style=color:#f92672>(</span>0x00007fc42cd19000<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>        libonig.so.5 <span style=color:#f92672>=</span>&gt; /lib/x86_64-linux-gnu/libonig.so.5 <span style=color:#f92672>(</span>0x00007fc42cc86000<span style=color:#f92672>)</span>
+</span></span><span style=display:flex><span>        /lib64/ld-linux-x86-64.so.2 <span style=color:#f92672>(</span>0x00007fc42d0e9000<span style=color:#f92672>)</span>
+</span></span></code></pre></div><p>如果要离线一个脚本, 只需要将<code>=></code>后面的文件复制一份打包即可, 这时<code>awk</code>命令就能派上用场了</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>APP_NAME<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;jq&#34;</span>
+</span></span><span style=display:flex><span>mkdir <span style=color:#e6db74>${</span>APP_NAME<span style=color:#e6db74>}</span>_archive <span style=color:#f92672>&amp;&amp;</span> cd <span style=color:#e6db74>${</span>APP_NAME<span style=color:#e6db74>}</span>_archive
+</span></span><span style=display:flex><span>mkdir libs
+</span></span><span style=display:flex><span>ldd <span style=color:#66d9ef>$(</span>which <span style=color:#e6db74>${</span>APP_NAME<span style=color:#e6db74>}</span><span style=color:#66d9ef>)</span> | awk <span style=color:#e6db74>&#39;{print $3}&#39;</span> | xargs -i cp -L <span style=color:#f92672>{}</span> libs
+</span></span></code></pre></div><p>这样只需要再把可执行文件也离线, 就可以离线安装运行了</p><p>不过还有最后一步, 这些lib文件不适合直接都放入<code>/lib/</code>目录下?, 因为有可能这些lib目录下有和当前程序冲突的版本, 所以直接把程序依赖的lib放在一个目录下然后启动时设置<code>LD_LIBRARY_PATH</code>目录让程序去找正确版本的lib库是更稳妥的.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>cp <span style=color:#66d9ef>$(</span>which <span style=color:#e6db74>${</span>APP_NAME<span style=color:#e6db74>}</span><span style=color:#66d9ef>)</span> .
+</span></span><span style=display:flex><span>cat <span style=color:#e6db74>&lt;&lt;EOF &gt; app_${APP_NAME}.sh
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>INSTALL_DIR=&#34;/opt/app_archives&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>APP_NAME=&#34;${APP_NAME}&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>export LD_LIBRARY_PATH=&#34;\${INSTALL_DIR}/\${APP_NAME}_archive/libs&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>\${INSTALL_DIR}/\${APP_NAME}_archive/\${APP_NAME}  &#34;\$@&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
+</span></span><span style=display:flex><span>chmod +x app_<span style=color:#e6db74>${</span>APP_NAME<span style=color:#e6db74>}</span>.sh
+</span></span></code></pre></div><p>最终的文件如下</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># tree .                     </span>
+</span></span><span style=display:flex><span>.
+</span></span><span style=display:flex><span>├── app_jq.sh
+</span></span><span style=display:flex><span>├── jq
+</span></span><span style=display:flex><span>└── libs
+</span></span><span style=display:flex><span>    ├── libc.so.6
+</span></span><span style=display:flex><span>    ├── libjq.so.1
+</span></span><span style=display:flex><span>    ├── libm.so.6
+</span></span><span style=display:flex><span>    └── libonig.so.5
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#ae81ff>1</span> directory, <span style=color:#ae81ff>6</span> files
+</span></span></code></pre></div><p>安装时, 只需要将<code>${APP_NAME}_archive</code>目录放在<code>/opt/app_archives</code>目录下, 然后创建一个如下的软链即可</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ln -nsf /opt/app_archives/<span style=color:#ae81ff>\$</span><span style=color:#f92672>{</span>APP_NAME<span style=color:#f92672>}</span>_archive/app_<span style=color:#ae81ff>\$</span><span style=color:#f92672>{</span>APP_NAME<span style=color:#f92672>}</span>.sh /usr/bin/<span style=color:#ae81ff>\$</span><span style=color:#f92672>{</span>APP_NAME<span style=color:#f92672>}</span>
+</span></span></code></pre></div><h2 id=mcminio-client><code>mc</code>(minio client)
+<a class=anchor href=#mcminio-client>#</a></h2><h3 id=设置alias>设置alias
+<a class=anchor href=#%e8%ae%be%e7%bd%aealias>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>mc alias set <span style=color:#f92672>{</span>NAME<span style=color:#f92672>}</span> http://minio.lan:9000 <span style=color:#f92672>{</span>USER<span style=color:#f92672>}</span> <span style=color:#f92672>{</span>PASSWORD<span style=color:#f92672>}</span>
+</span></span></code></pre></div><h3 id=设置匿名用户对某bucket权限>设置匿名用户对某bucket权限
+<a class=anchor href=#%e8%ae%be%e7%bd%ae%e5%8c%bf%e5%90%8d%e7%94%a8%e6%88%b7%e5%af%b9%e6%9f%90bucket%e6%9d%83%e9%99%90>#</a></h3><p>权限有<code>download</code>, <code>upload</code> 和 <code>public(download+upload)</code></p><p>设置匿名用户可以下载某个bucket下的文件</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># mc anonymous set download minio/app</span>
+</span></span><span style=display:flex><span>Access permission <span style=color:#66d9ef>for</span> <span style=color:#e6db74>`</span>minio/app<span style=color:#e6db74>`</span> is set to <span style=color:#e6db74>`</span>download<span style=color:#e6db74>`</span>
+</span></span></code></pre></div><p>查看匿名用户对某bucket的权限</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># mc anonymous get minio/app</span>
+</span></span><span style=display:flex><span>Access permission <span style=color:#66d9ef>for</span> <span style=color:#e6db74>`</span>minio/app<span style=color:#e6db74>`</span> is <span style=color:#e6db74>`</span>download<span style=color:#e6db74>`</span>
+</span></span></code></pre></div><h2 id=jq命令><code>jq</code>命令
+<a class=anchor href=#jq%e5%91%bd%e4%bb%a4>#</a></h2><blockquote><p><code>jq</code>用来处理json数据还是超级强大的</p></blockquote><h3 id=select过滤数组><code>select</code>过滤数组
+<a class=anchor href=#select%e8%bf%87%e6%bb%a4%e6%95%b0%e7%bb%84>#</a></h3><p>下面的命令用到了<code>jq</code>中的管道操作<code>|</code>和过滤操作<code>select</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># echo &#39;[{&#34;name&#34;:&#34;compute&#34;,&#34;image&#34;:&#34;c-image&#34;},{&#34;name&#34;:&#34;log&#34;}]&#39; | jq &#39;.[] | select(.name == &#34;compute&#34;) | .image&#39;</span>
+</span></span><span style=display:flex><span><span style=color:#e6db74>&#34;c-image&#34;</span>
+</span></span></code></pre></div><p>有时不想要字符串两边的双引号, 这时就需要用到上面用到的<code>sed</code>命令了, 思路是正则匹配整个字符串, 然后双引号中间的使用圆括号匹配作为变量<code>\1</code>, 最后将整个字符串替换为<code>\1</code>即可</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># str=$(echo &#39;[{&#34;name&#34;:&#34;compute&#34;,&#34;image&#34;:&#34;c-image&#34;},{&#34;name&#34;:&#34;log&#34;}]&#39; | jq &#39;.[] | select(.name == &#34;compute&#34;) | .image&#39;)</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># echo $str | sed &#39;s/^&#34;\(.*\)&#34;$/\1/&#39;</span>
+</span></span><span style=display:flex><span>c-image
+</span></span></code></pre></div><h2 id=tar命令><code>tar</code>命令
+<a class=anchor href=#tar%e5%91%bd%e4%bb%a4>#</a></h2><h3 id=压缩文件>压缩文件
+<a class=anchor href=#%e5%8e%8b%e7%bc%a9%e6%96%87%e4%bb%b6>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>tar -czvf name.tar.gz name
+</span></span></code></pre></div><h4 id=使用pigz加速压缩>使用<code>pigz</code>加速压缩
+<a class=anchor href=#%e4%bd%bf%e7%94%a8pigz%e5%8a%a0%e9%80%9f%e5%8e%8b%e7%bc%a9>#</a></h4><p>如果没安装<code>pigz</code>需要先安装<code>apt install pigz -y</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>tar -I pigz -czvf name.tar.gz name
+</span></span></code></pre></div><h3 id=解压文件>解压文件
+<a class=anchor href=#%e8%a7%a3%e5%8e%8b%e6%96%87%e4%bb%b6>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>tar -xzvf name.tar.gz
+</span></span></code></pre></div><h2 id=docker命令><code>docker</code>命令
+<a class=anchor href=#docker%e5%91%bd%e4%bb%a4>#</a></h2><h3 id=导出镜像到压缩包>导出镜像到压缩包
+<a class=anchor href=#%e5%af%bc%e5%87%ba%e9%95%9c%e5%83%8f%e5%88%b0%e5%8e%8b%e7%bc%a9%e5%8c%85>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>docker save -o all.tar image-a:1.0.0 image-b:1.0.0 image-c:1.0.0
+</span></span></code></pre></div><h3 id=从压缩包导入镜像>从压缩包导入镜像
+<a class=anchor href=#%e4%bb%8e%e5%8e%8b%e7%bc%a9%e5%8c%85%e5%af%bc%e5%85%a5%e9%95%9c%e5%83%8f>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>docker load &lt; all.tar
+</span></span></code></pre></div><h2 id=todo>TODO
+<a class=anchor href=#todo>#</a></h2><ul><li>看一下 <a href=https://github.com/jlevy/the-art-of-command-line>the art of command line</a> 然后融入进这片文档</li><li>增加 shell 常用的控制循环和条件判断语法</li></ul><h2 id=参考>参考
+<a class=anchor href=#%e5%8f%82%e8%80%83>#</a></h2><ul><li><a href=https://www.ruanyifeng.com/blog/2018/11/awk.html>awk</a></li><li><a href=https://github.com/jlevy/the-art-of-command-line>the art of command line</a></li></ul></div></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/390d99988c3f7e00d9db00857e1ae58d43a80b98 title='Last modified by go-bai | 2025-03-02' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
+<span>2025-03-02</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#binbash><code>#!/bin/bash</code></a></li><li><a href=#set><code>set</code></a><ul><li><a href=#set--u><code>set -u</code></a></li><li><a href=#set--x><code>set -x</code></a></li><li><a href=#set--e><code>set -e</code></a></li><li><a href=#set--o-pipefail><code>set -o pipefail</code></a></li></ul></li><li><a href=#单引号和双引号>单引号<code>''</code>和双引号<code>""</code></a></li><li><a href=#-here-document><code>&lt;&lt;</code> here document</a><ul><li><a href=#cat-eof写入到文件><code>cat &lt;&lt;EOF</code>写入到文件</a></li><li><a href=#kubectl-apply--f---eof><code>kubectl apply -f - &lt;&lt;EOF</code></a></li></ul></li><li><a href=#sed-stream-editor><code>sed</code> (stream editor)</a><ul><li><a href=#s命令替换字符串><code>s</code>命令替换字符串</a><ul><li><a href=#将镜像taglatest改为v111>将镜像tag<code>latest</code>改为<code>v1.1.1</code></a></li><li><a href=#只替换行中匹配到的某一个>只替换行中匹配到的某一个</a></li><li><a href=#只替换部分行字符串>只替换部分行字符串</a></li></ul></li><li><a href=#一些sed中常用的正则的语法>一些<code>sed</code>中常用的正则的语法</a></li><li><a href=#圆括号匹配>圆括号匹配</a><ul><li><a href=#将version后面的版本替换>将<code>VERSION</code>后面的版本替换</a></li></ul></li></ul></li><li><a href=#echo命令><code>echo</code>命令</a><ul><li><a href=#echo--n><code>echo -n</code></a></li><li><a href=#echo--e和echo--e><code>echo -e</code>和<code>echo -E</code></a></li></ul></li><li><a href=#grep命令><code>grep</code>命令</a><ul><li><a href=#grep--e><code>grep -E</code></a></li><li><a href=#grep--i><code>grep -i</code></a></li><li><a href=#grep--v><code>grep -v</code></a></li><li><a href=#grep--n><code>grep -n</code></a></li><li><a href=#grep--r><code>grep -r</code></a><ul><li><a href=#在当前目录递归遍历匹配字符串并打印行号>在当前目录递归遍历匹配字符串并打印行号</a></li></ul></li></ul></li><li><a href=#xargs命令><code>xargs</code>命令</a></li><li><a href=#awk命令><code>awk</code>命令</a></li><li><a href=#ldd命令><code>ldd</code>命令</a><ul><li><a href=#离线有动态链接库的程序>离线有动态链接库的程序</a></li></ul></li><li><a href=#mcminio-client><code>mc</code>(minio client)</a><ul><li><a href=#设置alias>设置alias</a></li><li><a href=#设置匿名用户对某bucket权限>设置匿名用户对某bucket权限</a></li></ul></li><li><a href=#jq命令><code>jq</code>命令</a><ul><li><a href=#select过滤数组><code>select</code>过滤数组</a></li></ul></li><li><a href=#tar命令><code>tar</code>命令</a><ul><li><a href=#压缩文件>压缩文件</a><ul><li><a href=#使用pigz加速压缩>使用<code>pigz</code>加速压缩</a></li></ul></li><li><a href=#解压文件>解压文件</a></li></ul></li><li><a href=#docker命令><code>docker</code>命令</a><ul><li><a href=#导出镜像到压缩包>导出镜像到压缩包</a></li><li><a href=#从压缩包导入镜像>从压缩包导入镜像</a></li></ul></li><li><a href=#todo>TODO</a></li><li><a href=#参考>参考</a></li></ul></nav></div></aside></main></body></html>

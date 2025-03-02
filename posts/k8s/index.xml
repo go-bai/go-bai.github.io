@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kubernetes on gobai's blog</title><link>/posts/k8s/</link><description>Recent content in Kubernetes on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/k8s/index.xml" rel="self" type="application/rss+xml"/><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">
+ 关于
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;a href="https://github.com/flannel-io/flannel">flannel&lt;/a> 是由 CoreOS 开发的一个简单易用的容器网络插件&lt;/p>
+&lt;p>网络是 k8s 中至关重要的一部分, 这里以简单的 flannel 为例做深入分析&lt;/p>
+&lt;h3 id="工作原理">
+ 工作原理
+ &lt;a class="anchor" href="#%e5%b7%a5%e4%bd%9c%e5%8e%9f%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;blockquote>
+&lt;p>以下介绍在 chart 方式部署的 flannel&lt;/p>&lt;/blockquote>
+&lt;p>flanneld 进程以 daemonset/kube-flannel-ds 方式运行在所有 node 上, 负责从提前配置好的网络池中分配子网租约 (subnet lease) 给 node.&lt;/p>
+&lt;p>flanneld 使用 k8s api 或者 etcd 存储网络配置、分配的子网和任何补充数据(如 node 的 public ip), 在 k8s 中使用一般不会单独提供 etcd 去存储这些数据.&lt;/p>
+&lt;ul>
+&lt;li>网络配置存储在 configmap 中, kube-flannel ns 下的 cm/kube-flannel-cfg 中&lt;/li>
+&lt;li>分配的子网存储在 PodCIDR 中&lt;/li>
+&lt;/ul>
+&lt;p>几个名词解释:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>subnet&lt;/code>: 对应 &lt;code>node.spec.podCIDR&lt;/code>。&lt;/li>
+&lt;li>&lt;code>backend&lt;/code>: 负责 &lt;code>node&lt;/code> 之间 &lt;code>pod&lt;/code> 通讯的后端。&lt;/li>
+&lt;/ol>
+&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
+ 关于 CNI
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cni">#&lt;/a>
+&lt;/h2>
+&lt;p>CNI 全称 &lt;code>Container Network Interface&lt;/code>, 容器网络接口, cni 插件是可执行文件, 一般位于 &lt;code>/opt/cni/bin/&lt;/code> 目录&lt;/p>
+&lt;p>在 k8s 中, kubelet 调用 cri 创建 sandbox 时(RunPodSandbox)会先去创建 network namespace, 然后创建 pause 和 其他容器并将容器加入到同一个 network namespace 中&lt;/p>
+&lt;p>cni spec 文档: &lt;a href="https://www.cni.dev/docs/spec/">https://www.cni.dev/docs/spec/&lt;/a>&lt;/p>
+&lt;p>有如下&lt;a href="https://www.cni.dev/docs/spec/#parameters">环境变量参数&lt;/a>:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>CNI_COMMAND&lt;/code>: 对应操作 &lt;code>ADD&lt;/code>, &lt;code>DEL&lt;/code>, &lt;code>CHECK&lt;/code>, or &lt;code>VERSION&lt;/code>.&lt;/li>
+&lt;li>&lt;code>CNI_CONTAINERID&lt;/code>: 容器 id&lt;/li>
+&lt;li>&lt;code>CNI_NETNS&lt;/code>: 如 &lt;code>/var/run/netns/[nsname]&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_IFNAME&lt;/code>: 要在容器中创建的接口名称, 一般容器中都是 &lt;code>eth0&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_ARGS&lt;/code>: 额外的 kv 参数, 如 &lt;code>FOO=BAR;ABC=123&lt;/code>&lt;/li>
+&lt;li>&lt;code>CNI_PATH&lt;/code>: 搜索 cni plugin 可执行文件的目录&lt;/li>
+&lt;/ul>
+&lt;h2 id="插件分析">
+ 插件分析
+ &lt;a class="anchor" href="#%e6%8f%92%e4%bb%b6%e5%88%86%e6%9e%90">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="bridge">
+ bridge
+ &lt;a class="anchor" href="#bridge">#&lt;/a>
+&lt;/h3>
+&lt;p>主要是 &lt;code>cmdAdd&lt;/code> 和 &lt;code>cmdDel&lt;/code> 两个函数, 对应 CNI spec 中的 &lt;code>ADD&lt;/code> 和 &lt;code>DEL&lt;/code> 两个主要操作&lt;/p></description></item><item><title>CSI 工作原理</title><link>/posts/csi/</link><pubDate>Mon, 04 Nov 2024 22:07:17 +0800</pubDate><guid>/posts/csi/</guid><description>&lt;h2 id="关于-csi">
+ 关于 CSI
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-csi">#&lt;/a>
+&lt;/h2>
+&lt;p>CSI 全称为 &lt;code>Container Storage Interface&lt;/code>, 容器存储接口&lt;/p>
+&lt;p>要实现一个第三方的 csi driver 需要实现下面的 gRPC service &lt;a href="https://github.com/container-storage-interface/spec/blob/master/lib/go/csi/csi_grpc.pb.go">csi spec&lt;/a>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 如果 NodeServer 和 ControllerServer 对应服务运行在不同 pod 中, 那么两个服务都要实现 IdentityServer&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">IdentityServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 用来获取插件名称&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">GetPluginInfo&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetPluginInfoRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetPluginInfoResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">GetPluginCapabilities&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetPluginCapabilitiesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetPluginCapabilitiesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Probe&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ProbeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ProbeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">mustEmbedUnimplementedIdentityServer&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">ControllerServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 创建 volume, 如 ceph 创建一个 rbd 或者 hostpath 创建一个目录&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">CreateVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 删除 volume, 如 ceph 删除一个 rbd 或者 hostpath 删除一个目录&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">DeleteVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">DeleteVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">DeleteVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 将 volume attach 到 node 上, 如 rbd 通过 rbd map 命令 attach, 成功后 node 上会多出一个 rbdx 的 block 设备&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerPublishVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerPublishVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerPublishVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 将 volume 从 node 上 detach, 如 rbd 通过 rbd unmap 命令 detach&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerUnpublishVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerUnpublishVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerUnpublishVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ValidateVolumeCapabilities&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ValidateVolumeCapabilitiesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ValidateVolumeCapabilitiesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 列出所有 volume&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ListVolumes&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListVolumesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListVolumesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">GetCapacity&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetCapacityRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetCapacityResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerGetCapabilities&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerGetCapabilitiesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerGetCapabilitiesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">CreateSnapshot&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateSnapshotRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateSnapshotResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">DeleteSnapshot&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">DeleteSnapshotRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">DeleteSnapshotResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ListSnapshots&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListSnapshotsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListSnapshotsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerExpandVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerExpandVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerExpandVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerGetVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerGetVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerGetVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ControllerModifyVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerModifyVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ControllerModifyVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">mustEmbedUnimplementedControllerServer&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 这些会被 kubelet 调用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">NodeServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// format (如果没format), mount 到 node 的 global directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeStageVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeStageVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeStageVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// umount&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeUnstageVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeUnstageVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeUnstageVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// mount --bind 到 pod directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodePublishVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodePublishVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodePublishVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// umount --bind&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeUnpublishVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeUnpublishVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeUnpublishVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeGetVolumeStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetVolumeStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetVolumeStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeExpandVolume&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeExpandVolumeRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeExpandVolumeResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeGetCapabilities&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetCapabilitiesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetCapabilitiesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">NodeGetInfo&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetInfoRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">NodeGetInfoResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">mustEmbedUnimplementedNodeServer&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="关于-sidecar-containers">
+ 关于 Sidecar Containers
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-sidecar-containers">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;a href="https://kubernetes-csi.github.io/docs/sidecar-containers.html">Sidecar Containers&lt;/a> 是一系列标准容器，用于简化 CSI 插件的开发和部署&lt;/p></description></item><item><title>构建多平台容器镜像</title><link>/posts/builing-multi-platform-container-images-guide/</link><pubDate>Sun, 13 Oct 2024 11:27:56 +0800</pubDate><guid>/posts/builing-multi-platform-container-images-guide/</guid><description>&lt;blockquote>
+&lt;p>构建多平台容器镜像&lt;/p>&lt;/blockquote>
+&lt;h2 id="docker-buildx-插件子命令">
+ Docker buildx 插件/子命令
+ &lt;a class="anchor" href="#docker-buildx-%e6%8f%92%e4%bb%b6%e5%ad%90%e5%91%bd%e4%bb%a4">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;a href="https://github.com/docker/buildx">buildx&lt;/a> 是 Docker 的一个 CLI 插件，用于扩展来自于 &lt;a href="https://github.com/moby/buildkit">Moby BuildKit&lt;/a> 项目的构建功能。&lt;/p>
+&lt;p>注意：buildx 需要 Docker 19.03 或更高版本。&lt;/p>
+&lt;h2 id="buildkit">
+ BuildKit
+ &lt;a class="anchor" href="#buildkit">#&lt;/a>
+&lt;/h2>
+&lt;p>BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。&lt;/p>
+&lt;p>Docker Engine 从 &lt;a href="https://docs.docker.com/engine/release-notes/23.0/#2300">23.0.0&lt;/a> 版本开始默认在Linux上使用Buildx和BuildKit为builder。&lt;/p>
+&lt;h3 id="builder-a-buildkit-daemon">
+ Builder: a BuildKit daemon
+ &lt;a class="anchor" href="#builder-a-buildkit-daemon">#&lt;/a>
+&lt;/h3>
+&lt;ul>
+&lt;li>&lt;a href="https://docs.docker.com/build/builders/">Builders介绍&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。&lt;/p>
+&lt;h3 id="build-drivers">
+ Build drivers
+ &lt;a class="anchor" href="#build-drivers">#&lt;/a>
+&lt;/h3>
+&lt;p>Build 驱动有多种，例如 &lt;code>docker&lt;/code>、&lt;code>docker-container&lt;/code>、&lt;code>kubernetes&lt;/code>、&lt;code>remote&lt;/code> 等。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>docker&lt;/code> 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。&lt;/li>
+&lt;li>&lt;code>docker-container&lt;/code> 使用Docker创建一个专用的BuildKit容器。&lt;/li>
+&lt;li>&lt;code>kubernetes&lt;/code> 在Kubernetes集群中创建BuildKit pods。&lt;/li>
+&lt;li>&lt;code>remote&lt;/code> 直接连接到手动管理的BuildKit守护进程。&lt;/li>
+&lt;/ul>
+&lt;div style="text-align: center;">Build Drivers Comparison&lt;/div>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Feature&lt;/th>
+ &lt;th>docker&lt;/th>
+ &lt;th>docker-container&lt;/th>
+ &lt;th>kubernetes&lt;/th>
+ &lt;th>remote&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>Automatically load image&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Cache export&lt;/td>
+ &lt;td>✓*&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Tarball output&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Multi-arch images&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>BuildKit configuration&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>✅&lt;/td>
+ &lt;td>&lt;/td>
+ &lt;td>Managed externally&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;div style="text-align: center;">* The docker driver doesn't support all cache export options&lt;/div>
+&lt;h3 id="默认的-builder-实例">
+ 默认的 Builder 实例
+ &lt;a class="anchor" href="#%e9%bb%98%e8%ae%a4%e7%9a%84-builder-%e5%ae%9e%e4%be%8b">#&lt;/a>
+&lt;/h3>
+&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>安装 Kube Prometheus Stack</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;h2 id="安装-kube-prometheus-stack">
+ 安装 kube-prometheus-stack
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-kube-prometheus-stack">#&lt;/a>
+&lt;/h2>
+&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo update
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheus:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheusSpec:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> additionalScrapeConfigs: []
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> podMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> ruleSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> probeSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> scrapeConfigSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> serviceMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># grafana service
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">grafana:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">alertmanager:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="配置说明">
+ 配置说明
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e8%af%b4%e6%98%8e">#&lt;/a>
+&lt;/h3>
+&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
+&lt;h2 id="安装-rook-ceph">
+ 安装 rook ceph
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-rook-ceph">#&lt;/a>
+&lt;/h2>
+&lt;p>使用 helm charts 安装 rook ceph&lt;/p>
+&lt;p>&lt;a href="https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/">https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/&lt;/a>&lt;/p>
+&lt;h3 id="安装-ceph-operator">
+ 安装 ceph operator
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-operator">#&lt;/a>
+&lt;/h3>
+&lt;p>我这里禁用了 cephfs 和 nfs 相关功能&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/rook-ceph/ceph-operator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/rook-ceph/ceph-operator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add rook-release https://charts.rook.io/release
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values rook-release/rook-ceph &amp;gt; values.yaml
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">logLevel: DEBUG
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">csi:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsDriver: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsSnapshotter: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableNFSSnapshotter: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="安装-ceph-cluster">
+ 安装 ceph cluster
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-cluster">#&lt;/a>
+&lt;/h3>
+&lt;p>添加三个 node 上的三个盘作为 osd&lt;/p></description></item><item><title>RKE2 安装 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>主机名&lt;/th>
+ &lt;th>配置&lt;/th>
+ &lt;th>ip (域名)&lt;/th>
+ &lt;th>系统盘 / 数据盘&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>k8s-node01&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.218 (&lt;code>lb.k8s.lan&lt;/code>)&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>k8s-node02&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.219&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>k8s-node03&lt;/td>
+ &lt;td>8核16G&lt;/td>
+ &lt;td>192.168.1.220&lt;/td>
+ &lt;td>50GB / 100GB*1&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="安装-rke2">
+ 安装 RKE2
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-rke2">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="安装第一个-server-节点">
+ 安装第一个 server 节点
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85%e7%ac%ac%e4%b8%80%e4%b8%aa-server-%e8%8a%82%e7%82%b9">#&lt;/a>
+&lt;/h3>
+&lt;p>在 k8s-node01 节点执行&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 初始化 rke2 配置文件&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/rancher/rke2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">tls-san:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - lb.k8s.lan
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">write-kubeconfig-mode: &amp;#34;0600&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">disable-cloud-controller: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">cni: none
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">debug: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># 指定 kube-scheduler 自定义参数, 会自动覆盖到 /var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">kube-scheduler-arg:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - v=4
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - bind-address=0.0.0.0
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">kube-controller-manager-arg:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - bind-address=0.0.0.0
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">etcd-expose-metrics: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>curl -sfL https://rancher-mirror.rancher.cn/rke2/install.sh | INSTALL_RKE2_MIRROR&lt;span style="color:#f92672">=&lt;/span>cn sh -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>systemctl enable rke2-server.service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>systemctl start rke2-server.service
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="配置介绍">
+ 配置介绍
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h4>
+&lt;h5 id="tls-san">
+ &lt;code>tls-san&lt;/code>
+ &lt;a class="anchor" href="#tls-san">#&lt;/a>
+&lt;/h5>
+&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item><item><title>Controller Runtime</title><link>/posts/controller-runtime/</link><pubDate>Sat, 01 Jun 2024 10:42:13 +0800</pubDate><guid>/posts/controller-runtime/</guid><description>&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime&lt;/a>是在&lt;a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">client-go/tools/cache&lt;/a>和&lt;a href="https://github.com/kubernetes/client-go/tree/master/util/workqueue">client-go/util/workqueue&lt;/a>的基础上实现的, 了解&lt;code>client-go/tools/cache&lt;/code>和&lt;code>client-go/util/workqueue&lt;/code>对理解&lt;code>controller-runtime&lt;/code>很有帮助&lt;/p>&lt;/blockquote>
+&lt;h2 id="informer-的工作机制是什么">
+ informer 的工作机制是什么
+ &lt;a class="anchor" href="#informer-%e7%9a%84%e5%b7%a5%e4%bd%9c%e6%9c%ba%e5%88%b6%e6%98%af%e4%bb%80%e4%b9%88">#&lt;/a>
+&lt;/h2>
+&lt;ol>
+&lt;li>&lt;code>Reflector&lt;/code> 从 &lt;code>kube-apiserver&lt;/code> 中获取资源对象, 更新到 &lt;code>DeltaFIFO&lt;/code> 中&lt;/li>
+&lt;li>Informer 从 DeltaFIFO 中获取资源对象, 更新到 &lt;code>local cache&lt;/code> 中, 然后执行注册的 EventHandler&lt;/li>
+&lt;/ol>
+&lt;p>自定义控制器会注册 &lt;code>AddFunc&lt;/code>, &lt;code>UpdateFunc&lt;/code>, &lt;code>DeleteFunc&lt;/code> 等事件处理器, 这些事件会添加对象到 WorkQueue 中, 然后从 WorkQueue 中获取对象, 触发 reconcile&lt;/p>
+&lt;h3 id="同一个-crd-object-会不会同时被-reconcile">
+ 同一个 crd object 会不会同时被 reconcile
+ &lt;a class="anchor" href="#%e5%90%8c%e4%b8%80%e4%b8%aa-crd-object-%e4%bc%9a%e4%b8%8d%e4%bc%9a%e5%90%8c%e6%97%b6%e8%a2%ab-reconcile">#&lt;/a>
+&lt;/h3>
+&lt;p>这个全靠Queue数据结构设计的精妙, 保证了正在执行的reconcile不会处理相同的object&lt;/p>
+&lt;p>向queue中增加object之前会检查是否有次object存在于queue中，如果不存在则加入dirty set，如果也不存在于processing set才会加入queue中，当processing中的处理完成之后（调用Done），会将object从processing set种移除，如果次object在处理过程中加入到了dirty set，则将object再次加入到queue中
+&lt;a href="https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue">https://www.cnblogs.com/daniel-hutao/p/18010835/k8s_clientgo_workqueue&lt;/a>&lt;/p>
+&lt;p>有几种队列，Queue，DelayingQueue，RateLimitingQueue&lt;/p>
+&lt;h3 id="reconcile-时会读到旧数据吗如何解决">
+ &lt;code>reconcile&lt;/code> 时会读到旧数据吗，如何解决
+ &lt;a class="anchor" href="#reconcile-%e6%97%b6%e4%bc%9a%e8%af%bb%e5%88%b0%e6%97%a7%e6%95%b0%e6%8d%ae%e5%90%97%e5%a6%82%e4%bd%95%e8%a7%a3%e5%86%b3">#&lt;/a>
+&lt;/h3>
+&lt;p>因为读写分离，更新是直接更新 &lt;code>kube-apiserver&lt;/code>，读是从 &lt;code>indexer(local cache)&lt;/code> 中，所以读到的有可能是陈旧的数据。&lt;/p>
+&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p></description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">
+ 简介
+ &lt;a class="anchor" href="#%e7%ae%80%e4%bb%8b">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="背景">
+ 背景
+ &lt;a class="anchor" href="#%e8%83%8c%e6%99%af">#&lt;/a>
+&lt;/h3>
+&lt;blockquote>
+&lt;p>在kubevirt中, 通过vmi的spec没办法涵盖所有的&lt;a href="https://libvirt.org/formatdomain.html">libvirt domain xml&lt;/a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML&lt;/p>&lt;/blockquote>
+&lt;h3 id="功能介绍">
+ 功能介绍
+ &lt;a class="anchor" href="#%e5%8a%9f%e8%83%bd%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.&lt;/p>
+&lt;p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>OnDefineDomain&lt;/code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm&lt;/li>
+&lt;li>&lt;code>PreCloudInitIso&lt;/code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data&lt;/li>
+&lt;li>&lt;code>Shutdown&lt;/code>: 这个是&lt;code>v1alpha3&lt;/code>版本才支持的&lt;/li>
+&lt;/ol>
+&lt;p>使用hook sidecar功能需要在&lt;code>kv.spec.configuration.developerConfiguration.featureGates&lt;/code>中开启&lt;code>Sidecar&lt;/code>功能&lt;/p>
+&lt;h2 id="源码分析">
+ 源码分析
+ &lt;a class="anchor" href="#%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="kubevirt-boot-sidecar-介绍">
+ kubevirt-boot-sidecar 介绍
+ &lt;a class="anchor" href="#kubevirt-boot-sidecar-%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>以下以&lt;a href="https://github.com/go-bai/kubevirt-boot-sidecar">kubevirt-boot-sidecar&lt;/a>为例讲述sidecar的工作流程, 这个sidecar支持修改&lt;code>引导设备顺序(boot)&lt;/code>和&lt;code>开启交互式引导菜单(bootmenu)&lt;/code>&lt;/p>
+&lt;p>&lt;code>kubevirt-boot-sidecar&lt;/code>只实现了&lt;code>OnDefineDomain&lt;/code>, 下面也是主要串一下OnDefineDomain相关的&lt;/p>
+&lt;h3 id="sidecar工作流程">
+ sidecar工作流程
+ &lt;a class="anchor" href="#sidecar%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>&lt;code>virt-launcher&lt;/code>刚启动时收集所有sidecar信息
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// cmd/virt-launcher/virt-launcher.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hookSidecars&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">pflag&lt;/span>.&lt;span style="color:#a6e22e">Uint&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;hook-sidecars&amp;#34;&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 收集所有sidecar的信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hookManager&lt;/span>.&lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookSidecars&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">qemuTimeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.OnDefineDomain执行所有的sidecar的OnDefineDomain方法&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 最终用OnDefineDomain编辑后的domainSpec创建domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">cmdServerDone&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">startCmdServer&lt;/span>(&lt;span style="color:#a6e22e">cmdclient&lt;/span>.&lt;span style="color:#a6e22e">UninitializedSocketOnGuest&lt;/span>(), &lt;span style="color:#a6e22e">domainManager&lt;/span>, &lt;span style="color:#a6e22e">stopChan&lt;/span>, &lt;span style="color:#a6e22e">options&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// numberOfRequestedHookSidecars为vmi注解 hooks.kubevirt.io/hookSidecars 的数组长度, 在virt-controller生成pod manifest的逻辑中计算得出&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span> = &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) (&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>]&lt;span style="color:#66d9ef">bool&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">timeoutCh&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">After&lt;/span>(&lt;span style="color:#a6e22e">timeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> uint(len(&lt;span style="color:#a6e22e">processedSockets&lt;/span>)) &amp;lt; &lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">sockets&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">os&lt;/span>.&lt;span style="color:#a6e22e">ReadDir&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 遍历 /var/run/kubevirt-hooks/ 目录下的 unix socket 文件&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">sockets&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">select&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#f92672">&amp;lt;-&lt;/span>&lt;span style="color:#a6e22e">timeoutCh&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Errorf&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Failed to collect all expected sidecar hook sockets within given timeout&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">default&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">processed&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()]; &lt;span style="color:#a6e22e">processed&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 连接 sock 文件对应的 sidecar server 的 Info 函数获取 server 实现了哪些 hook(onDefineDomain或preCloudInitIso)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">notReady&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processSideCarSocket&lt;/span>(&lt;span style="color:#a6e22e">filepath&lt;/span>.&lt;span style="color:#a6e22e">Join&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">notReady&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">log&lt;/span>.&lt;span style="color:#a6e22e">Log&lt;/span>.&lt;span style="color:#a6e22e">Info&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Sidecar server might not be ready yet, retrying in the next iteration&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">else&lt;/span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint[onDefineDomain|preCloudInitIso][]*callBackClient{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 聚合出 onDefineDomain:[&amp;#34;aaaa.sock&amp;#34;,&amp;#34;bbbb.sock&amp;#34;]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>.&lt;span style="color:#a6e22e">subscribedHookPoints&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()] = append(&lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()], &lt;span style="color:#a6e22e">callBackClient&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()] = &lt;span style="color:#66d9ef">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Sleep&lt;/span>(&lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Second&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// {&amp;#34;onDefineDomain&amp;#34;:[{&amp;#34;SocketPath&amp;#34;:&amp;#34;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;#34;, &amp;#34;Version&amp;#34;:&amp;#34;v1alpha3&amp;#34;, &amp;#34;subscribedHookPoints&amp;#34;: [{&amp;#34;name&amp;#34;: &amp;#34;onDefineDomain&amp;#34;, &amp;#34;priority&amp;#34;: 0}]}]}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>&lt;code>virt-launcher&lt;/code>启动之后, &lt;code>virt-handler&lt;/code>会执行一些本地盘等相关初始化配置后通过gRPC调用&lt;code>virt-launcher&lt;/code>的&lt;code>SyncVirtualMachine&lt;/code>方法开始创建domain
+&lt;ol>
+&lt;li>&lt;code>SyncVMI&lt;/code>
+&lt;ol>
+&lt;li>&lt;code>Convert_v1_VirtualMachineInstance_To_api_Domain&lt;/code> 将 vmi 转换为 domainSpec&lt;/li>
+&lt;li>&lt;code>lookupOrCreateVirDomain&lt;/code> 先&lt;code>LookupDomainByName&lt;/code>, 如果已存在则直接退出
+&lt;ol>
+&lt;li>&lt;code>preStartHook&lt;/code>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooks&lt;/span>.&lt;span style="color:#a6e22e">GetManager&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 执行所有的 PreCloudInitIso sidecar&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">cloudInitData&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">PreCloudInitIso&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">cloudInitData&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>&lt;code>setDomainSpecWithHooks&lt;/code>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/virt-launcher/virtwarp/util/libvirt-helper.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStrWithHooks&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span> &lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">Connection&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>, &lt;span style="color:#a6e22e">wantedSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">api&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>) (&lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">VirDomain&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">getHookManager&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的 OnDefineDomain sidecar&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">wantedSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用 virConn.DomainDefineXML 创建 domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStr&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">domainSpec&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">virtwrapApi&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>) (&lt;span style="color:#66d9ef">string&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">xml&lt;/span>.&lt;span style="color:#a6e22e">MarshalIndent&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;\t&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacks&lt;/span>, &lt;span style="color:#a6e22e">found&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">hooksInfo&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainHookPointName&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> !&lt;span style="color:#a6e22e">found&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">vmiJSON&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">json&lt;/span>.&lt;span style="color:#a6e22e">Marshal&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callbacks&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span> []&lt;span style="color:#66d9ef">byte&lt;/span>) ([]&lt;span style="color:#66d9ef">byte&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// dial /var/run/kubevirt-hooks/shim-xxxx.sock&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">conn&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">grpcutil&lt;/span>.&lt;span style="color:#a6e22e">DialSocketWithTimeout&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">SocketPath&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">switch&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">client&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">NewCallbacksClient&lt;/span>(&lt;span style="color:#a6e22e">conn&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用sidecar server 的 OnDefineDomain 方法&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">result&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">client&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">ctx&lt;/span>, &lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainParams&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">DomainXML&lt;/span>: &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Vmi&lt;/span>: &lt;span style="color:#a6e22e">vmiJSON&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span> = &lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">GetDomainXML&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配&lt;code>sidecar-shim&lt;/code>, 下面开始介绍&lt;/p></description></item></channel></rss>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>&lt;&lt; 链接 >> on gobai's blog</title><link>/posts/zz-links/</link><description>Recent content in &lt;&lt; 链接 >> on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/zz-links/index.xml" rel="self" type="application/rss+xml"/><item><title>关于我</title><link>/posts/about/</link><pubDate>Sun, 02 Mar 2025 23:10:09 +0800</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
+&lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>&lt;/blockquote>
+&lt;h3 id="目前在学的内容">
+ 目前在学的内容
+ &lt;a class="anchor" href="#%e7%9b%ae%e5%89%8d%e5%9c%a8%e5%ad%a6%e7%9a%84%e5%86%85%e5%ae%b9">#&lt;/a>
+&lt;/h3>
+&lt;ul>
+&lt;li>&lt;strong>golang&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>linux&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>kubernetes&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>kubevirt&lt;/strong>&lt;/li>
+&lt;li>ceph&lt;/li>
+&lt;li>openstack&lt;/li>
+&lt;li>terraform&lt;/li>
+&lt;li>postgresql&lt;/li>
+&lt;li>mysql&lt;/li>
+&lt;li>redis&lt;/li>
+&lt;li>sqlite&lt;/li>
+&lt;/ul>
+&lt;h3 id="我的设备">
+ 我的设备
+ &lt;a class="anchor" href="#%e6%88%91%e7%9a%84%e8%ae%be%e5%a4%87">#&lt;/a>
+&lt;/h3>
+&lt;ul>
+&lt;li>Macbook Pro 2018 15 inch 16+256&lt;/li>
+&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 64G内存+1TB固态
+&lt;ul>
+&lt;li>Ubuntu 22.04 + QEMU/KVM&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>5G CPE VN009&lt;/li>
+&lt;li>iPad mini6&lt;/li>
+&lt;li>OnePlus 9R&lt;/li>
+&lt;/ul>
+&lt;h3 id="联系方式">
+ 联系方式
+ &lt;a class="anchor" href="#%e8%81%94%e7%b3%bb%e6%96%b9%e5%bc%8f">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>echo YWRtaW5AZ29jbi50b3AK | base64 -d
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>友链</title><link>/posts/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/posts/links/</guid><description>&lt;style>
+ .friend-link {
+ display: flex;
+ align-items: center;
+ padding: 12px;
+ margin: 8px;
+ border: 1px solid #eee;
+ border-radius: 8px;
+ text-decoration: none;
+ color: inherit;
+ transition: 0.3s;
+ }
+ .friend-link:hover {
+ box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+ }
+ .friend-avatar {
+ width: 40px;
+ height: 40px;
+ border-radius: 50%;
+ margin-right: 12px;
+ }
+ .friend-info {
+ display: flex;
+ flex-direction: column;
+ }
+ .friend-desc {
+ font-size: 14px;
+ color: #666;
+ margin-top: 4px;
+ }
+&lt;/style>
+&lt;div class="friend-links">
+ &lt;a href="https://blog.cugxuan.cn/" target="_blank" class="friend-link">
+ &lt;img src="https://image.cugxuan.cn/avater.jpg" alt="avatar" class="friend-avatar">
+ &lt;div class="friend-info">
+ &lt;span>泫&lt;/span>
+ &lt;span class="friend-desc">公众号【泫言】：记录有意思的东西，聊点技术（Go/C++/Linux），偶尔安利数码产品，讲讲思考。&lt;/span>
+ &lt;/div>
+ &lt;/a>
+&lt;/div></description></item></channel></rss>

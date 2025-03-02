@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Git on gobai's blog</title><link>/tags/git/</link><description>Recent content in Git on gobai's blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 12 Nov 2021 15:36:19 +0800</lastBuildDate><atom:link href="/tags/git/index.xml" rel="self" type="application/rss+xml"/><item><title>Git Tricks</title><link>/posts/git-tricks/</link><pubDate>Fri, 12 Nov 2021 15:36:19 +0800</pubDate><guid>/posts/git-tricks/</guid><description>&lt;h2 id="暂存当前代码改动">暂存当前代码改动&lt;/h2>
-&lt;p>场景是在一个git branch写了不少代码以后发现写错分支了，总不能删了再重新写吧，可以使用 &lt;code>git stash&lt;/code> 命令解决。&lt;/p>
-&lt;pre>&lt;code class="language-bash"># 将当前改动的代码暂存
-git stash
-# git checkout 到你要工作的分支
-git checkout your_workspace_branch
-# 把暂存的代码从堆栈弹出到当前分支
-git stash pop
-&lt;/code>&lt;/pre></description></item></channel></rss>

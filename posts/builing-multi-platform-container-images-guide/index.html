@@ -1,46 +1,160 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>构建多平台容器镜像 | gobai's blog</title>
-<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link href=//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css rel=stylesheet><style>h2::before,h3::before,h4::before,h5::before{color:#8f8f8f}h2::before{content:"## "}h3::before{content:"### "}h4::before{content:"#### "}h5::before{content:"##### "}</style></head><body><nav><ul class=menu><li><a href=/>博客</a></li><li><a href=/about/>关于我</a></li><li><a href=/links/>友链</a></li><li><a href=/tags/>标签</a></li><li><a href=/index.xml>订阅</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>构建多平台容器镜像</span></h1><p class=date>2024/10/13</p><p class=terms>Tags: <a href=/tags/docker>docker</a> <a href=/tags/buildx>buildx</a> <a href=/tags/buildkit>buildkit</a></p></div><nav id=TableOfContents><ul><li><a href=#docker-buildx-插件子命令>Docker buildx 插件/子命令</a></li><li><a href=#buildkit>BuildKit</a><ul><li><a href=#builder-a-buildkit-daemon>Builder: a BuildKit daemon</a></li><li><a href=#build-drivers>Build drivers</a></li><li><a href=#默认的-builder-实例>默认的 Builder 实例</a></li><li><a href=#创建-builder-实例>创建 Builder 实例</a></li></ul></li><li><a href=#使用-buildx-构建多平台镜像>使用 buildx 构建多平台镜像</a><ul><li><a href=#构建镜像>构建镜像</a></li><li><a href=#推送镜像>推送镜像</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav><main><blockquote><p>构建多平台容器镜像</p></blockquote><h2 id=docker-buildx-插件子命令>Docker buildx 插件/子命令</h2><p><a href=https://github.com/docker/buildx>buildx</a> 是 Docker 的一个 CLI 插件，用于扩展来自于 <a href=https://github.com/moby/buildkit>Moby BuildKit</a> 项目的构建功能。</p><p>注意：buildx 需要 Docker 19.03 或更高版本。</p><h2 id=buildkit>BuildKit</h2><p>BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。</p><p>Docker Engine 从 <a href=https://docs.docker.com/engine/release-notes/23.0/#2300>23.0.0</a> 版本开始默认在Linux上使用Buildx和BuildKit为builder。</p><h3 id=builder-a-buildkit-daemon>Builder: a BuildKit daemon</h3><ul><li><a href=https://docs.docker.com/build/builders/>Builders介绍</a></li></ul><p>一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。</p><h3 id=build-drivers>Build drivers</h3><p>Build 驱动有多种，例如 <code>docker</code>、<code>docker-container</code>、<code>kubernetes</code>、<code>remote</code> 等。</p><ul><li><code>docker</code> 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。</li><li><code>docker-container</code> 使用Docker创建一个专用的BuildKit容器。</li><li><code>kubernetes</code> 在Kubernetes集群中创建BuildKit pods。</li><li><code>remote</code> 直接连接到手动管理的BuildKit守护进程。</li></ul><div style=text-align:center>Build Drivers Comparison</div><table><thead><tr><th>Feature</th><th>docker</th><th>docker-container</th><th>kubernetes</th><th>remote</th></tr></thead><tbody><tr><td>Automatically load image</td><td>✅</td><td></td><td></td><td></td></tr><tr><td>Cache export</td><td>✓*</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Tarball output</td><td></td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Multi-arch images</td><td></td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>BuildKit configuration</td><td></td><td>✅</td><td></td><td>Managed externally</td></tr></tbody></table><div style=text-align:center>* The docker driver doesn't support all cache export options</div><h3 id=默认的-builder-实例>默认的 Builder 实例</h3><p>docker engine 会自动创建一个默认的 builder 实例，例如 <code>default</code>。默认的驱动是 <code>docker</code>，不支持多平台构建。</p><pre><code class=language-bash># docker buildx ls
-NAME/NODE     DRIVER/ENDPOINT   STATUS    BUILDKIT   PLATFORMS
-default*      docker                                 
- \_ default    \_ default       running   v0.16.0    linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386
-</code></pre><h3 id=创建-builder-实例>创建 Builder 实例</h3><p>下面创建一个 <code>docker-container</code> driver 的 builder 实例。</p><pre><code class=language-bash>docker buildx create \
-  --name container-builder \
-  --driver docker-container \
-  --platform linux/amd64,linux/arm64 \
-  --bootstrap \
-  --use
-</code></pre><p>参数介绍:</p><ul><li><code>--name</code> 指定实例名称</li><li><code>--driver</code> 指定驱动，默认是 <code>docker</code>，<code>docker</code>不支持多平台构建，这里使用支持多平台构建的 <code>docker-container</code></li><li><code>--platform</code> 指定支持的平台</li><li><code>--bootstrap</code> 启动实例</li><li><code>--use</code> 指定使用该实例</li></ul><p>创建后会发现多了一个容器 <code>buildx_buildkit_container-builder0</code>, 使用的镜像是 <code>moby/buildkit:buildx-stable-1</code>。</p><pre><code class=language-bash># docker ps
-CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS          PORTS   NAMES
-6be2b567eaa3   moby/buildkit:buildx-stable-1   &quot;buildkitd --allow-i…&quot;   31 minutes ago   Up 31 minutes           buildx_buildkit_container-builder0
-</code></pre><p>可以指定builder实例容器使用的容器镜像，<code>--driver-opt image=name</code></p><p>可以指定buildkitd配置文件路径，<code>--buildkitd-config /path/to/buildkitd.toml</code></p><p>buildkitd 可以配置镜像仓库的insecure等配置，参考<a href=https://github.com/moby/buildkit/blob/master/docs/buildkitd.toml.md>buildkitd config</a>，demo如下</p><pre><code class=language-toml># buildkitd.toml
-[registry.&quot;registry.example.com&quot;]
-insecure = true
-http = true
-</code></pre><h2 id=使用-buildx-构建多平台镜像>使用 buildx 构建多平台镜像</h2><p>Buildx + Dockerfile 构建多平台镜像有<a href="https://github.com/docker/buildx?tab=readme-ov-file#building-multi-platform-images">三种方式</a></p><ol><li>在内核中使用QEMU仿真支持, 利用的内核的 binfmt_misc 机制提供运行多平台二进制文件的能力<ul><li><code>docker run --privileged --rm tonistiigi/binfmt --install all</code> 注册所有平台的二进制文件格式到内核中</li><li>上面的命令会将所有平台的二进制文件格式注册到内核中，例如 <code>linux/arm64</code>、<code>linux/amd64</code> 等, 可以在 <code>/proc/sys/fs/binfmt_misc/qemu-*</code> 看到注册的二进制文件格式和对应的解释器路径</li></ul></li><li>使用相同的构建器实例在多个不同平台节点上构建</li><li>使用Dockerfile中的一个阶段来交叉编译到不同的架构，需要语言支持交叉编译(Go语言等)或者平台无关(Java语言和前端静态文件等)</li></ol><p>下面是使用 BuildKit 构建多平台镜像时，Dockerfile 中可以使用的ARGs, 参考<a href=https://docs.docker.com/reference/dockerfile/#automatic-platform-args-in-the-global-scope>Automatic platform args in the global scope</a></p><ul><li><code>BUILDPLATFORM</code> 是构建时平台的标识符，例如 <code>linux/amd64</code></li><li><code>BUILDOS</code> 是构建时操作系统的标识符，例如 <code>linux</code></li><li><code>BUILDARCH</code> 是构建时架构的标识符，例如 <code>amd64</code></li><li><code>TARGETPLATFORM</code> 是目标平台的标识符，例如 <code>linux/arm64</code></li><li><code>TARGETOS</code> 是目标操作系统的标识符，例如 <code>linux</code></li><li><code>TARGETARCH</code> 是目标架构的标识符，例如 <code>arm64</code></li></ul><p>使用第一种多平台镜像构建方式是最简单的（如果构建使用的节点支持），下面这个实例使用第三种构建多平台镜像方式，在 Dockerfile 中使用一个阶段来交叉编译到不同的架构。</p><pre><code class=language-bash># Dockerfile
-# 第一个阶段, 使用构建时所在平台的镜像环境中交叉编译, 最终复制到目标平台对应的镜像中使用
-FROM --platform=$BUILDPLATFORM golang:1.23.1-alpine AS builder
-ARG TARGETOS
-ARG TARGETARCH
-ENV GO111MODULE=on \
-    CGO_ENABLED=0
-WORKDIR /build
-RUN apk --no-cache add tzdata
-COPY . .
-# 交叉编译
-# docker buildx build --platform linux/amd64,linux/arm64 ... 等同于在 linux/amd64 平台下执行
-# 1. GOOS=linux GOARCH=amd64 go build -ldflags &quot;-s -w&quot; -o main
-# 2. GOOS=linux GOARCH=arm64 go build -ldflags &quot;-s -w&quot; -o main
-RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags &quot;-s -w&quot; -o main
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="
+构建多平台容器镜像
 
-# 第二个阶段, 使用目标平台的镜像做为运行时镜像
-# FROM 默认 --platform=$TARGETPLATFORM
-FROM scratch
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /build/main /
+  Docker buildx 插件/子命令
+  #
 
-ENTRYPOINT [&quot;/main&quot;]
-</code></pre><h3 id=构建镜像>构建镜像</h3><pre><code class=language-bash>docker buildx build --platform linux/amd64,linux/arm64 -t registry.example.com/my-image:latest .
-</code></pre><h3 id=推送镜像>推送镜像</h3><pre><code class=language-bash>docker buildx build --platform linux/amd64,linux/arm64 -t registry.example.com/my-image:latest --push .
-</code></pre><h2 id=参考>参考</h2><ul><li><a href=https://docs.docker.com/build/building/multi-platform/>(docker docs) Multi-platform builds</a></li></ul></main><footer><script defer src=https://cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js></script><script>hljs.configure({languages:[]}),hljs.highlightAll()</script><hr>© <a href=https://blog.gocn.top>gobai</a> 2021 &ndash; 2025 | <a href=https://github.com/go-bai>Github</a></footer></body></html>
+buildx 是 Docker 的一个 CLI 插件，用于扩展来自于 Moby BuildKit 项目的构建功能。
+注意：buildx 需要 Docker 19.03 或更高版本。
+
+  BuildKit
+  #
+
+BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。
+Docker Engine 从 23.0.0 版本开始默认在Linux上使用Buildx和BuildKit为builder。
+
+  Builder: a BuildKit daemon
+  #
+
+
+Builders介绍
+
+一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。
+
+  Build drivers
+  #
+
+Build 驱动有多种，例如 docker、docker-container、kubernetes、remote 等。
+
+docker 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。
+docker-container 使用Docker创建一个专用的BuildKit容器。
+kubernetes 在Kubernetes集群中创建BuildKit pods。
+remote 直接连接到手动管理的BuildKit守护进程。
+
+Build Drivers Comparison
+
+  
+      
+          Feature
+          docker
+          docker-container
+          kubernetes
+          remote
+      
+  
+  
+      
+          Automatically load image
+          ✅
+          
+          
+          
+      
+      
+          Cache export
+          ✓*
+          ✅
+          ✅
+          ✅
+      
+      
+          Tarball output
+          
+          ✅
+          ✅
+          ✅
+      
+      
+          Multi-arch images
+          
+          ✅
+          ✅
+          ✅
+      
+      
+          BuildKit configuration
+          
+          ✅
+          
+          Managed externally
+      
+  
+
+* The docker driver doesn't support all cache export options
+
+  默认的 Builder 实例
+  #
+
+docker engine 会自动创建一个默认的 builder 实例，例如 default。默认的驱动是 docker，不支持多平台构建。"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/posts/builing-multi-platform-container-images-guide/"><meta property="og:site_name" content="gobai's blog"><meta property="og:title" content="构建多平台容器镜像"><meta property="og:description" content="构建多平台容器镜像
+Docker buildx 插件/子命令 # buildx 是 Docker 的一个 CLI 插件，用于扩展来自于 Moby BuildKit 项目的构建功能。
+注意：buildx 需要 Docker 19.03 或更高版本。
+BuildKit # BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。
+Docker Engine 从 23.0.0 版本开始默认在Linux上使用Buildx和BuildKit为builder。
+Builder: a BuildKit daemon # Builders介绍 一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。
+Build drivers # Build 驱动有多种，例如 docker、docker-container、kubernetes、remote 等。
+docker 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。 docker-container 使用Docker创建一个专用的BuildKit容器。 kubernetes 在Kubernetes集群中创建BuildKit pods。 remote 直接连接到手动管理的BuildKit守护进程。 Build Drivers Comparison Feature docker docker-container kubernetes remote Automatically load image ✅ Cache export ✓* ✅ ✅ ✅ Tarball output ✅ ✅ ✅ Multi-arch images ✅ ✅ ✅ BuildKit configuration ✅ Managed externally * The docker driver doesn't support all cache export options 默认的 Builder 实例 # docker engine 会自动创建一个默认的 builder 实例，例如 default。默认的驱动是 docker，不支持多平台构建。"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-10-13T11:27:56+08:00"><meta property="article:modified_time" content="2025-03-03T00:08:35+08:00"><title>构建多平台容器镜像 | gobai's blog</title>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/builing-multi-platform-container-images-guide/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.2d7343f7ad832e081ecba88fc9b1e7b83132fd3f25ba51c9e24716866b2ba73c.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's blog</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><input type=checkbox id=section-2817774238063d11f9fedc418e8bcf3f class=toggle>
+<label for=section-2817774238063d11f9fedc418e8bcf3f class="flex justify-between"><a role=button>Golang</a></label><ul><li><a href=/posts/sqlx-vs-xorm/>sqlx vs xorm</a></li><li><a href=/posts/solve-timezone-issue-in-go-application-in-container/>解决Go应用在容器中的时区问题</a></li><li><a href=/posts/go-app-reduce-size/>减小go程序编译后的体积</a></li></ul></li><li><input type=checkbox id=section-f91fe725fab4dcbef0dd504359ff7b63 class=toggle>
+<label for=section-f91fe725fab4dcbef0dd504359ff7b63 class="flex justify-between"><a role=button>Linux</a></label><ul><li><a href=/posts/node-exporter/>Node Exporter</a></li><li><a href=/posts/rclone/>Rclone 使用笔记</a></li><li><a href=/posts/multi-bootable-usb/>Multi-Bootable USB</a></li><li><a href=/posts/shell-script/>Shell Script</a></li><li><a href=/posts/delete-partition-and-expand-another/>删除分区并扩容另一个分区和根文件系统</a></li><li><a href=/posts/ubuntu-config/>Ubuntu Config</a></li><li><a href=/posts/systemd-journal/>About Systemd</a></li><li><input type=checkbox id=section-176ad016ae09a9f0440dca17617492cb class=toggle>
+<label for=section-176ad016ae09a9f0440dca17617492cb class="flex justify-between"><a role=button>Network</a></label><ul><li><a href=/posts/linux-iptables/>Linux iptables</a></li><li><a href=/posts/wireless-to-wired-network/>无线转有线网络</a></li><li><a href=/posts/openwrt/>OpenWrt</a></li><li><a href=/posts/dhclient/>dhclient</a></li><li><a href=/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>在 Ubuntu 22.04 使用 netplan 创建桥接网络</a></li></ul></li></ul></li><li><input type=checkbox id=section-db6ac5e9808e911c643d4dada0e07ebd class=toggle checked>
+<label for=section-db6ac5e9808e911c643d4dada0e07ebd class="flex justify-between"><a role=button>Kubernetes</a></label><ul><li><a href=/posts/flannel/>深入了解 Kubernetes CNI 网络插件 Flannel</a></li><li><a href=/posts/cni/>CNI 工作原理</a></li><li><a href=/posts/csi/>CSI 工作原理</a></li><li><a href=/posts/builing-multi-platform-container-images-guide/ class=active>构建多平台容器镜像</a></li><li><a href=/posts/kube-prometheus-stack/>安装 Kube Prometheus Stack</a></li><li><a href=/posts/rook-ceph/>安装 Rook Ceph</a></li><li><a href=/posts/rke2/>RKE2 安装 k8s 集群</a></li><li><a href=/posts/controller-runtime/>Controller Runtime</a></li><li><a href=/posts/kubevirt-sidecar/>Kubevirt Hook Sidecar</a></li></ul></li><li><input type=checkbox id=section-45ed28834a9c7fe37d3e4d15606fec65 class=toggle>
+<label for=section-45ed28834a9c7fe37d3e4d15606fec65 class="flex justify-between"><a href=/posts/db/>Database</a></label><ul><li><a href=/posts/sqlite3/>SQLite3</a></li></ul></li><li><input type=checkbox id=section-71066de79af329dead5f497549dd47db class=toggle>
+<label for=section-71066de79af329dead5f497549dd47db class="flex justify-between"><a role=button>Virtualization</a></label><ul><li><a href=/posts/libvirt/>Libvirt 使用笔记</a></li><li><a href=/posts/create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a></li></ul></li><li><input type=checkbox id=section-11b3445850a0f3882808ba1894e9cf94 class=toggle>
+<label for=section-11b3445850a0f3882808ba1894e9cf94 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li><li class=book-section-flat><span>&lt;&lt; 链接 >></span><ul><li><a href=/posts/about/>关于我</a></li><li><a href=/posts/links/>友链</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>构建多平台容器镜像</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#docker-buildx-插件子命令>Docker buildx 插件/子命令</a></li><li><a href=#buildkit>BuildKit</a><ul><li><a href=#builder-a-buildkit-daemon>Builder: a BuildKit daemon</a></li><li><a href=#build-drivers>Build drivers</a></li><li><a href=#默认的-builder-实例>默认的 Builder 实例</a></li><li><a href=#创建-builder-实例>创建 Builder 实例</a></li></ul></li><li><a href=#使用-buildx-构建多平台镜像>使用 buildx 构建多平台镜像</a><ul><li><a href=#构建镜像>构建镜像</a></li><li><a href=#推送镜像>推送镜像</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></aside></header><article class="markdown book-post"><h2>构建多平台容器镜像</h2><div class="flex align-center text-small book-post-date"><img src=/svg/calendar.svg class=book-icon alt>
+<span>2024-10-13</span></div><div class=book-post-content><blockquote><p>构建多平台容器镜像</p></blockquote><h2 id=docker-buildx-插件子命令>Docker buildx 插件/子命令
+<a class=anchor href=#docker-buildx-%e6%8f%92%e4%bb%b6%e5%ad%90%e5%91%bd%e4%bb%a4>#</a></h2><p><a href=https://github.com/docker/buildx>buildx</a> 是 Docker 的一个 CLI 插件，用于扩展来自于 <a href=https://github.com/moby/buildkit>Moby BuildKit</a> 项目的构建功能。</p><p>注意：buildx 需要 Docker 19.03 或更高版本。</p><h2 id=buildkit>BuildKit
+<a class=anchor href=#buildkit>#</a></h2><p>BuildKit是一个build引擎，它接收一个配置文件（Dockerfile），并转化成一个制品（容器镜像或其他制品）。相较与传统的build具有多阶段并发构建、更好的layer缓存支持等优点，Dockerfile中的RUN指令会被runc执行。</p><p>Docker Engine 从 <a href=https://docs.docker.com/engine/release-notes/23.0/#2300>23.0.0</a> 版本开始默认在Linux上使用Buildx和BuildKit为builder。</p><h3 id=builder-a-buildkit-daemon>Builder: a BuildKit daemon
+<a class=anchor href=#builder-a-buildkit-daemon>#</a></h3><ul><li><a href=https://docs.docker.com/build/builders/>Builders介绍</a></li></ul><p>一个 builder 是一个 BuildKit 守护进程，BuildKit是build引擎，它解决Dockerfile中的构建步骤，以生成容器镜像或其他制品。</p><h3 id=build-drivers>Build drivers
+<a class=anchor href=#build-drivers>#</a></h3><p>Build 驱动有多种，例如 <code>docker</code>、<code>docker-container</code>、<code>kubernetes</code>、<code>remote</code> 等。</p><ul><li><code>docker</code> 使用捆绑在Docker守护进程中的BuildKit库。默认的Builder使用的该驱动。</li><li><code>docker-container</code> 使用Docker创建一个专用的BuildKit容器。</li><li><code>kubernetes</code> 在Kubernetes集群中创建BuildKit pods。</li><li><code>remote</code> 直接连接到手动管理的BuildKit守护进程。</li></ul><div style=text-align:center>Build Drivers Comparison</div><table><thead><tr><th>Feature</th><th>docker</th><th>docker-container</th><th>kubernetes</th><th>remote</th></tr></thead><tbody><tr><td>Automatically load image</td><td>✅</td><td></td><td></td><td></td></tr><tr><td>Cache export</td><td>✓*</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Tarball output</td><td></td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Multi-arch images</td><td></td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>BuildKit configuration</td><td></td><td>✅</td><td></td><td>Managed externally</td></tr></tbody></table><div style=text-align:center>* The docker driver doesn't support all cache export options</div><h3 id=默认的-builder-实例>默认的 Builder 实例
+<a class=anchor href=#%e9%bb%98%e8%ae%a4%e7%9a%84-builder-%e5%ae%9e%e4%be%8b>#</a></h3><p>docker engine 会自动创建一个默认的 builder 实例，例如 <code>default</code>。默认的驱动是 <code>docker</code>，不支持多平台构建。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># docker buildx ls</span>
+</span></span><span style=display:flex><span>NAME/NODE     DRIVER/ENDPOINT   STATUS    BUILDKIT   PLATFORMS
+</span></span><span style=display:flex><span>default*      docker                                 
+</span></span><span style=display:flex><span> <span style=color:#ae81ff>\_</span> default    <span style=color:#ae81ff>\_</span> default       running   v0.16.0    linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386
+</span></span></code></pre></div><h3 id=创建-builder-实例>创建 Builder 实例
+<a class=anchor href=#%e5%88%9b%e5%bb%ba-builder-%e5%ae%9e%e4%be%8b>#</a></h3><p>下面创建一个 <code>docker-container</code> driver 的 builder 实例。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>docker buildx create <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --name container-builder <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --driver docker-container <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --platform linux/amd64,linux/arm64 <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --bootstrap <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --use
+</span></span></code></pre></div><p>参数介绍:</p><ul><li><code>--name</code> 指定实例名称</li><li><code>--driver</code> 指定驱动，默认是 <code>docker</code>，<code>docker</code>不支持多平台构建，这里使用支持多平台构建的 <code>docker-container</code></li><li><code>--platform</code> 指定支持的平台</li><li><code>--bootstrap</code> 启动实例</li><li><code>--use</code> 指定使用该实例</li></ul><p>创建后会发现多了一个容器 <code>buildx_buildkit_container-builder0</code>, 使用的镜像是 <code>moby/buildkit:buildx-stable-1</code>。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># docker ps</span>
+</span></span><span style=display:flex><span>CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS          PORTS   NAMES
+</span></span><span style=display:flex><span>6be2b567eaa3   moby/buildkit:buildx-stable-1   <span style=color:#e6db74>&#34;buildkitd --allow-i…&#34;</span>   <span style=color:#ae81ff>31</span> minutes ago   Up <span style=color:#ae81ff>31</span> minutes           buildx_buildkit_container-builder0
+</span></span></code></pre></div><p>可以指定builder实例容器使用的容器镜像，<code>--driver-opt image=name</code></p><p>可以指定buildkitd配置文件路径，<code>--buildkitd-config /path/to/buildkitd.toml</code></p><p>buildkitd 可以配置镜像仓库的insecure等配置，参考<a href=https://github.com/moby/buildkit/blob/master/docs/buildkitd.toml.md>buildkitd config</a>，demo如下</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-toml data-lang=toml><span style=display:flex><span><span style=color:#75715e># buildkitd.toml</span>
+</span></span><span style=display:flex><span>[<span style=color:#a6e22e>registry</span>.<span style=color:#e6db74>&#34;registry.example.com&#34;</span>]
+</span></span><span style=display:flex><span><span style=color:#a6e22e>insecure</span> = <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>http</span> = <span style=color:#66d9ef>true</span>
+</span></span></code></pre></div><h2 id=使用-buildx-构建多平台镜像>使用 buildx 构建多平台镜像
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-buildx-%e6%9e%84%e5%bb%ba%e5%a4%9a%e5%b9%b3%e5%8f%b0%e9%95%9c%e5%83%8f>#</a></h2><p>Buildx + Dockerfile 构建多平台镜像有<a href="https://github.com/docker/buildx?tab=readme-ov-file#building-multi-platform-images">三种方式</a></p><ol><li>在内核中使用QEMU仿真支持, 利用的内核的 binfmt_misc 机制提供运行多平台二进制文件的能力<ul><li><code>docker run --privileged --rm tonistiigi/binfmt --install all</code> 注册所有平台的二进制文件格式到内核中</li><li>上面的命令会将所有平台的二进制文件格式注册到内核中，例如 <code>linux/arm64</code>、<code>linux/amd64</code> 等, 可以在 <code>/proc/sys/fs/binfmt_misc/qemu-*</code> 看到注册的二进制文件格式和对应的解释器路径</li></ul></li><li>使用相同的构建器实例在多个不同平台节点上构建</li><li>使用Dockerfile中的一个阶段来交叉编译到不同的架构，需要语言支持交叉编译(Go语言等)或者平台无关(Java语言和前端静态文件等)</li></ol><p>下面是使用 BuildKit 构建多平台镜像时，Dockerfile 中可以使用的ARGs, 参考<a href=https://docs.docker.com/reference/dockerfile/#automatic-platform-args-in-the-global-scope>Automatic platform args in the global scope</a></p><ul><li><code>BUILDPLATFORM</code> 是构建时平台的标识符，例如 <code>linux/amd64</code></li><li><code>BUILDOS</code> 是构建时操作系统的标识符，例如 <code>linux</code></li><li><code>BUILDARCH</code> 是构建时架构的标识符，例如 <code>amd64</code></li><li><code>TARGETPLATFORM</code> 是目标平台的标识符，例如 <code>linux/arm64</code></li><li><code>TARGETOS</code> 是目标操作系统的标识符，例如 <code>linux</code></li><li><code>TARGETARCH</code> 是目标架构的标识符，例如 <code>arm64</code></li></ul><p>使用第一种多平台镜像构建方式是最简单的（如果构建使用的节点支持），下面这个实例使用第三种构建多平台镜像方式，在 Dockerfile 中使用一个阶段来交叉编译到不同的架构。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Dockerfile</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 第一个阶段, 使用构建时所在平台的镜像环境中交叉编译, 最终复制到目标平台对应的镜像中使用</span>
+</span></span><span style=display:flex><span>FROM --platform<span style=color:#f92672>=</span>$BUILDPLATFORM golang:1.23.1-alpine AS builder
+</span></span><span style=display:flex><span>ARG TARGETOS
+</span></span><span style=display:flex><span>ARG TARGETARCH
+</span></span><span style=display:flex><span>ENV GO111MODULE<span style=color:#f92672>=</span>on <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>    CGO_ENABLED<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>WORKDIR /build
+</span></span><span style=display:flex><span>RUN apk --no-cache add tzdata
+</span></span><span style=display:flex><span>COPY . .
+</span></span><span style=display:flex><span><span style=color:#75715e># 交叉编译</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># docker buildx build --platform linux/amd64,linux/arm64 ... 等同于在 linux/amd64 平台下执行</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 1. GOOS=linux GOARCH=amd64 go build -ldflags &#34;-s -w&#34; -o main</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 2. GOOS=linux GOARCH=arm64 go build -ldflags &#34;-s -w&#34; -o main</span>
+</span></span><span style=display:flex><span>RUN GOOS<span style=color:#f92672>=</span><span style=color:#e6db74>${</span>TARGETOS<span style=color:#e6db74>}</span> GOARCH<span style=color:#f92672>=</span><span style=color:#e6db74>${</span>TARGETARCH<span style=color:#e6db74>}</span> go build -ldflags <span style=color:#e6db74>&#34;-s -w&#34;</span> -o main
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 第二个阶段, 使用目标平台的镜像做为运行时镜像</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># FROM 默认 --platform=$TARGETPLATFORM</span>
+</span></span><span style=display:flex><span>FROM scratch
+</span></span><span style=display:flex><span>COPY --from<span style=color:#f92672>=</span>builder /usr/share/zoneinfo /usr/share/zoneinfo
+</span></span><span style=display:flex><span>COPY --from<span style=color:#f92672>=</span>builder /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+</span></span><span style=display:flex><span>COPY --from<span style=color:#f92672>=</span>builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+</span></span><span style=display:flex><span>COPY --from<span style=color:#f92672>=</span>builder /build/main /
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>ENTRYPOINT <span style=color:#f92672>[</span><span style=color:#e6db74>&#34;/main&#34;</span><span style=color:#f92672>]</span>
+</span></span></code></pre></div><h3 id=构建镜像>构建镜像
+<a class=anchor href=#%e6%9e%84%e5%bb%ba%e9%95%9c%e5%83%8f>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>docker buildx build --platform linux/amd64,linux/arm64 -t registry.example.com/my-image:latest .
+</span></span></code></pre></div><h3 id=推送镜像>推送镜像
+<a class=anchor href=#%e6%8e%a8%e9%80%81%e9%95%9c%e5%83%8f>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>docker buildx build --platform linux/amd64,linux/arm64 -t registry.example.com/my-image:latest --push .
+</span></span></code></pre></div><h2 id=参考>参考
+<a class=anchor href=#%e5%8f%82%e8%80%83>#</a></h2><ul><li><a href=https://docs.docker.com/build/building/multi-platform/>(docker docs) Multi-platform builds</a></li></ul></div></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/390d99988c3f7e00d9db00857e1ae58d43a80b98 title='Last modified by go-bai | 2025-03-02' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
+<span>2025-03-02</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#docker-buildx-插件子命令>Docker buildx 插件/子命令</a></li><li><a href=#buildkit>BuildKit</a><ul><li><a href=#builder-a-buildkit-daemon>Builder: a BuildKit daemon</a></li><li><a href=#build-drivers>Build drivers</a></li><li><a href=#默认的-builder-实例>默认的 Builder 实例</a></li><li><a href=#创建-builder-实例>创建 Builder 实例</a></li></ul></li><li><a href=#使用-buildx-构建多平台镜像>使用 buildx 构建多平台镜像</a><ul><li><a href=#构建镜像>构建镜像</a></li><li><a href=#推送镜像>推送镜像</a></li></ul></li><li><a href=#参考>参考</a></li></ul></nav></div></aside></main></body></html>
