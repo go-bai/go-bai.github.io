@@ -2,8 +2,8 @@ baseURL: '/'
 languageCode: en-us
 title: gobai's blog
 theme: hugo-book
-# enableRobotsTXT: true
-enableGitInfo: true
+enableRobotsTXT: true
+enableGitInfo: true # 在文章底部根据 Git 记录自动更新时间, 如: Last modified by go-bai | 2025-03-02
 
 permalinks:
   posts: "/posts/:filename/"
