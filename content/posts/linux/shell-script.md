@@ -2,8 +2,6 @@
 title: "Shell Script"
 date: 2024-03-23T09:43:34+08:00
 draft: false
-toc: true
-tags: [shell,bash,linux]
 ---
 
 > 最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.

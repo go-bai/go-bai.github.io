@@ -2,8 +2,6 @@
 title: "CRI 工作原理"
 date: 2024-11-17T20:30:12+08:00
 draft: true
-toc: true
-tags: [k8s,cri]
 ---
 
 ## 关于 CRI

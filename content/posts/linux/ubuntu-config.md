@@ -2,8 +2,6 @@
 title: "Ubuntu Config"
 date: 2023-09-24T10:56:12+08:00
 draft: false
-toc: true
-tags: [ubuntu]
 ---
 
 > 以下配置都是在 `Ubuntu 22.04` 系统配置

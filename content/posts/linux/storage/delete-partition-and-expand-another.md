@@ -2,8 +2,6 @@
 title: "删除分区并扩容另一个分区和根文件系统"
 date: 2023-10-02T16:54:05+08:00
 draft: false
-toc: true
-tags: [linux,fdisk,resize2fs,lsblk,partprobe,ext4,partition]
 ---
 
 > 现在要将 `/dev/sda3` 分区删掉并扩容到 `/dev/sda2`, 并且在不重启服务器的情况下扩容根文件系统(跟文件系统 `/` 挂载在 `/dev/sda2` 上, 并且 filesystem 是 `ext4`)

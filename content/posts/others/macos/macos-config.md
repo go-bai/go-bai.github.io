@@ -2,8 +2,6 @@
 title: "MacOS Config"
 date: 2023-09-24T10:56:13+08:00
 draft: false
-toc: true
-tags: [macos]
 ---
 
 ## 安装`iproute2mac`

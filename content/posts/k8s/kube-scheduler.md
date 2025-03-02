@@ -2,8 +2,6 @@
 title: "Kube Scheduler"
 date: 2024-12-17T22:07:49+08:00
 draft: true
-toc: true
-tags: [kube-scheduler,kubernetes]
 ---
 
 RKE2 自定义[调度器配置](https://kubernetes.io/zh-cn/docs/reference/scheduling/config/)

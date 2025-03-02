@@ -2,8 +2,6 @@
 title: "构建多平台容器镜像"
 date: 2024-10-13T11:27:56+08:00
 draft: false
-toc: true
-tags: [docker,buildx,buildkit]
 ---
 
 > 构建多平台容器镜像

@@ -2,7 +2,6 @@
 title: "Cloud Desktop"
 date: 2023-10-14T23:10:09+08:00
 draft: true
-tags: [hypervisor,VDI,IDV,VOI,DaaS]
 ---
 
 关于云桌面技术架构

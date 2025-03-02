@@ -8,7 +8,7 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ➜  ~ go version
-go version go1.21.1 linux/amd64
+go version go1.23.1 linux/amd64
 ```
 
 ### install hugo extended
@@ -32,7 +32,7 @@ hugo new content posts/linux/jq-command.md
 ### preview
 
 ```bash
-hugo server
+hugo server --bind 0.0.0.0 --minify --theme hugo-book
 ```
 
 ### push

@@ -2,8 +2,6 @@
 title: "Libvirt 使用笔记"
 date: 2024-07-27T22:57:08+08:00
 draft: false
-toc: true
-tags: [libvirt,virsh]
 ---
 
 ## `virsh` 命令

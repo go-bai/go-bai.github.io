@@ -2,8 +2,6 @@
 title: "CNI 工作原理"
 date: 2024-11-17T20:30:06+08:00
 draft: false
-toc: true
-tags: [k8s,cni]
 ---
 
 ## 关于 CNI

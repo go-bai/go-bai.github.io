@@ -1,7 +1,6 @@
 ---
 title: "关于我"
-author: gobai
-
+date: 2025-03-02T23:10:09+08:00
 ---
 
 > golang 服务端开发工程师，喜欢一些基础设施相关的东西
@@ -9,10 +8,10 @@ author: gobai
 ### 目前在学的内容
 
 - **golang**
+- **linux**
 - **kubernetes**
 - **kubevirt**
 - ceph
-- linux
 - openstack
 - terraform
 - postgresql
@@ -29,7 +28,7 @@ author: gobai
 - iPad mini6
 - OnePlus 9R
 
-### 联系方式: 
+### 联系方式
 
 ```bash
 echo YWRtaW5AZ29jbi50b3AK | base64 -d

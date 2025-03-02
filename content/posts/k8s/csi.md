@@ -2,8 +2,6 @@
 title: "CSI 工作原理"
 date: 2024-11-04T22:07:17+08:00
 draft: false
-toc: true
-tags: [k8s,csi]
 ---
 
 ## 关于 CSI

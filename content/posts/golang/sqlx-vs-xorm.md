@@ -2,8 +2,6 @@
 title: "sqlx vs xorm"
 date: 2024-03-09T10:49:09+08:00
 draft: false
-toc: true
-tags: [golang,sqlx,golang,database,sql]
 ---
 
 ## 初始化演示环境

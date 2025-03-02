@@ -2,8 +2,6 @@
 title: "dhclient"
 date: 2023-10-09T21:37:55+08:00
 draft: false
-toc: false
-tags: [dhclient,linux,network]
 ---
 
 在机器上使用`netplan`+`NetworkManager`配置[bridged network](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04)之后

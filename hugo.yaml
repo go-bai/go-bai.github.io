@@ -1,0 +1,27 @@
+baseURL: '/'
+languageCode: en-us
+title: gobai's blog
+theme: hugo-book
+# enableRobotsTXT: true
+enableGitInfo: true
+
+permalinks:
+  posts: "/posts/:filename/"
+
+params:
+  BookTheme: auto
+  BookToC: true
+  BookLogo: favicon.ico
+  BookSection: posts # render content/posts/
+  BookDateFormat: '2006-01-02'
+  BookSearch: true
+  BookRepo: https://github.com/go-bai/go-bai.github.io
+
+markup:
+  tableOfContents:
+    startLevel: 2
+    endLevel: 5
+    ordered: false
+  goldmark:
+    renderer:
+      unsafe: true

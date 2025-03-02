@@ -2,8 +2,6 @@
 title: "在 Ubuntu 22.04 使用 netplan 创建桥接网络"
 date: 2023-10-04T13:01:59+08:00
 draft: false
-toc: true
-tags: [linux,bridged-network,netplan,ubuntu]
 ---
 
 本地LAN环境

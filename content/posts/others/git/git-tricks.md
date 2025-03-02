@@ -2,8 +2,6 @@
 title: "Git Tricks"
 date: 2021-11-12T15:36:19+08:00
 draft: false
-toc: true
-tags: ["git"]
 ---
 
 ## 暂存当前代码改动

@@ -2,8 +2,6 @@
 title: "安装 Rook Ceph"
 date: 2024-07-02T14:56:03+08:00
 draft: false
-toc: true
-tags: [k8s, rook, ceph]
 ---
 
 使用 [RKE2 快速搭建 k8s 集群](../rke2/) 创建的集群

@@ -2,8 +2,6 @@
 title: "Multi-Bootable USB"
 date: 2024-03-28T22:20:22+08:00
 draft: false
-toc: true
-tags: [ventoy]
 ---
 
 > 从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件

@@ -2,8 +2,6 @@
 title: "创建虚拟机时使用 cloudinit 初始化"
 date: 2024-07-01T01:56:57+08:00
 draft: false
-toc: true
-tags: [cloudinit]
 ---
 
 ## cloudinit 介绍

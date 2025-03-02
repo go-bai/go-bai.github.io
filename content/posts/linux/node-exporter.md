@@ -2,8 +2,6 @@
 title: "Node Exporter"
 date: 2024-07-03T22:39:59+08:00
 draft: false
-toc: true
-tags: [prometheus, node-exporter]
 ---
 
 ## node-exporter 安装
