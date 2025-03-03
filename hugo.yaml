@@ -18,9 +18,9 @@ params:
   BookRepo: https://github.com/go-bai/go-bai.github.io
 
 markup:
-  tableOfContents:
-    startLevel: 2
-    endLevel: 5
+  tableOfContents: # https://gohugo.io/methods/page/tableofcontents/
+    startLevel: 2 # 默认从 2 开始
+    endLevel: 5 # 默认从 3 结束
     ordered: false
   goldmark:
     renderer:
