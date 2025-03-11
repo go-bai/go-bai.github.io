@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/posts/prometheus/"><meta property="og:site_name" content="gobai's blog"><meta property="og:title" content="Prometheus"><meta property="og:locale" content="en_us"><meta property="og:type" content="website"><title>Prometheus | gobai's blog</title>
-<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/prometheus/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.7e483290a5debcf3815d7eb67ac625973729504c33e27b970bac98162ae0a992.js></script><link rel=alternate type=application/rss+xml href=/posts/prometheus/index.xml title="gobai's blog"></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/prometheus/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.d0fb5674e3a569eb4bfb6e1933ca9b58280500626e7ac24b2288d3d525b81e63.js></script><link rel=alternate type=application/rss+xml href=/posts/prometheus/index.xml title="gobai's blog"></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
 <input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's blog</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><span>Golang</span><ul><li><input type=checkbox id=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class=toggle>
 <label for=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class="flex justify-between"><a role=button>语言基础</a></label><ul><li><a href=/posts/golang-memory-escape/>内存逃逸</a></li><li><a href=/posts/golang-gc/>GC 垃圾回收</a></li><li><a href=/posts/golang-make-and-new/>make 与 new 区别</a></li><li><a href=/posts/golang-gmp/>GMP 模型</a></li></ul></li><li><input type=checkbox id=section-42d8c4148cb4c5a3e3d8addaded05197 class=toggle>
 <label for=section-42d8c4148cb4c5a3e3d8addaded05197 class="flex justify-between"><a role=button>数据结构</a></label><ul><li><a href=/posts/golang-chan/>Channel</a></li></ul></li><li><input type=checkbox id=section-1ca588caf6263863db394d8b5e8e27c7 class=toggle>
@@ -57,7 +57,7 @@
 </span></span></code></pre></div><h2 id=在-prometheus-中配置指标收集>在 prometheus 中配置指标收集
 <a class=anchor href=#%e5%9c%a8-prometheus-%e4%b8%ad%e9%85%8d%e7%bd%ae%e6%8c%87%e6%a0%87%e6%94%b6%e9%9b%86>#</a></h2><h3 id=方式一直接修改-prometheus-配置>方式一：直接修改 prometheus 配置
 <a class=anchor href=#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae>#</a></h3><p>修改 <code>kube-prometheus-stack</code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 <code>{EDIT_HERE}</code> 为实际值</p><a href=/posts/node-exporter/>...</a></div></article><article class="markdown book-post"><h2><a href=/posts/kube-prometheus-stack/>安装 Kube Prometheus Stack</a></h2><div class="flex align-center text-small book-post-date"><img src=/svg/calendar.svg class=book-icon alt>
-<span>2024-07-03</span></div><div class=book-post-content><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack
+<span>2024-07-03</span></div><div class=book-post-content><p><code>kube-prometheus-stack</code> 是 prometheus 的官方 helm charts，包含 <a href=https://github.com/prometheus-operator/prometheus-operator>prometheus-operator</a>、<a href=https://github.com/prometheus/prometheus>prometheus</a>、<a href=https://github.com/grafana/grafana>grafana</a>、<a href=https://github.com/prometheus/alertmanager>alertmanager</a>、<a href=https://github.com/prometheus/node_exporter>node-exporter</a> 等组件。</p><h2 id=安装-kube-prometheus-stack>安装 kube-prometheus-stack
 <a class=anchor href=#%e5%ae%89%e8%a3%85-kube-prometheus-stack>#</a></h2><p>使用 helm charts 安装 kube-prometheus-stack</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>mkdir -p ~/charts/kube-prometheus-stack
 </span></span><span style=display:flex><span>cd ~/charts/kube-prometheus-stack
 </span></span><span style=display:flex><span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -76,13 +76,18 @@
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>  service:
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>    type: NodePort
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>
-</span></span></span><span style=display:flex><span><span style=color:#e6db74># grafana service
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>prometheusOperator:
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  enabled: true
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>grafana:
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>  service:
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>    type: NodePort
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>alertmanager:
-</span></span></span><span style=display:flex><span><span style=color:#e6db74>  enabled: false
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  enabled: true
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>nodeExporter:
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  enabled: true
 </span></span></span><span style=display:flex><span><span style=color:#e6db74>EOF</span>
 </span></span><span style=display:flex><span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
 </span></span></code></pre></div><h3 id=配置说明>配置说明
