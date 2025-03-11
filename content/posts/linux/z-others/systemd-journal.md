@@ -1,7 +1,6 @@
 ---
 title: "About Systemd"
 date: 2021-11-14T01:47:04+08:00
-draft: false
 ---
 
 记录一下查看和操作 `systemd` 日志的几个常用命令

@@ -1,7 +1,6 @@
 ---
 title: "RKE2 安装 k8s 集群"
 date: 2024-07-01T21:24:49+08:00
-draft: false
 ---
 
 根据[创建 bridge 网络](../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/)和[创建虚拟机时使用 cloudinit 初始化](../create-vm-with-cloudinit/)创建虚拟机, 并配置静态ip如下

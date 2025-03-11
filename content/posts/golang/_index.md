@@ -1,5 +1,5 @@
 ---
 title: Golang
 weight: 1
-bookCollapseSection: true
+bookCollapseSection: false
 ---

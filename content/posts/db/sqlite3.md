@@ -1,7 +1,6 @@
 ---
 title: "SQLite3"
 date: 2021-12-14T10:33:14+08:00
-draft: false
 ---
 
 ## rollback日志模式下的五种锁状态介绍

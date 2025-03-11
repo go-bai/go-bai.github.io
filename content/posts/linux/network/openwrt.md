@@ -1,7 +1,6 @@
 ---
 title: "OpenWrt"
 date: 2024-01-06T17:38:38+08:00
-draft: false
 ---
 
 很久没折腾`OpenWrt`了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(`ALL IN BOOM!`)

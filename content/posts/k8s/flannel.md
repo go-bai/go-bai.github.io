@@ -1,7 +1,6 @@
 ---
 title: "深入了解 Kubernetes CNI 网络插件 Flannel"
 date: 2025-01-01T13:11:35+08:00
-draft: false
 ---
 
 ## 关于

@@ -1,7 +1,6 @@
 ---
 title: "Rclone 使用笔记"
 date: 2024-04-04T15:56:58+08:00
-draft: false
 ---
 
 > 使用`rclone`和`alist`提供的`webdav`接口将阿里云盘`mount`到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件

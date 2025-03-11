@@ -1,5 +1,5 @@
 ---
 title: Virtualization
-bookCollapseSection: true
+bookCollapseSection: false
 weight: 5
 ---
