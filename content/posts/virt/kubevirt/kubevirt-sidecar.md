@@ -1,7 +1,6 @@
 ---
 title: "Kubevirt Hook Sidecar"
 date: 2024-05-12T14:37:18+08:00
-draft: false
 ---
 
 ## 简介
