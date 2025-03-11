@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>OS on gobai's blog</title><link>/posts/linux/os/</link><description>Recent content in OS on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/os/index.xml" rel="self" type="application/rss+xml"/><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
+&lt;p>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件&lt;/p>&lt;/blockquote>
+&lt;h2 id="下载并解压ventoy">
+ 下载并解压&lt;code>ventoy&lt;/code>
+ &lt;a class="anchor" href="#%e4%b8%8b%e8%bd%bd%e5%b9%b6%e8%a7%a3%e5%8e%8bventoy">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget https://github.com/ventoy/Ventoy/releases/download/v1.0.97/ventoy-1.0.97-linux.tar.gz
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>tar -xvzf ventoy-1.0.97-linux.tar.gz
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ventoy-1.0.97/
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Ventoy2Disk.sh&lt;/code>用来安装&lt;code>ventor&lt;/code>到U盘&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>./Ventoy2Disk.sh -h
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>**********************************************
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Ventoy: 1.0.97 x86_64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> longpanda admin@ventoy.net
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> https://www.ventoy.net
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>**********************************************
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Usage: Ventoy2Disk.sh CMD &lt;span style="color:#f92672">[&lt;/span> OPTION &lt;span style="color:#f92672">]&lt;/span> /dev/sdX
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CMD:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -i install Ventoy to sdX &lt;span style="color:#f92672">(&lt;/span>fails &lt;span style="color:#66d9ef">if&lt;/span> disk already installed with Ventoy&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -I force install Ventoy to sdX &lt;span style="color:#f92672">(&lt;/span>no matter &lt;span style="color:#66d9ef">if&lt;/span> installed or not&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -u update Ventoy in sdX
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -l list Ventoy information in sdX
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OPTION: &lt;span style="color:#f92672">(&lt;/span>optional&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -r SIZE_MB preserve some space at the bottom of the disk &lt;span style="color:#f92672">(&lt;/span>only &lt;span style="color:#66d9ef">for&lt;/span> install&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -s/-S enable/disable secure boot support &lt;span style="color:#f92672">(&lt;/span>default is enabled&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -g use GPT partition style, default is MBR &lt;span style="color:#f92672">(&lt;/span>only &lt;span style="color:#66d9ef">for&lt;/span> install&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -L Label of the 1st exfat partition &lt;span style="color:#f92672">(&lt;/span>default is Ventoy&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -n try non-destructive installation &lt;span style="color:#f92672">(&lt;/span>only &lt;span style="color:#66d9ef">for&lt;/span> install&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="安装ventoy">
+ 安装ventoy
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85ventoy">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ./Ventoy2Disk.sh -I /dev/sdb&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>**********************************************
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Ventoy: 1.0.97 x86_64
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> longpanda admin@ventoy.net
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> https://www.ventoy.net
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>**********************************************
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Disk : /dev/sdb
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Model: Kingston DataTraveler 3.0 &lt;span style="color:#f92672">(&lt;/span>scsi&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Size : &lt;span style="color:#ae81ff">115&lt;/span> GB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Style: MBR
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Attention:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>You will install Ventoy to /dev/sdb.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>All the data on the disk /dev/sdb will be lost!!!
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Continue? &lt;span style="color:#f92672">(&lt;/span>y/n&lt;span style="color:#f92672">)&lt;/span> y
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>All the data on the disk /dev/sdb will be lost!!!
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Double-check. Continue? &lt;span style="color:#f92672">(&lt;/span>y/n&lt;span style="color:#f92672">)&lt;/span> y
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Create partitions on /dev/sdb by parted in MBR style ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Wait &lt;span style="color:#66d9ef">for&lt;/span> partitions ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>partition exist OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>create efi fat fs /dev/sdb2 ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkfs.fat 4.2 &lt;span style="color:#f92672">(&lt;/span>2021-01-31&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>success
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Wait &lt;span style="color:#66d9ef">for&lt;/span> partitions ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>/dev/sdb1 exist OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>/dev/sdb2 exist OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>partition exist OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Format partition &lt;span style="color:#ae81ff">1&lt;/span> /dev/sdb1 ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkexfatfs 1.3.0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Creating... &lt;span style="color:#66d9ef">done&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Flushing... &lt;span style="color:#66d9ef">done&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>File system created successfully.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkexfatfs success
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>writing data to disk ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sync data ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>esp partition processing ...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Install Ventoy to /dev/sdb successfully finished.
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>查看最终的U盘分区, &lt;code>sdb1&lt;/code>分区是存放&lt;code>iso&lt;/code>镜像的&lt;/p></description></item></channel></rss>

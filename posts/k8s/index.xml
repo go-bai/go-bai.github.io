@@ -1,4 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kubernetes on gobai's blog</title><link>/posts/k8s/</link><description>Recent content in Kubernetes on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/k8s/index.xml" rel="self" type="application/rss+xml"/><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kubernetes on gobai's blog</title><link>/posts/k8s/</link><description>Recent content in Kubernetes on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/k8s/index.xml" rel="self" type="application/rss+xml"/><item><title>k8s informer 介绍</title><link>/posts/k8s-informer/</link><pubDate>Sun, 23 Feb 2025 19:15:23 +0800</pubDate><guid>/posts/k8s-informer/</guid><description>&lt;p>&lt;code>informer&lt;/code> 提供一个保持更新的 k8s 资源的本地缓存。&lt;/p>
+&lt;h2 id="informer">
+ &lt;code>informer&lt;/code>
+ &lt;a class="anchor" href="#informer">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">
  关于
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e">#&lt;/a>
 &lt;/h2>
@@ -21,7 +26,148 @@
 &lt;li>&lt;code>subnet&lt;/code>: 对应 &lt;code>node.spec.podCIDR&lt;/code>。&lt;/li>
 &lt;li>&lt;code>backend&lt;/code>: 负责 &lt;code>node&lt;/code> 之间 &lt;code>pod&lt;/code> 通讯的后端。&lt;/li>
 &lt;/ol>
-&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
+&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>Kube Scheduler</title><link>/posts/kube-scheduler/</link><pubDate>Tue, 17 Dec 2024 22:07:49 +0800</pubDate><guid>/posts/kube-scheduler/</guid><description>&lt;p>RKE2 自定义&lt;a href="https://kubernetes.io/zh-cn/docs/reference/scheduling/config/">调度器配置&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>创建调度器配置文件&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>NodeResourcesFit&lt;/code> 是一个调度插件, 检查节点是否拥有 Pod 请求的所有资源, 得分可以使用以下三种策略之一:
+&lt;code>LeastAllocated&lt;/code> (默认)、&lt;code>MostAllocated&lt;/code> 和 &lt;code>RequestedToCapacityRatio&lt;/code>&lt;/p>
+&lt;p>实现了多个扩展点: &lt;code>preFilter&lt;/code>、&lt;code>filter&lt;/code>、&lt;code>preScore&lt;/code>、&lt;code>score&lt;/code>&lt;/p>
+&lt;p>我这里自定义使用 &lt;code>MostAllocated&lt;/code> 策略, 优选分配比率较高的节点&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># /etc/rancher/rke2/kube-scheduler-config.yaml&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">kubescheduler.config.k8s.io/v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">KubeSchedulerConfiguration&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">clientConnection&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">kubeconfig&lt;/span>: &lt;span style="color:#ae81ff">/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">profiles&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">schedulerName&lt;/span>: &lt;span style="color:#ae81ff">default-scheduler&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">pluginConfig&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">NodeResourcesFit&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">scoringStrategy&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">type&lt;/span>: &lt;span style="color:#ae81ff">MostAllocated&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">resources&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">cpu&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">weight&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">memory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">weight&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="2">
+&lt;li>修改 rke2 配置文件&lt;/li>
+&lt;/ol>
+&lt;p>修改 &lt;code>/etc/rancher/rke2/config.yaml&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-diff" data-lang="diff">&lt;span style="display:flex;">&lt;span>kube-scheduler-arg:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">+ - config=/etc/rancher/rke2/kube-scheduler-config.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="3">
+&lt;li>重启 rke2-server&lt;/li>
+&lt;/ol>
+&lt;p>会重新生成 kube-scheduler 的 static pod manifest 文件 &lt;code>/var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml&lt;/code>&lt;/p>
+&lt;p>会挂载 &lt;code>/etc/rancher/rke2/kube-scheduler-config.yaml&lt;/code> 文件到 pod 中&lt;/p></description></item><item><title>CRI 工作原理</title><link>/posts/cri/</link><pubDate>Sun, 17 Nov 2024 20:30:12 +0800</pubDate><guid>/posts/cri/</guid><description>&lt;h2 id="关于-cri">
+ 关于 CRI
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cri">#&lt;/a>
+&lt;/h2>
+&lt;p>CRI 全称为 &lt;code>Container Runtime Interface&lt;/code>, 容器运行时接口&lt;/p>
+&lt;p>&lt;a href="https://github.com/kubernetes/cri-api">https://github.com/kubernetes/cri-api&lt;/a>&lt;/p>
+&lt;p>containerd 的 &lt;code>criService&lt;/code> 有实现下面这个 &lt;code>RuntimeServiceServer&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// RuntimeServiceServer is the server API for RuntimeService service.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">RuntimeServiceServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Version returns the runtime name, runtime version, and runtime API version.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Version&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RunPodSandbox creates and starts a pod-level sandbox. Runtimes must ensure&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// the sandbox is in the ready state on success.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RunPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopPodSandbox stops any running process that is part of the sandbox and&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaims network resources (e.g., IP addresses) allocated to the sandbox.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If there are any running containers in the sandbox, they must be forcibly&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// terminated.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if all relevant&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// resources have already been reclaimed. kubelet will call StopPodSandbox&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// at least once before calling RemovePodSandbox. It will also attempt to&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaim resources eagerly, as soon as a sandbox is not needed. Hence,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// multiple StopPodSandbox calls are expected.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemovePodSandbox removes the sandbox. If there are any running containers&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// in the sandbox, they must be forcibly terminated and removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the sandbox has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemovePodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStatus returns the status of the PodSandbox. If the PodSandbox is not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandbox returns a list of PodSandboxes.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CreateContainer creates a new container in specified PodSandbox&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CreateContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StartContainer starts the container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StartContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopContainer stops a running container with a grace period (i.e., timeout).&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been stopped.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The runtime must forcibly kill the container after the grace period is&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reached.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemoveContainer removes the container. If the container is running, the&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// container must be forcibly removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemoveContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainers lists all containers by filters.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainers&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStatus returns status of the container. If the container is not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateContainerResources updates ContainerConfig of the container synchronously.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If runtime fails to transactionally update the requested resources, an error is returned.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateContainerResources&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ReopenContainerLog asks runtime to reopen the stdout/stderr log file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// for the container. This is often called after the log file has been&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// rotated. If the container is not running, container runtime can choose&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// to either create a new log file and return nil, or return an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Once it returns error, new container log file MUST NOT be created.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ReopenContainerLog&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ExecSync runs a command in a container synchronously.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ExecSync&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Exec prepares a streaming endpoint to execute a command in the container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Exec&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Attach prepares a streaming endpoint to attach to a running container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Attach&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PortForward prepares a streaming endpoint to forward ports from a PodSandbox.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PortForward&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStats returns stats of the container. If the container does not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainerStats returns stats of all running containers.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStats returns stats of the pod sandbox. If the pod sandbox does not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxStats returns stats of the pod sandboxes matching a filter.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateRuntimeConfig updates the runtime configuration based on the given request.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateRuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Status returns the status of the runtime.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Status&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CheckpointContainer checkpoints a container&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CheckpointContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// GetContainerEvents gets container events from the CRI runtime&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">GetContainerEvents&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetEventsRequest&lt;/span>, &lt;span style="color:#a6e22e">RuntimeService_GetContainerEventsServer&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This list should be static at startup: either the client and server restart together when&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// adding or removing metrics descriptors, or they should not change.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Put differently, if ListPodSandboxMetrics references a name that is not described in the initial&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors call, then the metric will not be broadcasted.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListMetricDescriptors&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxMetrics gets pod sandbox metrics from CRI Runtime&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxMetrics&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RuntimeConfig returns configuration information of the runtime.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// A couple of notes:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - The RuntimeConfigRequest object is not to be confused with the contents of UpdateRuntimeConfigRequest.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The former is for having runtime tell Kubelet what to do, the latter vice versa.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - It is the expectation of the Kubelet that these fields are static for the lifecycle of the Kubelet.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The Kubelet will not re-request the RuntimeConfiguration after startup, and CRI implementations should&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// avoid updating them without a full node reboot.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
  关于 CNI
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cni">#&lt;/a>
 &lt;/h2>
@@ -190,72 +336,7 @@
  默认的 Builder 实例
  &lt;a class="anchor" href="#%e9%bb%98%e8%ae%a4%e7%9a%84-builder-%e5%ae%9e%e4%be%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>安装 Kube Prometheus Stack</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;h2 id="安装-kube-prometheus-stack">
- 安装 kube-prometheus-stack
- &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-kube-prometheus-stack">#&lt;/a>
-&lt;/h2>
-&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/kube-prometheus-stack
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/kube-prometheus-stack
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo update
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheus:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheusSpec:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> additionalScrapeConfigs: []
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> podMonitorSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> ruleSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> probeSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> scrapeConfigSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> serviceMonitorSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># grafana service
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">grafana:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">alertmanager:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="配置说明">
- 配置说明
- &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e8%af%b4%e6%98%8e">#&lt;/a>
-&lt;/h3>
-&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
-&lt;h2 id="安装-rook-ceph">
- 安装 rook ceph
- &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-rook-ceph">#&lt;/a>
-&lt;/h2>
-&lt;p>使用 helm charts 安装 rook ceph&lt;/p>
-&lt;p>&lt;a href="https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/">https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/&lt;/a>&lt;/p>
-&lt;h3 id="安装-ceph-operator">
- 安装 ceph operator
- &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-operator">#&lt;/a>
-&lt;/h3>
-&lt;p>我这里禁用了 cephfs 和 nfs 相关功能&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/rook-ceph/ceph-operator
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/rook-ceph/ceph-operator
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add rook-release https://charts.rook.io/release
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values rook-release/rook-ceph &amp;gt; values.yaml
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">logLevel: DEBUG
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">csi:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsDriver: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsSnapshotter: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableNFSSnapshotter: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="安装-ceph-cluster">
- 安装 ceph cluster
- &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-cluster">#&lt;/a>
-&lt;/h3>
-&lt;p>添加三个 node 上的三个盘作为 osd&lt;/p></description></item><item><title>RKE2 安装 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
+&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>K8s Namespace</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description/></item><item><title>K8s Cgroup</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description/></item><item><title>RKE2 安装 k8s 集群</title><link>/posts/rke2/</link><pubDate>Mon, 01 Jul 2024 21:24:49 +0800</pubDate><guid>/posts/rke2/</guid><description>&lt;p>根据&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04/">创建 bridge 网络&lt;/a>和&lt;a href="../create-vm-with-cloudinit/">创建虚拟机时使用 cloudinit 初始化&lt;/a>创建虚拟机, 并配置静态ip如下&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -349,172 +430,4 @@
  &lt;a class="anchor" href="#reconcile-%e6%97%b6%e4%bc%9a%e8%af%bb%e5%88%b0%e6%97%a7%e6%95%b0%e6%8d%ae%e5%90%97%e5%a6%82%e4%bd%95%e8%a7%a3%e5%86%b3">#&lt;/a>
 &lt;/h3>
 &lt;p>因为读写分离，更新是直接更新 &lt;code>kube-apiserver&lt;/code>，读是从 &lt;code>indexer(local cache)&lt;/code> 中，所以读到的有可能是陈旧的数据。&lt;/p>
-&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p></description></item><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">
- 简介
- &lt;a class="anchor" href="#%e7%ae%80%e4%bb%8b">#&lt;/a>
-&lt;/h2>
-&lt;h3 id="背景">
- 背景
- &lt;a class="anchor" href="#%e8%83%8c%e6%99%af">#&lt;/a>
-&lt;/h3>
-&lt;blockquote>
-&lt;p>在kubevirt中, 通过vmi的spec没办法涵盖所有的&lt;a href="https://libvirt.org/formatdomain.html">libvirt domain xml&lt;/a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML&lt;/p>&lt;/blockquote>
-&lt;h3 id="功能介绍">
- 功能介绍
- &lt;a class="anchor" href="#%e5%8a%9f%e8%83%bd%e4%bb%8b%e7%bb%8d">#&lt;/a>
-&lt;/h3>
-&lt;p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.&lt;/p>
-&lt;p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks&lt;/p>
-&lt;ol>
-&lt;li>&lt;code>OnDefineDomain&lt;/code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm&lt;/li>
-&lt;li>&lt;code>PreCloudInitIso&lt;/code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data&lt;/li>
-&lt;li>&lt;code>Shutdown&lt;/code>: 这个是&lt;code>v1alpha3&lt;/code>版本才支持的&lt;/li>
-&lt;/ol>
-&lt;p>使用hook sidecar功能需要在&lt;code>kv.spec.configuration.developerConfiguration.featureGates&lt;/code>中开启&lt;code>Sidecar&lt;/code>功能&lt;/p>
-&lt;h2 id="源码分析">
- 源码分析
- &lt;a class="anchor" href="#%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90">#&lt;/a>
-&lt;/h2>
-&lt;h3 id="kubevirt-boot-sidecar-介绍">
- kubevirt-boot-sidecar 介绍
- &lt;a class="anchor" href="#kubevirt-boot-sidecar-%e4%bb%8b%e7%bb%8d">#&lt;/a>
-&lt;/h3>
-&lt;p>以下以&lt;a href="https://github.com/go-bai/kubevirt-boot-sidecar">kubevirt-boot-sidecar&lt;/a>为例讲述sidecar的工作流程, 这个sidecar支持修改&lt;code>引导设备顺序(boot)&lt;/code>和&lt;code>开启交互式引导菜单(bootmenu)&lt;/code>&lt;/p>
-&lt;p>&lt;code>kubevirt-boot-sidecar&lt;/code>只实现了&lt;code>OnDefineDomain&lt;/code>, 下面也是主要串一下OnDefineDomain相关的&lt;/p>
-&lt;h3 id="sidecar工作流程">
- sidecar工作流程
- &lt;a class="anchor" href="#sidecar%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b">#&lt;/a>
-&lt;/h3>
-&lt;ol>
-&lt;li>&lt;code>virt-launcher&lt;/code>刚启动时收集所有sidecar信息
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// cmd/virt-launcher/virt-launcher.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hookSidecars&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">pflag&lt;/span>.&lt;span style="color:#a6e22e">Uint&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;hook-sidecars&amp;#34;&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 收集所有sidecar的信息&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hookManager&lt;/span>.&lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookSidecars&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">qemuTimeout&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.OnDefineDomain执行所有的sidecar的OnDefineDomain方法&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 最终用OnDefineDomain编辑后的domainSpec创建domain&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">cmdServerDone&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">startCmdServer&lt;/span>(&lt;span style="color:#a6e22e">cmdclient&lt;/span>.&lt;span style="color:#a6e22e">UninitializedSocketOnGuest&lt;/span>(), &lt;span style="color:#a6e22e">domainManager&lt;/span>, &lt;span style="color:#a6e22e">stopChan&lt;/span>, &lt;span style="color:#a6e22e">options&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// numberOfRequestedHookSidecars为vmi注解 hooks.kubevirt.io/hookSidecars 的数组长度, 在virt-controller生成pod manifest的逻辑中计算得出&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span> = &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) (&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>]&lt;span style="color:#66d9ef">bool&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">timeoutCh&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">After&lt;/span>(&lt;span style="color:#a6e22e">timeout&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> uint(len(&lt;span style="color:#a6e22e">processedSockets&lt;/span>)) &amp;lt; &lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">sockets&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">os&lt;/span>.&lt;span style="color:#a6e22e">ReadDir&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 遍历 /var/run/kubevirt-hooks/ 目录下的 unix socket 文件&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">sockets&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">select&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#f92672">&amp;lt;-&lt;/span>&lt;span style="color:#a6e22e">timeoutCh&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Errorf&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Failed to collect all expected sidecar hook sockets within given timeout&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">default&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">processed&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()]; &lt;span style="color:#a6e22e">processed&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 连接 sock 文件对应的 sidecar server 的 Info 函数获取 server 实现了哪些 hook(onDefineDomain或preCloudInitIso)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">notReady&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processSideCarSocket&lt;/span>(&lt;span style="color:#a6e22e">filepath&lt;/span>.&lt;span style="color:#a6e22e">Join&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()))
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">notReady&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">log&lt;/span>.&lt;span style="color:#a6e22e">Log&lt;/span>.&lt;span style="color:#a6e22e">Info&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Sidecar server might not be ready yet, retrying in the next iteration&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">else&lt;/span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint[onDefineDomain|preCloudInitIso][]*callBackClient{}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 聚合出 onDefineDomain:[&amp;#34;aaaa.sock&amp;#34;,&amp;#34;bbbb.sock&amp;#34;]&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>.&lt;span style="color:#a6e22e">subscribedHookPoints&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()] = append(&lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()], &lt;span style="color:#a6e22e">callBackClient&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()] = &lt;span style="color:#66d9ef">true&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Sleep&lt;/span>(&lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Second&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// {&amp;#34;onDefineDomain&amp;#34;:[{&amp;#34;SocketPath&amp;#34;:&amp;#34;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;#34;, &amp;#34;Version&amp;#34;:&amp;#34;v1alpha3&amp;#34;, &amp;#34;subscribedHookPoints&amp;#34;: [{&amp;#34;name&amp;#34;: &amp;#34;onDefineDomain&amp;#34;, &amp;#34;priority&amp;#34;: 0}]}]}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;li>&lt;code>virt-launcher&lt;/code>启动之后, &lt;code>virt-handler&lt;/code>会执行一些本地盘等相关初始化配置后通过gRPC调用&lt;code>virt-launcher&lt;/code>的&lt;code>SyncVirtualMachine&lt;/code>方法开始创建domain
-&lt;ol>
-&lt;li>&lt;code>SyncVMI&lt;/code>
-&lt;ol>
-&lt;li>&lt;code>Convert_v1_VirtualMachineInstance_To_api_Domain&lt;/code> 将 vmi 转换为 domainSpec&lt;/li>
-&lt;li>&lt;code>lookupOrCreateVirDomain&lt;/code> 先&lt;code>LookupDomainByName&lt;/code>, 如果已存在则直接退出
-&lt;ol>
-&lt;li>&lt;code>preStartHook&lt;/code>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooks&lt;/span>.&lt;span style="color:#a6e22e">GetManager&lt;/span>()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 执行所有的 PreCloudInitIso sidecar&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">cloudInitData&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">PreCloudInitIso&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">cloudInitData&lt;/span>)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;li>&lt;code>setDomainSpecWithHooks&lt;/code>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/virt-launcher/virtwarp/util/libvirt-helper.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStrWithHooks&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span> &lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">Connection&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>, &lt;span style="color:#a6e22e">wantedSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">api&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>) (&lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">VirDomain&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">getHookManager&lt;/span>()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的 OnDefineDomain sidecar&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">wantedSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用 virConn.DomainDefineXML 创建 domain&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStr&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">domainSpec&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">virtwrapApi&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>) (&lt;span style="color:#66d9ef">string&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">xml&lt;/span>.&lt;span style="color:#a6e22e">MarshalIndent&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;\t&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacks&lt;/span>, &lt;span style="color:#a6e22e">found&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">hooksInfo&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainHookPointName&lt;/span>]
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> !&lt;span style="color:#a6e22e">found&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">vmiJSON&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">json&lt;/span>.&lt;span style="color:#a6e22e">Marshal&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callbacks&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span> []&lt;span style="color:#66d9ef">byte&lt;/span>) ([]&lt;span style="color:#66d9ef">byte&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// dial /var/run/kubevirt-hooks/shim-xxxx.sock&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">conn&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">grpcutil&lt;/span>.&lt;span style="color:#a6e22e">DialSocketWithTimeout&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">SocketPath&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">switch&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">client&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">NewCallbacksClient&lt;/span>(&lt;span style="color:#a6e22e">conn&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用sidecar server 的 OnDefineDomain 方法&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">result&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">client&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">ctx&lt;/span>, &lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainParams&lt;/span>{
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">DomainXML&lt;/span>: &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Vmi&lt;/span>: &lt;span style="color:#a6e22e">vmiJSON&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span> = &lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">GetDomainXML&lt;/span>()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;/ol>
-&lt;p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配&lt;code>sidecar-shim&lt;/code>, 下面开始介绍&lt;/p></description></item></channel></rss>
+&lt;p>My cache might be stale if I read from a cache! How should I deal with that?&lt;/p></description></item></channel></rss>

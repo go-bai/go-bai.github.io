@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Prometheus on gobai's blog</title><link>/posts/prometheus/</link><description>Recent content in Prometheus on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/prometheus/index.xml" rel="self" type="application/rss+xml"/><item><title>Node Exporter</title><link>/posts/node-exporter/</link><pubDate>Wed, 03 Jul 2024 22:39:59 +0800</pubDate><guid>/posts/node-exporter/</guid><description>&lt;h2 id="node-exporter-安装">
+ node-exporter 安装
+ &lt;a class="anchor" href="#node-exporter-%e5%ae%89%e8%a3%85">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="生成账号密码的-bcrypt-hash">
+ 生成账号密码的 bcrypt hash
+ &lt;a class="anchor" href="#%e7%94%9f%e6%88%90%e8%b4%a6%e5%8f%b7%e5%af%86%e7%a0%81%e7%9a%84-bcrypt-hash">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>apt install apache2-utils -y
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>生成一个账号密码的 bcrypt hash&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>-B&lt;/code> 强制使用 bcrypt 算法&lt;/li>
+&lt;li>&lt;code>-C 10&lt;/code> 指定 bcrypt 的 cost 值为 10, golang bcrypt 默认 cost 值也为 10&lt;/li>
+&lt;/ul>
+&lt;p>注意修改下面的 &lt;code>username&lt;/code> 和 &lt;code>password&lt;/code> 为你要设置的账号密码&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># htpasswd -nbBC 10 username password&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>username:$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="关于-bcrypt">
+ 关于 bcrypt
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-bcrypt">#&lt;/a>
+&lt;/h4>
+&lt;p>格式为 &lt;code>$2&amp;lt;a/b/x/y&amp;gt;$[cost]$[22 character salt][31 character hash]&lt;/code>&lt;/p>
+&lt;p>例如&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">\_&lt;/span>_/&lt;span style="color:#ae81ff">\/&lt;/span> &lt;span style="color:#ae81ff">\_&lt;/span>___________________/&lt;span style="color:#ae81ff">\_&lt;/span>____________________________/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Alg Cost Salt Hash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="运行-node-exporter">
+ 运行 node-exporter
+ &lt;a class="anchor" href="#%e8%bf%90%e8%a1%8c-node-exporter">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>创建 &lt;code>prometheus&lt;/code> 配置文件 &lt;code>/etc/prometheus/web.yml&lt;/code>&lt;/li>
+&lt;li>创建 &lt;code>docker-compose.yml&lt;/code> 文件&lt;/li>
+&lt;li>运行 docker compose&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>PASS&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/prometheus
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/web.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">basic_auth_users:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> # username: password
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheus: ${PASS}
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/docker-compose.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">services:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> node-exporter:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> image: quay.io/prometheus/node-exporter:latest
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> container_name: node-exporter
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> command: 
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--path.rootfs=/host&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--web.config.file=/etc/prometheus/web.yml&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> network_mode: &amp;#34;host&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> pid: host
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> restart: always
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> volumes:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#39;/:/host:ro,rslave&amp;#39;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - /etc/prometheus/web.yml:/etc/prometheus/web.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>docker compose -f /etc/prometheus/docker-compose.yml up -d
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="在-prometheus-中配置指标收集">
+ 在 prometheus 中配置指标收集
+ &lt;a class="anchor" href="#%e5%9c%a8-prometheus-%e4%b8%ad%e9%85%8d%e7%bd%ae%e6%8c%87%e6%a0%87%e6%94%b6%e9%9b%86">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="方式一直接修改-prometheus-配置">
+ 方式一：直接修改 prometheus 配置
+ &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
+&lt;/h3>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>安装 Kube Prometheus Stack</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;h2 id="安装-kube-prometheus-stack">
+ 安装 kube-prometheus-stack
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-kube-prometheus-stack">#&lt;/a>
+&lt;/h2>
+&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo update
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheus:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheusSpec:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> additionalScrapeConfigs: []
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> podMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> ruleSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> probeSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> scrapeConfigSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> serviceMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># grafana service
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">grafana:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">alertmanager:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="配置说明">
+ 配置说明
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e8%af%b4%e6%98%8e">#&lt;/a>
+&lt;/h3>
+&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item></channel></rss>

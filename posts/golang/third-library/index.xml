@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>三方库 on gobai's blog</title><link>/posts/golang/third-library/</link><description>Recent content in 三方库 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/third-library/index.xml" rel="self" type="application/rss+xml"/><item><title>sqlx vs xorm</title><link>/posts/sqlx-vs-xorm/</link><pubDate>Sat, 09 Mar 2024 10:49:09 +0800</pubDate><guid>/posts/sqlx-vs-xorm/</guid><description>&lt;h2 id="初始化演示环境">
+ 初始化演示环境
+ &lt;a class="anchor" href="#%e5%88%9d%e5%a7%8b%e5%8c%96%e6%bc%94%e7%a4%ba%e7%8e%af%e5%a2%83">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="使用docker部署">
+ 使用docker部署
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8docker%e9%83%a8%e7%bd%b2">#&lt;/a>
+&lt;/h3>
+&lt;p>部署的当前时间最新版本&lt;code>postgres:16.2&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>docker run -d --name pgsql &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> -e POSTGRES_USER&lt;span style="color:#f92672">=&lt;/span>admin &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> -e POSTGRES_PASSWORD&lt;span style="color:#f92672">=&lt;/span>admin &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> -e POSTGRES_DB&lt;span style="color:#f92672">=&lt;/span>testdb &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> -p 15432:5432 &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> postgres:16.2
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="使用psql连接">
+ 使用&lt;code>psql&lt;/code>连接
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8psql%e8%bf%9e%e6%8e%a5">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>docker exec -it pgsql psql -U admin -d testdb
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="初始化uservps和host表">
+ 初始化&lt;code>user&lt;/code>,&lt;code>vps&lt;/code>和&lt;code>host&lt;/code>表
+ &lt;a class="anchor" href="#%e5%88%9d%e5%a7%8b%e5%8c%96uservps%e5%92%8chost%e8%a1%a8">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sql" data-lang="sql">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">CREATE&lt;/span> &lt;span style="color:#66d9ef">TABLE&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id bigserial &lt;span style="color:#66d9ef">PRIMARY&lt;/span> &lt;span style="color:#66d9ef">KEY&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> username VARCHAR(&lt;span style="color:#ae81ff">255&lt;/span>) &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> password VARCHAR(&lt;span style="color:#ae81ff">255&lt;/span>) &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">CREATE&lt;/span> &lt;span style="color:#66d9ef">TABLE&lt;/span> &lt;span style="color:#e6db74">&amp;#34;host&amp;#34;&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id bigserial &lt;span style="color:#66d9ef">PRIMARY&lt;/span> &lt;span style="color:#66d9ef">KEY&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> hostname VARCHAR(&lt;span style="color:#ae81ff">255&lt;/span>) &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">CREATE&lt;/span> &lt;span style="color:#66d9ef">TABLE&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vps&amp;#34;&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id bigserial &lt;span style="color:#66d9ef">PRIMARY&lt;/span> &lt;span style="color:#66d9ef">KEY&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> user_id bigint &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> host_id bigint &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name VARCHAR(&lt;span style="color:#ae81ff">255&lt;/span>) &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys_disk jsonb &lt;span style="color:#66d9ef">NOT&lt;/span> &lt;span style="color:#66d9ef">NULL&lt;/span> &lt;span style="color:#66d9ef">DEFAULT&lt;/span> &lt;span style="color:#e6db74">&amp;#39;{}&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="查看创建出的表">
+ 查看创建出的表
+ &lt;a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e5%88%9b%e5%bb%ba%e5%87%ba%e7%9a%84%e8%a1%a8">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>testdb&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#75715e"># \z&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Access privileges
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Schema | Name | Type | Access privileges | Column privileges | Policies
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>--------+-------------+----------+-------------------+-------------------+----------
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | host | table | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | host_id_seq | sequence | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | user | table | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | user_id_seq | sequence | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | vps | table | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public | vps_id_seq | sequence | | |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#ae81ff">6&lt;/span> rows&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>testdb&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#75715e"># \d user&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Table &lt;span style="color:#e6db74">&amp;#34;public.user&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Column | Type | Collation | Nullable | Default
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>----------+------------------------+-----------+----------+----------------------------------
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id | bigint | | not null | nextval&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#e6db74">&amp;#39;user_id_seq&amp;#39;&lt;/span>::regclass&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> username | character varying&lt;span style="color:#f92672">(&lt;/span>255&lt;span style="color:#f92672">)&lt;/span> | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> password | character varying&lt;span style="color:#f92672">(&lt;/span>255&lt;span style="color:#f92672">)&lt;/span> | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Indexes:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;user_pkey&amp;#34;&lt;/span> PRIMARY KEY, btree &lt;span style="color:#f92672">(&lt;/span>id&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>testdb&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#75715e"># \d host&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Table &lt;span style="color:#e6db74">&amp;#34;public.host&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Column | Type | Collation | Nullable | Default
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>----------+------------------------+-----------+----------+----------------------------------
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id | bigint | | not null | nextval&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#e6db74">&amp;#39;host_id_seq&amp;#39;&lt;/span>::regclass&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> hostname | character varying&lt;span style="color:#f92672">(&lt;/span>255&lt;span style="color:#f92672">)&lt;/span> | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Indexes:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;host_pkey&amp;#34;&lt;/span> PRIMARY KEY, btree &lt;span style="color:#f92672">(&lt;/span>id&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>testdb&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#75715e"># \d vps&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Table &lt;span style="color:#e6db74">&amp;#34;public.vps&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Column | Type | Collation | Nullable | Default
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>----------+------------------------+-----------+----------+---------------------------------
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id | bigint | | not null | nextval&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#e6db74">&amp;#39;vps_id_seq&amp;#39;&lt;/span>::regclass&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> user_id | bigint | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> host_id | bigint | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name | character varying&lt;span style="color:#f92672">(&lt;/span>255&lt;span style="color:#f92672">)&lt;/span> | | not null |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys_disk | jsonb | | not null | &lt;span style="color:#e6db74">&amp;#39;{}&amp;#39;&lt;/span>::jsonb
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Indexes:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;vps_pkey&amp;#34;&lt;/span> PRIMARY KEY, btree &lt;span style="color:#f92672">(&lt;/span>id&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="初始化数据">
+ 初始化数据
+ &lt;a class="anchor" href="#%e5%88%9d%e5%a7%8b%e5%8c%96%e6%95%b0%e6%8d%ae">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sql" data-lang="sql">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- 插入用户数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> (username, password) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#e6db74">&amp;#39;user1&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;password1&amp;#39;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#e6db74">&amp;#39;user2&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;password2&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- 插入主机数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;host&amp;#34;&lt;/span> (hostname) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#e6db74">&amp;#39;host1&amp;#39;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#e6db74">&amp;#39;host2&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- user1 在 host1 上创建一个 VPS
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vps&amp;#34;&lt;/span> (user_id, host_id, name, sys_disk) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ((&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> username &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;user1&amp;#39;&lt;/span>), (&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#66d9ef">host&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> hostname &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;host1&amp;#39;&lt;/span>), &lt;span style="color:#e6db74">&amp;#39;vps_user1_host1&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;disk_size&amp;#34;: 50}&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- user2 在 host1 上创建一个 VPS
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vps&amp;#34;&lt;/span> (user_id, host_id, name, sys_disk) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ((&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> username &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;user2&amp;#39;&lt;/span>), (&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#66d9ef">host&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> hostname &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;host1&amp;#39;&lt;/span>), &lt;span style="color:#e6db74">&amp;#39;vps_user2_host1&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;disk_size&amp;#34;: 60}&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- user1 在 host2 上创建一个 VPS
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vps&amp;#34;&lt;/span> (user_id, host_id, name, sys_disk) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ((&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> username &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;user1&amp;#39;&lt;/span>), (&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#66d9ef">host&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> hostname &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;host2&amp;#39;&lt;/span>), &lt;span style="color:#e6db74">&amp;#39;vps_user1_host2&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;disk_size&amp;#34;: 70}&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">-- user2 在 host2 上创建一个 VPS
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">INSERT&lt;/span> &lt;span style="color:#66d9ef">INTO&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vps&amp;#34;&lt;/span> (user_id, host_id, name, sys_disk) &lt;span style="color:#66d9ef">VALUES&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ((&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> username &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;user2&amp;#39;&lt;/span>), (&lt;span style="color:#66d9ef">SELECT&lt;/span> id &lt;span style="color:#66d9ef">FROM&lt;/span> &lt;span style="color:#66d9ef">host&lt;/span> &lt;span style="color:#66d9ef">WHERE&lt;/span> hostname &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;host2&amp;#39;&lt;/span>), &lt;span style="color:#e6db74">&amp;#39;vps_user2_host2&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;{&amp;#34;disk_size&amp;#34;: 80}&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="关于-databasesql">
+ 关于 &lt;code>database/sql&lt;/code>
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-databasesql">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>database/sql&lt;/code>提供了操作SQL数据库的通用接口, 需要结合&lt;code>database driver&lt;/code>同时使用, 这里是一些&lt;a href="https://go.dev/wiki/SQLDrivers">驱动列表&lt;/a>&lt;/p></description></item></channel></rss>

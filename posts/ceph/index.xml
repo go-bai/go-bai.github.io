@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ceph on gobai's blog</title><link>/posts/ceph/</link><description>Recent content in Ceph on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/ceph/index.xml" rel="self" type="application/rss+xml"/><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
+&lt;h2 id="安装-rook-ceph">
+ 安装 rook ceph
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-rook-ceph">#&lt;/a>
+&lt;/h2>
+&lt;p>使用 helm charts 安装 rook ceph&lt;/p>
+&lt;p>&lt;a href="https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/">https://rook.io/docs/rook/latest-release/Helm-Charts/helm-charts/&lt;/a>&lt;/p>
+&lt;h3 id="安装-ceph-operator">
+ 安装 ceph operator
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-operator">#&lt;/a>
+&lt;/h3>
+&lt;p>我这里禁用了 cephfs 和 nfs 相关功能&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/rook-ceph/ceph-operator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/rook-ceph/ceph-operator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add rook-release https://charts.rook.io/release
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values rook-release/rook-ceph &amp;gt; values.yaml
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">logLevel: DEBUG
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">csi:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsDriver: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableCephfsSnapshotter: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enableNFSSnapshotter: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f custom-values.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="安装-ceph-cluster">
+ 安装 ceph cluster
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-ceph-cluster">#&lt;/a>
+&lt;/h3>
+&lt;p>添加三个 node 上的三个盘作为 osd&lt;/p></description></item></channel></rss>

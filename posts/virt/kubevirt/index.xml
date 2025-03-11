@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>KubeVirt on gobai's blog</title><link>/posts/virt/kubevirt/</link><description>Recent content in KubeVirt on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/virt/kubevirt/index.xml" rel="self" type="application/rss+xml"/><item><title>Kubevirt Hook Sidecar</title><link>/posts/kubevirt-sidecar/</link><pubDate>Sun, 12 May 2024 14:37:18 +0800</pubDate><guid>/posts/kubevirt-sidecar/</guid><description>&lt;h2 id="简介">
+ 简介
+ &lt;a class="anchor" href="#%e7%ae%80%e4%bb%8b">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="背景">
+ 背景
+ &lt;a class="anchor" href="#%e8%83%8c%e6%99%af">#&lt;/a>
+&lt;/h3>
+&lt;blockquote>
+&lt;p>在kubevirt中, 通过vmi的spec没办法涵盖所有的&lt;a href="https://libvirt.org/formatdomain.html">libvirt domain xml&lt;/a>元素, 所以有了hook sidecar功能来允许我们在define domain之前自定义domainSpecXML&lt;/p>&lt;/blockquote>
+&lt;h3 id="功能介绍">
+ 功能介绍
+ &lt;a class="anchor" href="#%e5%8a%9f%e8%83%bd%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>在kubevirt中, Hook Sidecar容器是sidecar container(和main application container跑在同一个pod中)用来在vm初始化完成前执行一些自定义操作.&lt;/p>
+&lt;p>sidecar container与main container(compute)通过gRPC通讯, 有两种主要的sidecar hooks&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>OnDefineDomain&lt;/code>: 这个hook帮助自定义libvirt的XML, 并通过gRPC协议返回最新的XML以创建vm&lt;/li>
+&lt;li>&lt;code>PreCloudInitIso&lt;/code>: 这个hook帮助定义cloud-init配置, 它运行并返回最新的cloud-init data&lt;/li>
+&lt;li>&lt;code>Shutdown&lt;/code>: 这个是&lt;code>v1alpha3&lt;/code>版本才支持的&lt;/li>
+&lt;/ol>
+&lt;p>使用hook sidecar功能需要在&lt;code>kv.spec.configuration.developerConfiguration.featureGates&lt;/code>中开启&lt;code>Sidecar&lt;/code>功能&lt;/p>
+&lt;h2 id="源码分析">
+ 源码分析
+ &lt;a class="anchor" href="#%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="kubevirt-boot-sidecar-介绍">
+ kubevirt-boot-sidecar 介绍
+ &lt;a class="anchor" href="#kubevirt-boot-sidecar-%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>以下以&lt;a href="https://github.com/go-bai/kubevirt-boot-sidecar">kubevirt-boot-sidecar&lt;/a>为例讲述sidecar的工作流程, 这个sidecar支持修改&lt;code>引导设备顺序(boot)&lt;/code>和&lt;code>开启交互式引导菜单(bootmenu)&lt;/code>&lt;/p>
+&lt;p>&lt;code>kubevirt-boot-sidecar&lt;/code>只实现了&lt;code>OnDefineDomain&lt;/code>, 下面也是主要串一下OnDefineDomain相关的&lt;/p>
+&lt;h3 id="sidecar工作流程">
+ sidecar工作流程
+ &lt;a class="anchor" href="#sidecar%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>&lt;code>virt-launcher&lt;/code>刚启动时收集所有sidecar信息
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// cmd/virt-launcher/virt-launcher.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hookSidecars&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">pflag&lt;/span>.&lt;span style="color:#a6e22e">Uint&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;hook-sidecars&amp;#34;&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;Number of requested hook sidecars, virt-launcher will wait for all of them to become available&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 收集所有sidecar的信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hookManager&lt;/span>.&lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookSidecars&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">qemuTimeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 启动 cmd server, 这里面有 SyncVirtualMachine 方法, 具体的实现在 func (l *LibvirtDomainManager) SyncVMI&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// virt-handler在初始化完虚拟机硬盘等之后会通过 SyncVirtualMachine 调用SyncVMI函数开始创建domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// SyncVMI将vmi spec转换为domainSpec, 然后调用hooksManager.OnDefineDomain执行所有的sidecar的OnDefineDomain方法&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 最终用OnDefineDomain编辑后的domainSpec创建domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">cmdServerDone&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">startCmdServer&lt;/span>(&lt;span style="color:#a6e22e">cmdclient&lt;/span>.&lt;span style="color:#a6e22e">UninitializedSocketOnGuest&lt;/span>(), &lt;span style="color:#a6e22e">domainManager&lt;/span>, &lt;span style="color:#a6e22e">stopChan&lt;/span>, &lt;span style="color:#a6e22e">options&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// numberOfRequestedHookSidecars为vmi注解 hooks.kubevirt.io/hookSidecars 的数组长度, 在virt-controller生成pod manifest的逻辑中计算得出&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">Collect&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span> = &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">collectSideCarSockets&lt;/span>(&lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span>, &lt;span style="color:#a6e22e">timeout&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Duration&lt;/span>) (&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>][]&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">map&lt;/span>[&lt;span style="color:#66d9ef">string&lt;/span>]&lt;span style="color:#66d9ef">bool&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">timeoutCh&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">After&lt;/span>(&lt;span style="color:#a6e22e">timeout&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> uint(len(&lt;span style="color:#a6e22e">processedSockets&lt;/span>)) &amp;lt; &lt;span style="color:#a6e22e">numberOfRequestedHookSidecars&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">sockets&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">os&lt;/span>.&lt;span style="color:#a6e22e">ReadDir&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 遍历 /var/run/kubevirt-hooks/ 目录下的 unix socket 文件&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">sockets&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">select&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#f92672">&amp;lt;-&lt;/span>&lt;span style="color:#a6e22e">timeoutCh&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Errorf&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Failed to collect all expected sidecar hook sockets within given timeout&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">default&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">processed&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()]; &lt;span style="color:#a6e22e">processed&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 连接 sock 文件对应的 sidecar server 的 Info 函数获取 server 实现了哪些 hook(onDefineDomain或preCloudInitIso)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">notReady&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">processSideCarSocket&lt;/span>(&lt;span style="color:#a6e22e">filepath&lt;/span>.&lt;span style="color:#a6e22e">Join&lt;/span>(&lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">hookSocketSharedDirectory&lt;/span>, &lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">notReady&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">log&lt;/span>.&lt;span style="color:#a6e22e">Log&lt;/span>.&lt;span style="color:#a6e22e">Info&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Sidecar server might not be ready yet, retrying in the next iteration&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">else&lt;/span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// callbacksPerHookPoint[onDefineDomain|preCloudInitIso][]*callBackClient{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 聚合出 onDefineDomain:[&amp;#34;aaaa.sock&amp;#34;,&amp;#34;bbbb.sock&amp;#34;]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callBackClient&lt;/span>.&lt;span style="color:#a6e22e">subscribedHookPoints&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()] = append(&lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">subscribedHookPoint&lt;/span>.&lt;span style="color:#a6e22e">GetName&lt;/span>()], &lt;span style="color:#a6e22e">callBackClient&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">processedSockets&lt;/span>[&lt;span style="color:#a6e22e">socket&lt;/span>.&lt;span style="color:#a6e22e">Name&lt;/span>()] = &lt;span style="color:#66d9ef">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Sleep&lt;/span>(&lt;span style="color:#a6e22e">time&lt;/span>.&lt;span style="color:#a6e22e">Second&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// {&amp;#34;onDefineDomain&amp;#34;:[{&amp;#34;SocketPath&amp;#34;:&amp;#34;/var/run/kubevirt-hooks/shim-xxxx.sock&amp;#34;, &amp;#34;Version&amp;#34;:&amp;#34;v1alpha3&amp;#34;, &amp;#34;subscribedHookPoints&amp;#34;: [{&amp;#34;name&amp;#34;: &amp;#34;onDefineDomain&amp;#34;, &amp;#34;priority&amp;#34;: 0}]}]}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">callbacksPerHookPoint&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>&lt;code>virt-launcher&lt;/code>启动之后, &lt;code>virt-handler&lt;/code>会执行一些本地盘等相关初始化配置后通过gRPC调用&lt;code>virt-launcher&lt;/code>的&lt;code>SyncVirtualMachine&lt;/code>方法开始创建domain
+&lt;ol>
+&lt;li>&lt;code>SyncVMI&lt;/code>
+&lt;ol>
+&lt;li>&lt;code>Convert_v1_VirtualMachineInstance_To_api_Domain&lt;/code> 将 vmi 转换为 domainSpec&lt;/li>
+&lt;li>&lt;code>lookupOrCreateVirDomain&lt;/code> 先&lt;code>LookupDomainByName&lt;/code>, 如果已存在则直接退出
+&lt;ol>
+&lt;li>&lt;code>preStartHook&lt;/code>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooks&lt;/span>.&lt;span style="color:#a6e22e">GetManager&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 执行所有的 PreCloudInitIso sidecar&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">cloudInitData&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">PreCloudInitIso&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">cloudInitData&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>&lt;code>setDomainSpecWithHooks&lt;/code>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// pkg/virt-launcher/virtwarp/util/libvirt-helper.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStrWithHooks&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span> &lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">Connection&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>, &lt;span style="color:#a6e22e">wantedSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">api&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>) (&lt;span style="color:#a6e22e">cli&lt;/span>.&lt;span style="color:#a6e22e">VirDomain&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">hooksManager&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">getHookManager&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的 OnDefineDomain sidecar&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksManager&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">wantedSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用 virConn.DomainDefineXML 创建 domain&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">SetDomainSpecStr&lt;/span>(&lt;span style="color:#a6e22e">virConn&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span>, &lt;span style="color:#a6e22e">domainSpec&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">virtwrapApi&lt;/span>.&lt;span style="color:#a6e22e">DomainSpec&lt;/span>, &lt;span style="color:#a6e22e">vmi&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">v1&lt;/span>.&lt;span style="color:#a6e22e">VirtualMachineInstance&lt;/span>) (&lt;span style="color:#66d9ef">string&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">xml&lt;/span>.&lt;span style="color:#a6e22e">MarshalIndent&lt;/span>(&lt;span style="color:#a6e22e">domainSpec&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;\t&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacks&lt;/span>, &lt;span style="color:#a6e22e">found&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">CallbacksPerHookPoint&lt;/span>[&lt;span style="color:#a6e22e">hooksInfo&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainHookPointName&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> !&lt;span style="color:#a6e22e">found&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">vmiJSON&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">json&lt;/span>.&lt;span style="color:#a6e22e">Marshal&lt;/span>(&lt;span style="color:#a6e22e">vmi&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> &lt;span style="color:#a6e22e">_&lt;/span>, &lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#66d9ef">range&lt;/span> &lt;span style="color:#a6e22e">callbacks&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 执行所有的sidecar OnDefineDomain函数, 一次次编辑domainSpecXML&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> = &lt;span style="color:#a6e22e">m&lt;/span>.&lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> string(&lt;span style="color:#a6e22e">domainSpecXML&lt;/span>), &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// /pkg/hooks/manager.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> (&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">hookManager&lt;/span>) &lt;span style="color:#a6e22e">onDefineDomainCallback&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">callBackClient&lt;/span>, &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#a6e22e">vmiJSON&lt;/span> []&lt;span style="color:#66d9ef">byte&lt;/span>) ([]&lt;span style="color:#66d9ef">byte&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// dial /var/run/kubevirt-hooks/shim-xxxx.sock&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">conn&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">grpcutil&lt;/span>.&lt;span style="color:#a6e22e">DialSocketWithTimeout&lt;/span>(&lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">SocketPath&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">switch&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">case&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">Version&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">client&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">NewCallbacksClient&lt;/span>(&lt;span style="color:#a6e22e">conn&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 调用sidecar server 的 OnDefineDomain 方法&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">result&lt;/span>, &lt;span style="color:#a6e22e">err&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">client&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomain&lt;/span>(&lt;span style="color:#a6e22e">ctx&lt;/span>, &lt;span style="color:#f92672">&amp;amp;&lt;/span>&lt;span style="color:#a6e22e">hooksV1alpha3&lt;/span>.&lt;span style="color:#a6e22e">OnDefineDomainParams&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">DomainXML&lt;/span>: &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Vmi&lt;/span>: &lt;span style="color:#a6e22e">vmiJSON&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span> = &lt;span style="color:#a6e22e">result&lt;/span>.&lt;span style="color:#a6e22e">GetDomainXML&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">domainSpecXML&lt;/span>, &lt;span style="color:#66d9ef">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;/li>
+&lt;/ol>
+&lt;p>会发现上面主要是sidecar client视角, 没有介绍sidecar server在哪实现的, 最新的解决方案是搭配&lt;code>sidecar-shim&lt;/code>, 下面开始介绍&lt;/p></description></item></channel></rss>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>语言基础 on gobai's blog</title><link>/posts/golang/language-basics/</link><description>Recent content in 语言基础 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/language-basics/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+ 内存逃逸
+ &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h2>
+&lt;p>可以通过 &lt;code>go build -gcflags=-m main.go&lt;/code> 分析内存逃逸&lt;/p>
+&lt;p>编译阶段不能确定大小的变量以及生命周期超出函数的局部变量数据都会逃逸到堆中。&lt;/p>
+&lt;h3 id="1-指针逃逸">
+ 1. 指针逃逸
+ &lt;a class="anchor" href="#1-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h3>
+&lt;p>算是最常见的了，函数中初始化一个局部变量，返回了这个变量的指针，因为指针的存在，变量的内存不能随着函数结束而回收，因此只能分配在堆上。&lt;/p>
+&lt;h3 id="2-interface-动态类型逃逸">
+ 2. &lt;code>interface{}&lt;/code> 动态类型逃逸
+ &lt;a class="anchor" href="#2-interface-%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h3>
+&lt;p>如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
+&lt;p>如传递给 &lt;code>fmt.Println()&lt;/code> 的参数&lt;/p>
+&lt;h3 id="3-栈空间不足">
+ 3. 栈空间不足
+ &lt;a class="anchor" href="#3-%e6%a0%88%e7%a9%ba%e9%97%b4%e4%b8%8d%e8%b6%b3">#&lt;/a>
+&lt;/h3>
+&lt;p>分配大变量，如大 slice，会有可能栈空间不足，然后编译器将其分配在堆上&lt;/p>
+&lt;p>tcmalloc&lt;/p>
+&lt;h3 id="4-闭包">
+ 4. 闭包
+ &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85">#&lt;/a>
+&lt;/h3>
+&lt;p>当一个闭包函数引用了外部变量并且会执行后续读写操作，则变量会被逃逸到堆上。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>() &lt;span style="color:#66d9ef">func&lt;/span>() &lt;span style="color:#66d9ef">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">n&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span> &lt;span style="color:#75715e">// move to heap&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">func&lt;/span>() &lt;span style="color:#66d9ef">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#a6e22e">n&lt;/span>&lt;span style="color:#f92672">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">n&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">in&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	println(&lt;span style="color:#a6e22e">in&lt;/span>()) &lt;span style="color:#75715e">// 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>GC 垃圾回收</title><link>/posts/golang-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/golang-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+ GC 垃圾回收
+ &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
+&lt;/h2>
+&lt;p>分配在栈上的数据，随着函数调用栈的销毁便释放了自身占用的内存，可以被程序重复利用。&lt;/p>
+&lt;p>协程栈也是从堆上分配的，也在 mheap 管理的 span 中，mspan.spanState 会记录该 span 是用作堆内存还是栈内存。&lt;/p>
+&lt;p>而分配在堆上的数据，他们占用的内存需要程序主动释放才可以重新使用，否则称为垃圾。&lt;/p>
+&lt;h3 id="三色标记原理">
+ 三色标记原理
+ &lt;a class="anchor" href="#%e4%b8%89%e8%89%b2%e6%a0%87%e8%ae%b0%e5%8e%9f%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;p>三色标记法，白色，灰色和黑色&lt;/p>
+&lt;ol>
+&lt;li>垃圾回收开始会把所有数据（栈、堆、数据段）都标记为白色&lt;/li>
+&lt;li>然后把直接追踪(扫描全局数据区和栈区)到的 root 节点标记为灰色，灰色代表基于当前节点展开的追踪还未完成。&lt;/li>
+&lt;li>基于某个节点的追踪任务完成后标记为黑色，标识有用并且无需基于它再追踪。&lt;/li>
+&lt;li>没有灰色节点后意味着标记工作结束。此时有用的数据为黑色，垃圾都是白色，在清除阶段回收这些白色的垃圾即可。&lt;/li>
+&lt;/ol>
+&lt;h3 id="混合写屏障">
+ 混合写屏障
+ &lt;a class="anchor" href="#%e6%b7%b7%e5%90%88%e5%86%99%e5%b1%8f%e9%9a%9c">#&lt;/a>
+&lt;/h3>
+&lt;p>通过 &lt;code>混合写屏障&lt;/code> 防止GC过程中并发修改对象的问题。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>混合写屏障&lt;/code> 继承了插入写屏障的优点，起始时无需 STW 打快照，直接并发扫描垃圾即可&lt;/li>
+&lt;li>&lt;code>混合写屏障&lt;/code> 继承了删除写屏障的优点，赋值器是黑色赋值器，GC期间，任何在栈上创建的新对象，均为黑色。扫描过后就不需要扫描了，这样就消除了插入写屏障最后 STW 的重新扫描栈了。&lt;/li>
+&lt;li>&lt;code>混合写屏障&lt;/code> 扫描栈虽然不用 STW，但是扫描某一个具体的栈的时候，还是要停止这个 goroutine 赋值器的工作（针对一个 goroutine 来说，是暂停扫的，要么全灰，要么全黑，是原子状态切换的）&lt;/li>
+&lt;/ul>
+&lt;h3 id="gc-触发时机">
+ GC 触发时机
+ &lt;a class="anchor" href="#gc-%e8%a7%a6%e5%8f%91%e6%97%b6%e6%9c%ba">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>主动触发：调用 &lt;code>runtime.GC&lt;/code>&lt;/li>
+&lt;li>被动触发：使用系统监控 &lt;code>sysmon&lt;/code>，该触发条件由 &lt;code>runtime.forcegcperiod&lt;/code> 控制，默认为 2 分钟。当超过时间没有产生任何 GC 时，强制触发 GC。使用步调算法。。。&lt;/li>
+&lt;/ol>
+&lt;h3 id="gc-流程">
+ GC 流程
+ &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;p>GC 划分为五个阶段&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+ make 和 new 的区别
+ &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
+&lt;/h2>
+&lt;blockquote>
+&lt;p>都是内存分配函数&lt;/p>&lt;/blockquote>
+&lt;h3 id="1-基本用途">
+ 1. 基本用途
+ &lt;a class="anchor" href="#1-%e5%9f%ba%e6%9c%ac%e7%94%a8%e9%80%94">#&lt;/a>
+&lt;/h3>
+&lt;p>make 仅用于创建 &lt;code>slice&lt;/code>、&lt;code>map&lt;/code> 和 &lt;code>channel&lt;/code>，并且会初始化这些类型的内部数据结构，返回初始化后的值类型
+new 可用于任何类型，返回指向该类型零值的指针&lt;/p>
+&lt;h3 id="2-返回值">
+ 2. 返回值
+ &lt;a class="anchor" href="#2-%e8%bf%94%e5%9b%9e%e5%80%bc">#&lt;/a>
+&lt;/h3>
+&lt;p>make返回初始化后的值类型
+new返回指向该类型零值的指针&lt;/p>
+&lt;h3 id="3-内存分配">
+ 3. 内存分配
+ &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>make会分配内存并初始化数据结构
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/golang-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/golang-gmp/</guid><description>&lt;h2 id="csp">
+ CSP
+ &lt;a class="anchor" href="#csp">#&lt;/a>
+&lt;/h2>
+&lt;p>CSP(Communicating Sequential Processes) 被认为是 Go 在并发编程中成功的关键，论文指出应该重视 input 和 output 原语，尤其是并发编程的代码。&lt;/p>
+&lt;h2 id="gmp介绍">
+ GMP介绍
+ &lt;a class="anchor" href="#gmp%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>G M P 是 Go 调度器的三个核心组件&lt;/p>
+&lt;h3 id="g-对应-goroutine-属于用户线程或绿色线程">
+ G 对应 goroutine, 属于用户线程或绿色线程
+ &lt;a class="anchor" href="#g-%e5%af%b9%e5%ba%94-goroutine-%e5%b1%9e%e4%ba%8e%e7%94%a8%e6%88%b7%e7%ba%bf%e7%a8%8b%e6%88%96%e7%bb%bf%e8%89%b2%e7%ba%bf%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">g&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">stack&lt;/span> &lt;span style="color:#a6e22e">stack&lt;/span> &lt;span style="color:#75715e">// goroutine 使用的栈，存储了栈的范围 [lo, hi)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#75715e">// 当前与 g 绑定的 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sched&lt;/span> &lt;span style="color:#a6e22e">gobuf&lt;/span> &lt;span style="color:#75715e">// goroutine 的运行现场, 存储各种寄存器的值，如 PC、SP等寄存器，M恢复现场时需要用到&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="m-对应内核线程">
+ M 对应内核线程
+ &lt;a class="anchor" href="#m-%e5%af%b9%e5%ba%94%e5%86%85%e6%a0%b8%e7%ba%bf%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;p>M 代表一个工作线程或者说系统线程，G需要调度到M上才能执行，和 P 绑定去获取 G 来执行。&lt;/p>
+&lt;p>它保存了 M 自身使用的栈信息，当前正在M上执行的G信息，与之绑定的 P 信息。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// m 代表工作线程，保存了自身使用的栈信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 记录工作线程（也就是内核线程）使用的栈信息。在执行调度代码时需要使用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 执行用户 goroutine 代码时，使用用户 goroutine 自己的栈，因此调度时会发生栈的切换&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">g0&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">g&lt;/span> &lt;span style="color:#75715e">// goroutine with scheduling stack/&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 通过 tls 结构体实现 m 与工作线程的绑定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 这里是线程本地存储&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">tls&lt;/span> [&lt;span style="color:#ae81ff">6&lt;/span>]&lt;span style="color:#66d9ef">uintptr&lt;/span> &lt;span style="color:#75715e">// thread-local storage (for x86 extern register)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 当前工作线程绑定的 p&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">p&lt;/span> &lt;span style="color:#a6e22e">puintptr&lt;/span> &lt;span style="color:#75715e">// attached p for executing go code (nil if not executing go code)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 工作线程 id&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">thread&lt;/span> &lt;span style="color:#66d9ef">uintptr&lt;/span> &lt;span style="color:#75715e">// thread handle&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 记录所有工作线程的链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">alllink&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#75715e">// on allm&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="p-是调度队列包含缓存信息">
+ P 是调度队列，包含缓存信息
+ &lt;a class="anchor" href="#p-%e6%98%af%e8%b0%83%e5%ba%a6%e9%98%9f%e5%88%97%e5%8c%85%e5%90%ab%e7%bc%93%e5%ad%98%e4%bf%a1%e6%81%af">#&lt;/a>
+&lt;/h3>
+&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item></channel></rss>

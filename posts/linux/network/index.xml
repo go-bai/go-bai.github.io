@@ -43,7 +43,7 @@
  四表
  &lt;a class="anchor" href="#%e5%9b%9b%e8%a1%a8">#&lt;/a>
 &lt;/h3>
-&lt;p>具有相同功能的规则的集合叫做 &lt;code>表&lt;/code>，iptables 定义了 四种表。&lt;/p></description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>&lt;blockquote>
+&lt;p>具有相同功能的规则的集合叫做 &lt;code>表&lt;/code>，iptables 定义了 四种表。&lt;/p></description></item><item><title>Linux Bridge</title><link>/posts/linux-bridge/</link><pubDate>Sun, 29 Dec 2024 15:40:46 +0800</pubDate><guid>/posts/linux-bridge/</guid><description>&lt;p>关于 Linux Bridge FDB&lt;/p></description></item><item><title>无线转有线网络</title><link>/posts/wireless-to-wired-network/</link><pubDate>Tue, 09 Apr 2024 22:16:24 +0800</pubDate><guid>/posts/wireless-to-wired-network/</guid><description>&lt;blockquote>
 &lt;p>通过无线网卡连接网络&lt;code>A(192.168.31.0/24)&lt;/code>, 无线网卡相当于&lt;code>WAN&lt;/code>口，通过有线网卡接入网络&lt;code>B(192.168.1.0/24)&lt;/code>, 有线网卡相当于&lt;code>LAN&lt;/code>口&lt;/p>&lt;/blockquote>
 &lt;h2 id="准备一个ubuntu虚拟机router">
  准备一个ubuntu虚拟机&lt;code>router&lt;/code>

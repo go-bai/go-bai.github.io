@@ -1,4 +1,192 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>关于我</title><link>/posts/about/</link><pubDate>Sun, 02 Mar 2025 23:10:09 +0800</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+ 内存逃逸
+ &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h2>
+&lt;p>可以通过 &lt;code>go build -gcflags=-m main.go&lt;/code> 分析内存逃逸&lt;/p>
+&lt;p>编译阶段不能确定大小的变量以及生命周期超出函数的局部变量数据都会逃逸到堆中。&lt;/p>
+&lt;h3 id="1-指针逃逸">
+ 1. 指针逃逸
+ &lt;a class="anchor" href="#1-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h3>
+&lt;p>算是最常见的了，函数中初始化一个局部变量，返回了这个变量的指针，因为指针的存在，变量的内存不能随着函数结束而回收，因此只能分配在堆上。&lt;/p>
+&lt;h3 id="2-interface-动态类型逃逸">
+ 2. &lt;code>interface{}&lt;/code> 动态类型逃逸
+ &lt;a class="anchor" href="#2-interface-%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;/h3>
+&lt;p>如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
+&lt;p>如传递给 &lt;code>fmt.Println()&lt;/code> 的参数&lt;/p>
+&lt;h3 id="3-栈空间不足">
+ 3. 栈空间不足
+ &lt;a class="anchor" href="#3-%e6%a0%88%e7%a9%ba%e9%97%b4%e4%b8%8d%e8%b6%b3">#&lt;/a>
+&lt;/h3>
+&lt;p>分配大变量，如大 slice，会有可能栈空间不足，然后编译器将其分配在堆上&lt;/p>
+&lt;p>tcmalloc&lt;/p>
+&lt;h3 id="4-闭包">
+ 4. 闭包
+ &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85">#&lt;/a>
+&lt;/h3>
+&lt;p>当一个闭包函数引用了外部变量并且会执行后续读写操作，则变量会被逃逸到堆上。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>() &lt;span style="color:#66d9ef">func&lt;/span>() &lt;span style="color:#66d9ef">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">n&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span> &lt;span style="color:#75715e">// move to heap&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">func&lt;/span>() &lt;span style="color:#66d9ef">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#a6e22e">n&lt;/span>&lt;span style="color:#f92672">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">n&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">in&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	println(&lt;span style="color:#a6e22e">in&lt;/span>()) &lt;span style="color:#75715e">// 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>GC 垃圾回收</title><link>/posts/golang-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/golang-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+ GC 垃圾回收
+ &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
+&lt;/h2>
+&lt;p>分配在栈上的数据，随着函数调用栈的销毁便释放了自身占用的内存，可以被程序重复利用。&lt;/p>
+&lt;p>协程栈也是从堆上分配的，也在 mheap 管理的 span 中，mspan.spanState 会记录该 span 是用作堆内存还是栈内存。&lt;/p>
+&lt;p>而分配在堆上的数据，他们占用的内存需要程序主动释放才可以重新使用，否则称为垃圾。&lt;/p>
+&lt;h3 id="三色标记原理">
+ 三色标记原理
+ &lt;a class="anchor" href="#%e4%b8%89%e8%89%b2%e6%a0%87%e8%ae%b0%e5%8e%9f%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;p>三色标记法，白色，灰色和黑色&lt;/p>
+&lt;ol>
+&lt;li>垃圾回收开始会把所有数据（栈、堆、数据段）都标记为白色&lt;/li>
+&lt;li>然后把直接追踪(扫描全局数据区和栈区)到的 root 节点标记为灰色，灰色代表基于当前节点展开的追踪还未完成。&lt;/li>
+&lt;li>基于某个节点的追踪任务完成后标记为黑色，标识有用并且无需基于它再追踪。&lt;/li>
+&lt;li>没有灰色节点后意味着标记工作结束。此时有用的数据为黑色，垃圾都是白色，在清除阶段回收这些白色的垃圾即可。&lt;/li>
+&lt;/ol>
+&lt;h3 id="混合写屏障">
+ 混合写屏障
+ &lt;a class="anchor" href="#%e6%b7%b7%e5%90%88%e5%86%99%e5%b1%8f%e9%9a%9c">#&lt;/a>
+&lt;/h3>
+&lt;p>通过 &lt;code>混合写屏障&lt;/code> 防止GC过程中并发修改对象的问题。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>混合写屏障&lt;/code> 继承了插入写屏障的优点，起始时无需 STW 打快照，直接并发扫描垃圾即可&lt;/li>
+&lt;li>&lt;code>混合写屏障&lt;/code> 继承了删除写屏障的优点，赋值器是黑色赋值器，GC期间，任何在栈上创建的新对象，均为黑色。扫描过后就不需要扫描了，这样就消除了插入写屏障最后 STW 的重新扫描栈了。&lt;/li>
+&lt;li>&lt;code>混合写屏障&lt;/code> 扫描栈虽然不用 STW，但是扫描某一个具体的栈的时候，还是要停止这个 goroutine 赋值器的工作（针对一个 goroutine 来说，是暂停扫的，要么全灰，要么全黑，是原子状态切换的）&lt;/li>
+&lt;/ul>
+&lt;h3 id="gc-触发时机">
+ GC 触发时机
+ &lt;a class="anchor" href="#gc-%e8%a7%a6%e5%8f%91%e6%97%b6%e6%9c%ba">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>主动触发：调用 &lt;code>runtime.GC&lt;/code>&lt;/li>
+&lt;li>被动触发：使用系统监控 &lt;code>sysmon&lt;/code>，该触发条件由 &lt;code>runtime.forcegcperiod&lt;/code> 控制，默认为 2 分钟。当超过时间没有产生任何 GC 时，强制触发 GC。使用步调算法。。。&lt;/li>
+&lt;/ol>
+&lt;h3 id="gc-流程">
+ GC 流程
+ &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;p>GC 划分为五个阶段&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+ make 和 new 的区别
+ &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
+&lt;/h2>
+&lt;blockquote>
+&lt;p>都是内存分配函数&lt;/p>&lt;/blockquote>
+&lt;h3 id="1-基本用途">
+ 1. 基本用途
+ &lt;a class="anchor" href="#1-%e5%9f%ba%e6%9c%ac%e7%94%a8%e9%80%94">#&lt;/a>
+&lt;/h3>
+&lt;p>make 仅用于创建 &lt;code>slice&lt;/code>、&lt;code>map&lt;/code> 和 &lt;code>channel&lt;/code>，并且会初始化这些类型的内部数据结构，返回初始化后的值类型
+new 可用于任何类型，返回指向该类型零值的指针&lt;/p>
+&lt;h3 id="2-返回值">
+ 2. 返回值
+ &lt;a class="anchor" href="#2-%e8%bf%94%e5%9b%9e%e5%80%bc">#&lt;/a>
+&lt;/h3>
+&lt;p>make返回初始化后的值类型
+new返回指向该类型零值的指针&lt;/p>
+&lt;h3 id="3-内存分配">
+ 3. 内存分配
+ &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
+&lt;/h3>
+&lt;p>make会分配内存并初始化数据结构
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/golang-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/golang-gmp/</guid><description>&lt;h2 id="csp">
+ CSP
+ &lt;a class="anchor" href="#csp">#&lt;/a>
+&lt;/h2>
+&lt;p>CSP(Communicating Sequential Processes) 被认为是 Go 在并发编程中成功的关键，论文指出应该重视 input 和 output 原语，尤其是并发编程的代码。&lt;/p>
+&lt;h2 id="gmp介绍">
+ GMP介绍
+ &lt;a class="anchor" href="#gmp%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>G M P 是 Go 调度器的三个核心组件&lt;/p>
+&lt;h3 id="g-对应-goroutine-属于用户线程或绿色线程">
+ G 对应 goroutine, 属于用户线程或绿色线程
+ &lt;a class="anchor" href="#g-%e5%af%b9%e5%ba%94-goroutine-%e5%b1%9e%e4%ba%8e%e7%94%a8%e6%88%b7%e7%ba%bf%e7%a8%8b%e6%88%96%e7%bb%bf%e8%89%b2%e7%ba%bf%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">g&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">stack&lt;/span> &lt;span style="color:#a6e22e">stack&lt;/span> &lt;span style="color:#75715e">// goroutine 使用的栈，存储了栈的范围 [lo, hi)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#75715e">// 当前与 g 绑定的 m&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sched&lt;/span> &lt;span style="color:#a6e22e">gobuf&lt;/span> &lt;span style="color:#75715e">// goroutine 的运行现场, 存储各种寄存器的值，如 PC、SP等寄存器，M恢复现场时需要用到&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="m-对应内核线程">
+ M 对应内核线程
+ &lt;a class="anchor" href="#m-%e5%af%b9%e5%ba%94%e5%86%85%e6%a0%b8%e7%ba%bf%e7%a8%8b">#&lt;/a>
+&lt;/h3>
+&lt;p>M 代表一个工作线程或者说系统线程，G需要调度到M上才能执行，和 P 绑定去获取 G 来执行。&lt;/p>
+&lt;p>它保存了 M 自身使用的栈信息，当前正在M上执行的G信息，与之绑定的 P 信息。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// m 代表工作线程，保存了自身使用的栈信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 记录工作线程（也就是内核线程）使用的栈信息。在执行调度代码时需要使用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 执行用户 goroutine 代码时，使用用户 goroutine 自己的栈，因此调度时会发生栈的切换&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">g0&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">g&lt;/span> &lt;span style="color:#75715e">// goroutine with scheduling stack/&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 通过 tls 结构体实现 m 与工作线程的绑定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 这里是线程本地存储&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">tls&lt;/span> [&lt;span style="color:#ae81ff">6&lt;/span>]&lt;span style="color:#66d9ef">uintptr&lt;/span> &lt;span style="color:#75715e">// thread-local storage (for x86 extern register)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 当前工作线程绑定的 p&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">p&lt;/span> &lt;span style="color:#a6e22e">puintptr&lt;/span> &lt;span style="color:#75715e">// attached p for executing go code (nil if not executing go code)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 工作线程 id&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">thread&lt;/span> &lt;span style="color:#66d9ef">uintptr&lt;/span> &lt;span style="color:#75715e">// thread handle&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// 记录所有工作线程的链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">alllink&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">m&lt;/span> &lt;span style="color:#75715e">// on allm&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="p-是调度队列包含缓存信息">
+ P 是调度队列，包含缓存信息
+ &lt;a class="anchor" href="#p-%e6%98%af%e8%b0%83%e5%ba%a6%e9%98%9f%e5%88%97%e5%8c%85%e5%90%ab%e7%bc%93%e5%ad%98%e4%bf%a1%e6%81%af">#&lt;/a>
+&lt;/h3>
+&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item><item><title>Golang Map</title><link>/posts/golang-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/golang-map/</guid><description/></item><item><title>Golang Slice</title><link>/posts/golang-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/golang-slice/</guid><description/></item><item><title>Channel</title><link>/posts/golang-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/golang-chan/</guid><description>&lt;h3 id="channel-数据结构">
+ channel 数据结构
+ &lt;a class="anchor" href="#channel-%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#&lt;/a>
+&lt;/h3>
+&lt;p>channel 被用来实现 goroutine 间的通信，以通信的方式共享内存。&lt;/p>
+&lt;p>如下代码使用 make 函数会在 &lt;code>堆上&lt;/code> 分配一个 &lt;code>runtime.hchan&lt;/code> 类型的数据结构并初始化，ch 是存在于 f 函数栈帧上的一个指针，指向堆上的 hchan 数据结构。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">f&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ch&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">chan&lt;/span> &lt;span style="color:#66d9ef">int&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>channel 分为 无缓冲 和 有缓冲 两种。对于有缓冲的 channel 来说，使用循环数组 &lt;code>buf&lt;/code> 来存储数据。&lt;/p>
+&lt;p>&lt;a href="https://mp.weixin.qq.com/s/6ZEGtXRGKm2qP5b-rGLyVg">Golang 图解channel之数据结构&lt;/a>&lt;/p>
+&lt;h3 id="select-和-channel-机制">
+ select 和 channel 机制
+ &lt;a class="anchor" href="#select-%e5%92%8c-channel-%e6%9c%ba%e5%88%b6">#&lt;/a>
+&lt;/h3>
+&lt;blockquote>
+&lt;p>通过 &lt;code>gouroutine&lt;/code> 和 &lt;code>channel&lt;/code> 实现并发中基于通信的内存同步, &lt;code>channel&lt;/code> 还可以和 &lt;code>select&lt;/code>、&lt;code>cancel&lt;/code>、&lt;code>timeout&lt;/code> 结合使用&lt;/p>&lt;/blockquote>
+&lt;p>channel 分为不带缓冲和带缓冲的，不带缓冲的可以认为是“同步模式”，带缓冲的可以认为是“异步模式”。&lt;/p>
+&lt;p>channel 的数据结构如下，包含一个 循环数组 buf 存储缓存中的数据 和当前读写在数组中的索引，以及缓存大小，还有一个阻塞&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">hchan&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">qcount&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// chan 中元素数量, 对于无缓冲的为 0, 数据直接从发送方传递给接收方&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">dataqsiz&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// chan 底层循环数组的大小, 对于无缓冲的为 0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">buf&lt;/span> &lt;span style="color:#a6e22e">unsafe&lt;/span>.&lt;span style="color:#a6e22e">Pointer&lt;/span> &lt;span style="color:#75715e">// 指向底层循环数组的指针, 只针对有缓冲的 channel&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">elemsize&lt;/span> &lt;span style="color:#66d9ef">uint16&lt;/span> &lt;span style="color:#75715e">// chan 中元素大小&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">closed&lt;/span> &lt;span style="color:#66d9ef">uint32&lt;/span> &lt;span style="color:#75715e">// chan 是否关闭的标志&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">timer&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">timer&lt;/span> &lt;span style="color:#75715e">// timer feeding this chan&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">elemtype&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">_type&lt;/span> &lt;span style="color:#75715e">// chan 中元素类型&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sendx&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// 下一个要发送元素在循环数组中的索引&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">recvx&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// 下一个要接收元素在循环数组中的索引&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">recvq&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#75715e">// 阻塞的尝试从此 channel 接收数据的 goroutine, sudog 双向链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sendq&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#75715e">// 阻塞的尝试向此 channel 发送数据的 goroutine, sudog 双向链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">lock&lt;/span> &lt;span style="color:#a6e22e">mutex&lt;/span> &lt;span style="color:#75715e">// 保护 hchan 所有字段的锁&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">first&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">last&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>阻塞模式和非阻塞模式：由 select 是否包含 default 确定&lt;/p></description></item><item><title>关于我</title><link>/posts/about/</link><pubDate>Sun, 02 Mar 2025 23:10:09 +0800</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
 &lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>&lt;/blockquote>
 &lt;h3 id="目前在学的内容">
  目前在学的内容
@@ -82,7 +270,12 @@
  四表
  &lt;a class="anchor" href="#%e5%9b%9b%e8%a1%a8">#&lt;/a>
 &lt;/h3>
-&lt;p>具有相同功能的规则的集合叫做 &lt;code>表&lt;/code>，iptables 定义了 四种表。&lt;/p></description></item><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">
+&lt;p>具有相同功能的规则的集合叫做 &lt;code>表&lt;/code>，iptables 定义了 四种表。&lt;/p></description></item><item><title>k8s informer 介绍</title><link>/posts/k8s-informer/</link><pubDate>Sun, 23 Feb 2025 19:15:23 +0800</pubDate><guid>/posts/k8s-informer/</guid><description>&lt;p>&lt;code>informer&lt;/code> 提供一个保持更新的 k8s 资源的本地缓存。&lt;/p>
+&lt;h2 id="informer">
+ &lt;code>informer&lt;/code>
+ &lt;a class="anchor" href="#informer">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>深入了解 Kubernetes CNI 网络插件 Flannel</title><link>/posts/flannel/</link><pubDate>Wed, 01 Jan 2025 13:11:35 +0800</pubDate><guid>/posts/flannel/</guid><description>&lt;h2 id="关于">
  关于
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e">#&lt;/a>
 &lt;/h2>
@@ -105,7 +298,148 @@
 &lt;li>&lt;code>subnet&lt;/code>: 对应 &lt;code>node.spec.podCIDR&lt;/code>。&lt;/li>
 &lt;li>&lt;code>backend&lt;/code>: 负责 &lt;code>node&lt;/code> 之间 &lt;code>pod&lt;/code> 通讯的后端。&lt;/li>
 &lt;/ol>
-&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
+&lt;p>flanneld 进程通过监听 &lt;code>node&lt;/code> 资源来生成 &lt;code>subnet event&lt;/code>, 然后在对应 &lt;code>backend&lt;/code> 的 &lt;code>handleSubnetEvents&lt;/code> 方法中处理逻辑，对于 &lt;code>vxlan backend&lt;/code> 主要是按顺序设置 &lt;code>arp&lt;/code>, &lt;code>fdb&lt;/code> 和 &lt;code>route&lt;/code> 来实现pod跨节点通讯。&lt;/p></description></item><item><title>Linux Bridge</title><link>/posts/linux-bridge/</link><pubDate>Sun, 29 Dec 2024 15:40:46 +0800</pubDate><guid>/posts/linux-bridge/</guid><description>&lt;p>关于 Linux Bridge FDB&lt;/p></description></item><item><title>Kube Scheduler</title><link>/posts/kube-scheduler/</link><pubDate>Tue, 17 Dec 2024 22:07:49 +0800</pubDate><guid>/posts/kube-scheduler/</guid><description>&lt;p>RKE2 自定义&lt;a href="https://kubernetes.io/zh-cn/docs/reference/scheduling/config/">调度器配置&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>创建调度器配置文件&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>NodeResourcesFit&lt;/code> 是一个调度插件, 检查节点是否拥有 Pod 请求的所有资源, 得分可以使用以下三种策略之一:
+&lt;code>LeastAllocated&lt;/code> (默认)、&lt;code>MostAllocated&lt;/code> 和 &lt;code>RequestedToCapacityRatio&lt;/code>&lt;/p>
+&lt;p>实现了多个扩展点: &lt;code>preFilter&lt;/code>、&lt;code>filter&lt;/code>、&lt;code>preScore&lt;/code>、&lt;code>score&lt;/code>&lt;/p>
+&lt;p>我这里自定义使用 &lt;code>MostAllocated&lt;/code> 策略, 优选分配比率较高的节点&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># /etc/rancher/rke2/kube-scheduler-config.yaml&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">kubescheduler.config.k8s.io/v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">KubeSchedulerConfiguration&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">clientConnection&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">kubeconfig&lt;/span>: &lt;span style="color:#ae81ff">/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">profiles&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">schedulerName&lt;/span>: &lt;span style="color:#ae81ff">default-scheduler&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">pluginConfig&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">NodeResourcesFit&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">scoringStrategy&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">type&lt;/span>: &lt;span style="color:#ae81ff">MostAllocated&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">resources&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">cpu&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">weight&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">memory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">weight&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="2">
+&lt;li>修改 rke2 配置文件&lt;/li>
+&lt;/ol>
+&lt;p>修改 &lt;code>/etc/rancher/rke2/config.yaml&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-diff" data-lang="diff">&lt;span style="display:flex;">&lt;span>kube-scheduler-arg:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">+ - config=/etc/rancher/rke2/kube-scheduler-config.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol start="3">
+&lt;li>重启 rke2-server&lt;/li>
+&lt;/ol>
+&lt;p>会重新生成 kube-scheduler 的 static pod manifest 文件 &lt;code>/var/lib/rancher/rke2/agent/pod-manifests/kube-scheduler.yaml&lt;/code>&lt;/p>
+&lt;p>会挂载 &lt;code>/etc/rancher/rke2/kube-scheduler-config.yaml&lt;/code> 文件到 pod 中&lt;/p></description></item><item><title>CRI 工作原理</title><link>/posts/cri/</link><pubDate>Sun, 17 Nov 2024 20:30:12 +0800</pubDate><guid>/posts/cri/</guid><description>&lt;h2 id="关于-cri">
+ 关于 CRI
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cri">#&lt;/a>
+&lt;/h2>
+&lt;p>CRI 全称为 &lt;code>Container Runtime Interface&lt;/code>, 容器运行时接口&lt;/p>
+&lt;p>&lt;a href="https://github.com/kubernetes/cri-api">https://github.com/kubernetes/cri-api&lt;/a>&lt;/p>
+&lt;p>containerd 的 &lt;code>criService&lt;/code> 有实现下面这个 &lt;code>RuntimeServiceServer&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// RuntimeServiceServer is the server API for RuntimeService service.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">RuntimeServiceServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Version returns the runtime name, runtime version, and runtime API version.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Version&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RunPodSandbox creates and starts a pod-level sandbox. Runtimes must ensure&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// the sandbox is in the ready state on success.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RunPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopPodSandbox stops any running process that is part of the sandbox and&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaims network resources (e.g., IP addresses) allocated to the sandbox.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If there are any running containers in the sandbox, they must be forcibly&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// terminated.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if all relevant&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// resources have already been reclaimed. kubelet will call StopPodSandbox&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// at least once before calling RemovePodSandbox. It will also attempt to&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaim resources eagerly, as soon as a sandbox is not needed. Hence,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// multiple StopPodSandbox calls are expected.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemovePodSandbox removes the sandbox. If there are any running containers&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// in the sandbox, they must be forcibly terminated and removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the sandbox has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemovePodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStatus returns the status of the PodSandbox. If the PodSandbox is not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandbox returns a list of PodSandboxes.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CreateContainer creates a new container in specified PodSandbox&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CreateContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StartContainer starts the container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StartContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopContainer stops a running container with a grace period (i.e., timeout).&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been stopped.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The runtime must forcibly kill the container after the grace period is&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reached.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemoveContainer removes the container. If the container is running, the&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// container must be forcibly removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemoveContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainers lists all containers by filters.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainers&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStatus returns status of the container. If the container is not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateContainerResources updates ContainerConfig of the container synchronously.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If runtime fails to transactionally update the requested resources, an error is returned.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateContainerResources&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ReopenContainerLog asks runtime to reopen the stdout/stderr log file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// for the container. This is often called after the log file has been&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// rotated. If the container is not running, container runtime can choose&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// to either create a new log file and return nil, or return an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Once it returns error, new container log file MUST NOT be created.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ReopenContainerLog&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ExecSync runs a command in a container synchronously.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ExecSync&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Exec prepares a streaming endpoint to execute a command in the container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Exec&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Attach prepares a streaming endpoint to attach to a running container.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Attach&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PortForward prepares a streaming endpoint to forward ports from a PodSandbox.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PortForward&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStats returns stats of the container. If the container does not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainerStats returns stats of all running containers.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStats returns stats of the pod sandbox. If the pod sandbox does not&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxStats returns stats of the pod sandboxes matching a filter.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateRuntimeConfig updates the runtime configuration based on the given request.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateRuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Status returns the status of the runtime.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Status&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CheckpointContainer checkpoints a container&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CheckpointContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// GetContainerEvents gets container events from the CRI runtime&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">GetContainerEvents&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetEventsRequest&lt;/span>, &lt;span style="color:#a6e22e">RuntimeService_GetContainerEventsServer&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This list should be static at startup: either the client and server restart together when&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// adding or removing metrics descriptors, or they should not change.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Put differently, if ListPodSandboxMetrics references a name that is not described in the initial&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors call, then the metric will not be broadcasted.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListMetricDescriptors&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxMetrics gets pod sandbox metrics from CRI Runtime&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxMetrics&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RuntimeConfig returns configuration information of the runtime.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// A couple of notes:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - The RuntimeConfigRequest object is not to be confused with the contents of UpdateRuntimeConfigRequest.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The former is for having runtime tell Kubelet what to do, the latter vice versa.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - It is the expectation of the Kubelet that these fields are static for the lifecycle of the Kubelet.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The Kubelet will not re-request the RuntimeConfiguration after startup, and CRI implementations should&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// avoid updating them without a full node reboot.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
  关于 CNI
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cni">#&lt;/a>
 &lt;/h2>
@@ -274,7 +608,7 @@
  默认的 Builder 实例
  &lt;a class="anchor" href="#%e9%bb%98%e8%ae%a4%e7%9a%84-builder-%e5%ae%9e%e4%be%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
+&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>Etcd</title><link>/posts/etcd/</link><pubDate>Sun, 25 Aug 2024 01:10:17 +0800</pubDate><guid>/posts/etcd/</guid><description/></item><item><title>Redis</title><link>/posts/redis/</link><pubDate>Sun, 25 Aug 2024 01:10:10 +0800</pubDate><guid>/posts/redis/</guid><description/></item><item><title>PostgreSQL</title><link>/posts/postgresql/</link><pubDate>Sun, 25 Aug 2024 01:10:04 +0800</pubDate><guid>/posts/postgresql/</guid><description/></item><item><title>MySQL</title><link>/posts/mysql/</link><pubDate>Sun, 25 Aug 2024 01:09:56 +0800</pubDate><guid>/posts/mysql/</guid><description/></item><item><title>MongoDB</title><link>/posts/mongodb/</link><pubDate>Sun, 25 Aug 2024 01:06:47 +0800</pubDate><guid>/posts/mongodb/</guid><description/></item><item><title>K8s Namespace</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description/></item><item><title>K8s Cgroup</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description/></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
  &lt;code>virsh&lt;/code> 命令
  &lt;a class="anchor" href="#virsh-%e5%91%bd%e4%bb%a4">#&lt;/a>
 &lt;/h2>
@@ -1467,7 +1801,7 @@
  &lt;a class="anchor" href="#%e4%bf%ae%e6%ad%a3%e7%ae%80%e4%bd%93%e4%b8%ad%e6%96%87%e6%98%be%e7%a4%ba%e4%b8%ba%e5%bc%82%e4%bd%93%e6%97%a5%e6%96%87%e5%ad%97%e5%bd%a2">#&lt;/a>
 &lt;/h2>
 &lt;blockquote>
-&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>解决Go应用在容器中的时区问题</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">
+&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>Go应用在容器中的时区</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">
  容器中的时区问题
  &lt;a class="anchor" href="#%e5%ae%b9%e5%99%a8%e4%b8%ad%e7%9a%84%e6%97%b6%e5%8c%ba%e9%97%ae%e9%a2%98">#&lt;/a>
 &lt;/h2>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>数据结构 on gobai's blog</title><link>/posts/golang/data-structure/</link><description>Recent content in 数据结构 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/data-structure/index.xml" rel="self" type="application/rss+xml"/><item><title>Golang Map</title><link>/posts/golang-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/golang-map/</guid><description/></item><item><title>Golang Slice</title><link>/posts/golang-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/golang-slice/</guid><description/></item><item><title>Channel</title><link>/posts/golang-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/golang-chan/</guid><description>&lt;h3 id="channel-数据结构">
+ channel 数据结构
+ &lt;a class="anchor" href="#channel-%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#&lt;/a>
+&lt;/h3>
+&lt;p>channel 被用来实现 goroutine 间的通信，以通信的方式共享内存。&lt;/p>
+&lt;p>如下代码使用 make 函数会在 &lt;code>堆上&lt;/code> 分配一个 &lt;code>runtime.hchan&lt;/code> 类型的数据结构并初始化，ch 是存在于 f 函数栈帧上的一个指针，指向堆上的 hchan 数据结构。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">f&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ch&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> make(&lt;span style="color:#66d9ef">chan&lt;/span> &lt;span style="color:#66d9ef">int&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>channel 分为 无缓冲 和 有缓冲 两种。对于有缓冲的 channel 来说，使用循环数组 &lt;code>buf&lt;/code> 来存储数据。&lt;/p>
+&lt;p>&lt;a href="https://mp.weixin.qq.com/s/6ZEGtXRGKm2qP5b-rGLyVg">Golang 图解channel之数据结构&lt;/a>&lt;/p>
+&lt;h3 id="select-和-channel-机制">
+ select 和 channel 机制
+ &lt;a class="anchor" href="#select-%e5%92%8c-channel-%e6%9c%ba%e5%88%b6">#&lt;/a>
+&lt;/h3>
+&lt;blockquote>
+&lt;p>通过 &lt;code>gouroutine&lt;/code> 和 &lt;code>channel&lt;/code> 实现并发中基于通信的内存同步, &lt;code>channel&lt;/code> 还可以和 &lt;code>select&lt;/code>、&lt;code>cancel&lt;/code>、&lt;code>timeout&lt;/code> 结合使用&lt;/p>&lt;/blockquote>
+&lt;p>channel 分为不带缓冲和带缓冲的，不带缓冲的可以认为是“同步模式”，带缓冲的可以认为是“异步模式”。&lt;/p>
+&lt;p>channel 的数据结构如下，包含一个 循环数组 buf 存储缓存中的数据 和当前读写在数组中的索引，以及缓存大小，还有一个阻塞&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">hchan&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">qcount&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// chan 中元素数量, 对于无缓冲的为 0, 数据直接从发送方传递给接收方&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">dataqsiz&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// chan 底层循环数组的大小, 对于无缓冲的为 0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">buf&lt;/span> &lt;span style="color:#a6e22e">unsafe&lt;/span>.&lt;span style="color:#a6e22e">Pointer&lt;/span> &lt;span style="color:#75715e">// 指向底层循环数组的指针, 只针对有缓冲的 channel&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">elemsize&lt;/span> &lt;span style="color:#66d9ef">uint16&lt;/span> &lt;span style="color:#75715e">// chan 中元素大小&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">closed&lt;/span> &lt;span style="color:#66d9ef">uint32&lt;/span> &lt;span style="color:#75715e">// chan 是否关闭的标志&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">timer&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">timer&lt;/span> &lt;span style="color:#75715e">// timer feeding this chan&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">elemtype&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">_type&lt;/span> &lt;span style="color:#75715e">// chan 中元素类型&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sendx&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// 下一个要发送元素在循环数组中的索引&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">recvx&lt;/span> &lt;span style="color:#66d9ef">uint&lt;/span> &lt;span style="color:#75715e">// 下一个要接收元素在循环数组中的索引&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">recvq&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#75715e">// 阻塞的尝试从此 channel 接收数据的 goroutine, sudog 双向链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">sendq&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#75715e">// 阻塞的尝试向此 channel 发送数据的 goroutine, sudog 双向链表&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">lock&lt;/span> &lt;span style="color:#a6e22e">mutex&lt;/span> &lt;span style="color:#75715e">// 保护 hchan 所有字段的锁&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">waitq&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">first&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">last&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>阻塞模式和非阻塞模式：由 select 是否包含 default 确定&lt;/p></description></item></channel></rss>
