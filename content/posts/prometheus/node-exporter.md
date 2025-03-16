@@ -1,6 +1,7 @@
 ---
-title: "Node Exporter"
+title: "node-exporter 安装"
 date: 2024-07-03T22:39:59+08:00
+weight: 3
 ---
 
 ## node-exporter 安装

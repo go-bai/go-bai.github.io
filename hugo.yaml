@@ -1,9 +1,9 @@
 baseURL: '/'
 languageCode: en-us
-title: gobai's blog
+title: gobai's notes
 theme: hugo-book
 enableRobotsTXT: true
-enableGitInfo: true # 在文章底部根据 Git 记录自动更新时间, 如: Last modified by go-bai | 2025-03-02
+enableGitInfo: true # auto update time based on git record, like: Last modified by go-bai | 2025-03-02
 
 permalinks:
   posts: "/posts/:filename/"
@@ -18,9 +18,9 @@ params:
   BookRepo: https://github.com/go-bai/go-bai.github.io
 
 markup:
-  tableOfContents: # https://gohugo.io/methods/page/tableofcontents/
-    startLevel: 2 # 默认从 2 开始
-    endLevel: 5 # 默认从 3 结束
+  tableOfContents: # refer to https://gohugo.io/methods/page/tableofcontents/
+    startLevel: 2 # default start from 2
+    endLevel: 5 # default end at 3, set to 5 means end at 5
     ordered: false
   goldmark:
     renderer:

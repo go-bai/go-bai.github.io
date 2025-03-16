@@ -1,6 +1,7 @@
 ---
-title: "安装 Kube Prometheus Stack"
+title: "kube-prometheus-stack 安装"
 date: 2024-07-03T14:56:03+08:00
+weight: 2
 ---
 
 `kube-prometheus-stack` 是 prometheus 的官方 helm charts，包含 [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator)、[prometheus](https://github.com/prometheus/prometheus)、[grafana](https://github.com/grafana/grafana)、[alertmanager](https://github.com/prometheus/alertmanager)、[node-exporter](https://github.com/prometheus/node_exporter) 等组件。

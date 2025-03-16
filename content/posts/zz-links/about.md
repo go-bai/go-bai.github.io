@@ -1,6 +1,6 @@
 ---
 title: "关于我"
-date: 2025-03-02T23:10:09+08:00
+bookSearchExclude: true
 ---
 
 > golang 服务端开发工程师，喜欢一些基础设施相关的东西
@@ -12,12 +12,8 @@ date: 2025-03-02T23:10:09+08:00
 - **kubernetes**
 - **kubevirt**
 - ceph
-- openstack
-- terraform
+- prometheus
 - postgresql
-- mysql
-- redis
-- sqlite
 
 ### 我的设备
 

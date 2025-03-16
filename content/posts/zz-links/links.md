@@ -1,5 +1,6 @@
 ---
 title: "友链"
+bookSearchExclude: true
 ---
 
 <style>

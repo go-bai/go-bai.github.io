@@ -32,13 +32,13 @@ hugo new content posts/linux/jq-command.md
 ### preview
 
 ```bash
-hugo server --bind 0.0.0.0 --minify --theme hugo-book
+make server
 ```
 
-### push
+### git push
 
 ```bash
-bash push.sh
+make git-push
 ```
 
 ## 其他
@@ -59,3 +59,8 @@ markup:
 ### 目录层级
 
 最多两层, 层级多了不好找
+
+### 文章顺序
+
+1. 文章顺序按照 `date` 字段排序, 从晚到早
+2. 如果 `date` 字段相同或不存在 `date` 字段, 按照 `title` 字段字典序排序
