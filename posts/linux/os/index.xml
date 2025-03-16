@@ -1,4 +1,33 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>OS on gobai's blog</title><link>/posts/linux/os/</link><description>Recent content in OS on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/os/index.xml" rel="self" type="application/rss+xml"/><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>OS on gobai's notes</title><link>/posts/linux/os/</link><description>Recent content in OS on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/os/index.xml" rel="self" type="application/rss+xml"/><item><title>Linux 启动流程 (BIOS)</title><link>/posts/linux-boot-process-bios/</link><pubDate>Thu, 13 Mar 2025 11:46:16 +0800</pubDate><guid>/posts/linux-boot-process-bios/</guid><description>&lt;h2 id="启动流程">
+ 启动流程
+ &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h2>
+&lt;p>开机自检(POST) -&amp;gt; 主板固件(BIOS) -&amp;gt; Boot Loader 引导(grub2) vmlinuz运行 -&amp;gt; 内核挂载文件系统 -&amp;gt; 初始化(systemd)&lt;/p>
+&lt;h3 id="开机自检-post">
+ 开机自检 (POST)
+ &lt;a class="anchor" href="#%e5%bc%80%e6%9c%ba%e8%87%aa%e6%a3%80-post">#&lt;/a>
+&lt;/h3>
+&lt;p>当计算机开机时，BIOS(Basic Input Output System) 首先进行自检 POST(Power-On Self Test)，检查硬件组件（如内存、硬盘、显卡等）是否正常工作&lt;/p>
+&lt;h3 id="加载引导程序">
+ 加载引导程序
+ &lt;a class="anchor" href="#%e5%8a%a0%e8%bd%bd%e5%bc%95%e5%af%bc%e7%a8%8b%e5%ba%8f">#&lt;/a>
+&lt;/h3>
+&lt;p>TODO&lt;/p>
+&lt;h2 id="其他">
+ 其他
+ &lt;a class="anchor" href="#%e5%85%b6%e4%bb%96">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="使用-initial-ram-disk-initrd">
+ &lt;strong>使用 initial RAM disk (initrd)&lt;/strong>
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8-initial-ram-disk-initrd">#&lt;/a>
+&lt;/h3>
+&lt;p>&lt;code>initrd&lt;/code> 提供了通过 &lt;code>boot loader&lt;/code> 程序加载 RAM 磁盘的能力，然后这个 RAM 磁盘可以被挂载为根文件系统，并可以从中运行程序。之后，可以从不同的设备挂载新的文件系统，然后将前一个根目录(来自initrd)移动到一个目录，然后可以卸载。&lt;/p>
+&lt;p>&lt;code>initrd&lt;/code> 主要设计为允许系统启动分为两个阶段进行，其中内核携带最少的编译进去的驱动程序集，从 &lt;code>initrd&lt;/code> 加载其他模块。&lt;/p>
+&lt;p>当时用 &lt;code>initrd&lt;/code>，系统通常按照下面顺序启动：&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>boot loader&lt;/code>(一般是&lt;code>grub&lt;/code>) 加载内核 &lt;code>vmlinuz&lt;/code> 和 initial RAM disk &lt;code>initrd.img&lt;/code>, 具体的文件名要看 &lt;code>/boot/grub/grub.cfg&lt;/code> 中的 menu 设置。&lt;/li>
+&lt;/ol>
+&lt;p>TODO&lt;/p></description></item><item><title>Multi-Bootable USB</title><link>/posts/multi-bootable-usb/</link><pubDate>Thu, 28 Mar 2024 22:20:22 +0800</pubDate><guid>/posts/multi-bootable-usb/</guid><description>&lt;blockquote>
 &lt;p>从一个USB设备(U盘)启动多个操作系统, 并且U盘还能继续存储其他普通文件&lt;/p>&lt;/blockquote>
 &lt;h2 id="下载并解压ventoy">
  下载并解压&lt;code>ventoy&lt;/code>

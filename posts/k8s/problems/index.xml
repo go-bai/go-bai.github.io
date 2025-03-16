@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>问题记录 on gobai's notes</title><link>/posts/k8s/problems/</link><description>Recent content in 问题记录 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/k8s/problems/index.xml" rel="self" type="application/rss+xml"/><item><title>failed to reserve sandbox name</title><link>/posts/failed-to-reserve-sandbox-name/</link><pubDate>Sat, 31 Aug 2024 23:18:04 +0800</pubDate><guid>/posts/failed-to-reserve-sandbox-name/</guid><description>&lt;h2 id="问题描述">
+ 问题描述
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e6%8f%8f%e8%bf%b0">#&lt;/a>
+&lt;/h2>
+&lt;p>当 k8s 集群时间发生回退时, 会出现 &lt;code>failed to reserve sandbox name&lt;/code> 错误.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Aug &lt;span style="color:#ae81ff">31&lt;/span> 13:58:38 kind-control-plane kubelet&lt;span style="color:#f92672">[&lt;/span>554&lt;span style="color:#f92672">]&lt;/span>: E0831 13:58:38.610262 	&lt;span style="color:#ae81ff">554&lt;/span> log.go:32&lt;span style="color:#f92672">]&lt;/span> &lt;span style="color:#e6db74">&amp;#34;RunPodSandbox from runtime service failed&amp;#34;&lt;/span> err&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;r
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">pc error: code = Unknown desc = failed to reserve sandbox name \&amp;#34;kube-scheduler-kind-control-plane_kube-system_3ead35239782468d5c21d9cb3933d
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">bb2_0\&amp;#34;: name \&amp;#34;kube-scheduler-kind-control-plane_kube-system_3ead35239782468d5c21d9cb3933dbb2_0\&amp;#34; is reserved for \&amp;#34;e193fd73214c4db18ca31ed
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">c6aa2591445dba26d77b6df9d8956a9228031689e\&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="解决办法">
+ 解决办法
+ &lt;a class="anchor" href="#%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95">#&lt;/a>
+&lt;/h2>
+&lt;p>将 &lt;code>&amp;lt;sandbox-id&amp;gt;&lt;/code> 对应的容器删掉&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>crictl stopp &amp;lt;sandbox-id&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>crictl rmp &amp;lt;sandbox-id&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="相关-issue">
+ 相关 issue
+ &lt;a class="anchor" href="#%e7%9b%b8%e5%85%b3-issue">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/kubernetes/kubernetes/issues/126514">https://github.com/kubernetes/kubernetes/issues/126514&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/containerd/containerd/issues/9459">https://github.com/containerd/containerd/issues/9459&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="相关-pr">
+ 相关 PR
+ &lt;a class="anchor" href="#%e7%9b%b8%e5%85%b3-pr">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/kubernetes/kubernetes/pull/130551">https://github.com/kubernetes/kubernetes/pull/130551&lt;/a>&lt;/li>
+&lt;/ul></description></item></channel></rss>

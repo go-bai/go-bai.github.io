@@ -1,4 +1,250 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's blog</title><link>/</link><description>Recent content in Home on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Home on gobai's notes</title><link>/</link><description>Recent content in Home on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>Prometheus 基础</title><link>/posts/prometheus-basics/</link><pubDate>Wed, 12 Mar 2025 13:41:23 +0800</pubDate><guid>/posts/prometheus-basics/</guid><description>&lt;h2 id="什么是-prometheus">
+ 什么是 Prometheus
+ &lt;a class="anchor" href="#%e4%bb%80%e4%b9%88%e6%98%af-prometheus">#&lt;/a>
+&lt;/h2>
+&lt;p>Prometheus 是一个开源的 monitoring 和 alerting 系统。&lt;/p>
+&lt;p>Prometheus 将 &lt;code>指标&lt;/code> (metrics) 收集并存储为 时序(time series) 数据，指标信息与记录它的 &lt;code>时间&lt;/code> 和可选的被称为 &lt;code>标签&lt;/code> (labels)的键值对一块存储。&lt;/p>
+&lt;h3 id="什么是-metrics">
+ 什么是 metrics
+ &lt;a class="anchor" href="#%e4%bb%80%e4%b9%88%e6%98%af-metrics">#&lt;/a>
+&lt;/h3>
+&lt;p>时序&lt;/p>
+&lt;h2 id="通过问题理解-prometheus">
+ 通过问题理解 Prometheus
+ &lt;a class="anchor" href="#%e9%80%9a%e8%bf%87%e9%97%ae%e9%a2%98%e7%90%86%e8%a7%a3-prometheus">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="prometheus-是如何收集指标数据的">
+ Prometheus 是如何收集指标数据的
+ &lt;a class="anchor" href="#prometheus-%e6%98%af%e5%a6%82%e4%bd%95%e6%94%b6%e9%9b%86%e6%8c%87%e6%a0%87%e6%95%b0%e6%8d%ae%e7%9a%84">#&lt;/a>
+&lt;/h3>
+&lt;h3 id="prometheus-是如何存储指标数据的">
+ Prometheus 是如何存储指标数据的
+ &lt;a class="anchor" href="#prometheus-%e6%98%af%e5%a6%82%e4%bd%95%e5%ad%98%e5%82%a8%e6%8c%87%e6%a0%87%e6%95%b0%e6%8d%ae%e7%9a%84">#&lt;/a>
+&lt;/h3>
+&lt;h3 id="prometheus-是如何存储一个指标的时间序列的">
+ Prometheus 是如何存储一个指标的时间序列的
+ &lt;a class="anchor" href="#prometheus-%e6%98%af%e5%a6%82%e4%bd%95%e5%ad%98%e5%82%a8%e4%b8%80%e4%b8%aa%e6%8c%87%e6%a0%87%e7%9a%84%e6%97%b6%e9%97%b4%e5%ba%8f%e5%88%97%e7%9a%84">#&lt;/a>
+&lt;/h3>
+&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/prometheus/prometheus/discussions/11261">Are metrics timestamped at the start of the scrape, or at the end? #11261&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>kube-prometheus-stack 安装</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;p>&lt;code>kube-prometheus-stack&lt;/code> 是 prometheus 的官方 helm charts，包含 &lt;a href="https://github.com/prometheus-operator/prometheus-operator">prometheus-operator&lt;/a>、&lt;a href="https://github.com/prometheus/prometheus">prometheus&lt;/a>、&lt;a href="https://github.com/grafana/grafana">grafana&lt;/a>、&lt;a href="https://github.com/prometheus/alertmanager">alertmanager&lt;/a>、&lt;a href="https://github.com/prometheus/node_exporter">node-exporter&lt;/a> 等组件。&lt;/p>
+&lt;h2 id="安装-kube-prometheus-stack">
+ 安装 kube-prometheus-stack
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-kube-prometheus-stack">#&lt;/a>
+&lt;/h2>
+&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/kube-prometheus-stack
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo update
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheus:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheusSpec:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> additionalScrapeConfigs: []
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> podMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> ruleSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> probeSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> scrapeConfigSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> serviceMonitorSelectorNilUsesHelmValues: false
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheusOperator:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">grafana:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">alertmanager:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">nodeExporter:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="配置说明">
+ 配置说明
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e8%af%b4%e6%98%8e">#&lt;/a>
+&lt;/h3>
+&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item><item><title>node-exporter 安装</title><link>/posts/node-exporter/</link><pubDate>Wed, 03 Jul 2024 22:39:59 +0800</pubDate><guid>/posts/node-exporter/</guid><description>&lt;h2 id="node-exporter-安装">
+ node-exporter 安装
+ &lt;a class="anchor" href="#node-exporter-%e5%ae%89%e8%a3%85">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="生成账号密码的-bcrypt-hash">
+ 生成账号密码的 bcrypt hash
+ &lt;a class="anchor" href="#%e7%94%9f%e6%88%90%e8%b4%a6%e5%8f%b7%e5%af%86%e7%a0%81%e7%9a%84-bcrypt-hash">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>apt install apache2-utils -y
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>生成一个账号密码的 bcrypt hash&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>-B&lt;/code> 强制使用 bcrypt 算法&lt;/li>
+&lt;li>&lt;code>-C 10&lt;/code> 指定 bcrypt 的 cost 值为 10, golang bcrypt 默认 cost 值也为 10&lt;/li>
+&lt;/ul>
+&lt;p>注意修改下面的 &lt;code>username&lt;/code> 和 &lt;code>password&lt;/code> 为你要设置的账号密码&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># htpasswd -nbBC 10 username password&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>username:$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="关于-bcrypt">
+ 关于 bcrypt
+ &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-bcrypt">#&lt;/a>
+&lt;/h4>
+&lt;p>格式为 &lt;code>$2&amp;lt;a/b/x/y&amp;gt;$[cost]$[22 character salt][31 character hash]&lt;/code>&lt;/p>
+&lt;p>例如&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">\_&lt;/span>_/&lt;span style="color:#ae81ff">\/&lt;/span> &lt;span style="color:#ae81ff">\_&lt;/span>___________________/&lt;span style="color:#ae81ff">\_&lt;/span>____________________________/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Alg Cost Salt Hash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="运行-node-exporter">
+ 运行 node-exporter
+ &lt;a class="anchor" href="#%e8%bf%90%e8%a1%8c-node-exporter">#&lt;/a>
+&lt;/h3>
+&lt;ol>
+&lt;li>创建 &lt;code>prometheus&lt;/code> 配置文件 &lt;code>/etc/prometheus/web.yml&lt;/code>&lt;/li>
+&lt;li>创建 &lt;code>docker-compose.yml&lt;/code> 文件&lt;/li>
+&lt;li>运行 docker compose&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>PASS&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/prometheus
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/web.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">basic_auth_users:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> # username: password
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheus: ${PASS}
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/docker-compose.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">services:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> node-exporter:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> image: quay.io/prometheus/node-exporter:latest
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> container_name: node-exporter
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> command: 
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--path.rootfs=/host&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--web.config.file=/etc/prometheus/web.yml&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> network_mode: &amp;#34;host&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> pid: host
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> restart: always
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> volumes:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#39;/:/host:ro,rslave&amp;#39;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - /etc/prometheus/web.yml:/etc/prometheus/web.yml
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>docker compose -f /etc/prometheus/docker-compose.yml up -d
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="在-prometheus-中配置指标收集">
+ 在 prometheus 中配置指标收集
+ &lt;a class="anchor" href="#%e5%9c%a8-prometheus-%e4%b8%ad%e9%85%8d%e7%bd%ae%e6%8c%87%e6%a0%87%e6%94%b6%e9%9b%86">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="方式一直接修改-prometheus-配置">
+ 方式一：直接修改 prometheus 配置
+ &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
+&lt;/h3>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Linux 磁盘分区</title><link>/posts/partitioning-disks/</link><pubDate>Sat, 15 Mar 2025 20:31:35 +0800</pubDate><guid>/posts/partitioning-disks/</guid><description>&lt;p>&lt;a href="https://www.baeldung.com/linux/partitioning-disks">https://www.baeldung.com/linux/partitioning-disks&lt;/a>
+&lt;a href="https://en.wikipedia.org/wiki/Master_boot_record">https://en.wikipedia.org/wiki/Master_boot_record&lt;/a>
+&lt;a href="https://www.cnblogs.com/god-of-death/p/18221794">https://www.cnblogs.com/god-of-death/p/18221794&lt;/a>&lt;/p>
+&lt;h2 id="概览">
+ 概览
+ &lt;a class="anchor" href="#%e6%a6%82%e8%a7%88">#&lt;/a>
+&lt;/h2>
+&lt;p>通常安装 Linux 系统的第一步就是磁盘分区。在我们创建任何文件前需要先存在文件系统。&lt;/p>
+&lt;p>分区被用来将原始存储空间分割成大块，可以用来隔离文件系统故障。&lt;/p>
+&lt;h2 id="磁盘类型-disk-types">
+ 磁盘类型 (Disk Types)
+ &lt;a class="anchor" href="#%e7%a3%81%e7%9b%98%e7%b1%bb%e5%9e%8b-disk-types">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="分区表格式-mbr-和-gpt">
+ 分区表格式 MBR 和 GPT
+ &lt;a class="anchor" href="#%e5%88%86%e5%8c%ba%e8%a1%a8%e6%a0%bc%e5%bc%8f-mbr-%e5%92%8c-gpt">#&lt;/a>
+&lt;/h3>
+&lt;p>&lt;a href="https://en.wikipedia.org/wiki/Master_boot_record">MBR&lt;/a> (Master Boot Record) 和 &lt;a href="https://en.wikipedia.org/wiki/GUID_Partition_Table">GPT&lt;/a> (GUID Partition Table) 是最广泛使用的分区表，相较于 GPT，MBR 是一个老的标准并且有一些限制。&lt;/p>
+&lt;h3 id="bios-和-uefi">
+ BIOS 和 UEFI
+ &lt;a class="anchor" href="#bios-%e5%92%8c-uefi">#&lt;/a>
+&lt;/h3>
+&lt;h3 id="分区工具">
+ 分区工具
+ &lt;a class="anchor" href="#%e5%88%86%e5%8c%ba%e5%b7%a5%e5%85%b7">#&lt;/a>
+&lt;/h3>
+&lt;p>&lt;code>fdisk&lt;/code> 和 &lt;code>parted&lt;/code>&lt;/p>
+&lt;p>TODO&lt;/p></description></item><item><title>Linux 文件系统之 inode</title><link>/posts/inode/</link><pubDate>Thu, 13 Mar 2025 12:08:49 +0800</pubDate><guid>/posts/inode/</guid><description>&lt;p>TODO&lt;/p>
+&lt;p>&lt;a href="https://www.ruanyifeng.com/blog/2011/12/inode.html">https://www.ruanyifeng.com/blog/2011/12/inode.html&lt;/a>&lt;/p>
+&lt;h2 id="inode-是什么">
+ inode 是什么
+ &lt;a class="anchor" href="#inode-%e6%98%af%e4%bb%80%e4%b9%88">#&lt;/a>
+&lt;/h2>
+&lt;p>inode 是 Linux 文件系统中的一个重要概念，它是一个文件的元数据，记录了文件的权限、类型、大小、创建时间、修改时间等信息。&lt;/p>
+&lt;h2 id="inode-的结构">
+ inode 的结构
+ &lt;a class="anchor" href="#inode-%e7%9a%84%e7%bb%93%e6%9e%84">#&lt;/a>
+&lt;/h2>
+&lt;p>inode 的结构如下:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>struct inode &lt;span style="color:#f92672">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> umode_t i_mode; // 文件类型和权限
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uid_t i_uid; // 文件所有者
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> gid_t i_gid; // 文件所属组
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> loff_t i_size; // 文件大小
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> struct timespec i_atime; // 文件访问时间
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> struct timespec i_ctime; // 文件创建时间
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> struct timespec i_mtime; // 文件修改时间
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="使用场景">
+ 使用场景
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8%e5%9c%ba%e6%99%af">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="通过-inode-查找并删除文件">
+ 通过 inode 查找并删除文件
+ &lt;a class="anchor" href="#%e9%80%9a%e8%bf%87-inode-%e6%9f%a5%e6%89%be%e5%b9%b6%e5%88%a0%e9%99%a4%e6%96%87%e4%bb%b6">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ls -li&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>total &lt;span style="color:#ae81ff">32&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">459&lt;/span> -rw-r--r-- &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">20070&lt;/span> Mar &lt;span style="color:#ae81ff">13&lt;/span> 11:27 &lt;span style="color:#e6db74">&amp;#39;&amp;#39;$&amp;#39;\033\033&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">526984&lt;/span> drwxr-xr-x &lt;span style="color:#ae81ff">5&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Jan &lt;span style="color:#ae81ff">1&lt;/span> 17:47 charts
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">784&lt;/span> drwxr-xr-x &lt;span style="color:#ae81ff">2&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Jan &lt;span style="color:#ae81ff">19&lt;/span> 20:42 pods
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">49203&lt;/span> drwx------ &lt;span style="color:#ae81ff">3&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Feb &lt;span style="color:#ae81ff">10&lt;/span> &lt;span style="color:#ae81ff">2023&lt;/span> snap
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># find . -inum 459&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>./??
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># find . -inum 459 -delete&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ls -li&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>total &lt;span style="color:#ae81ff">12&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">526984&lt;/span> drwxr-xr-x &lt;span style="color:#ae81ff">5&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Jan &lt;span style="color:#ae81ff">1&lt;/span> 17:47 charts
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">784&lt;/span> drwxr-xr-x &lt;span style="color:#ae81ff">2&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Jan &lt;span style="color:#ae81ff">19&lt;/span> 20:42 pods
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">49203&lt;/span> drwx------ &lt;span style="color:#ae81ff">3&lt;/span> root root &lt;span style="color:#ae81ff">4096&lt;/span> Feb &lt;span style="color:#ae81ff">10&lt;/span> &lt;span style="color:#ae81ff">2023&lt;/span> snap
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2></description></item><item><title>Linux 启动流程 (BIOS)</title><link>/posts/linux-boot-process-bios/</link><pubDate>Thu, 13 Mar 2025 11:46:16 +0800</pubDate><guid>/posts/linux-boot-process-bios/</guid><description>&lt;h2 id="启动流程">
+ 启动流程
+ &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8%e6%b5%81%e7%a8%8b">#&lt;/a>
+&lt;/h2>
+&lt;p>开机自检(POST) -&amp;gt; 主板固件(BIOS) -&amp;gt; Boot Loader 引导(grub2) vmlinuz运行 -&amp;gt; 内核挂载文件系统 -&amp;gt; 初始化(systemd)&lt;/p>
+&lt;h3 id="开机自检-post">
+ 开机自检 (POST)
+ &lt;a class="anchor" href="#%e5%bc%80%e6%9c%ba%e8%87%aa%e6%a3%80-post">#&lt;/a>
+&lt;/h3>
+&lt;p>当计算机开机时，BIOS(Basic Input Output System) 首先进行自检 POST(Power-On Self Test)，检查硬件组件（如内存、硬盘、显卡等）是否正常工作&lt;/p>
+&lt;h3 id="加载引导程序">
+ 加载引导程序
+ &lt;a class="anchor" href="#%e5%8a%a0%e8%bd%bd%e5%bc%95%e5%af%bc%e7%a8%8b%e5%ba%8f">#&lt;/a>
+&lt;/h3>
+&lt;p>TODO&lt;/p>
+&lt;h2 id="其他">
+ 其他
+ &lt;a class="anchor" href="#%e5%85%b6%e4%bb%96">#&lt;/a>
+&lt;/h2>
+&lt;h3 id="使用-initial-ram-disk-initrd">
+ &lt;strong>使用 initial RAM disk (initrd)&lt;/strong>
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8-initial-ram-disk-initrd">#&lt;/a>
+&lt;/h3>
+&lt;p>&lt;code>initrd&lt;/code> 提供了通过 &lt;code>boot loader&lt;/code> 程序加载 RAM 磁盘的能力，然后这个 RAM 磁盘可以被挂载为根文件系统，并可以从中运行程序。之后，可以从不同的设备挂载新的文件系统，然后将前一个根目录(来自initrd)移动到一个目录，然后可以卸载。&lt;/p>
+&lt;p>&lt;code>initrd&lt;/code> 主要设计为允许系统启动分为两个阶段进行，其中内核携带最少的编译进去的驱动程序集，从 &lt;code>initrd&lt;/code> 加载其他模块。&lt;/p>
+&lt;p>当时用 &lt;code>initrd&lt;/code>，系统通常按照下面顺序启动：&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>boot loader&lt;/code>(一般是&lt;code>grub&lt;/code>) 加载内核 &lt;code>vmlinuz&lt;/code> 和 initial RAM disk &lt;code>initrd.img&lt;/code>, 具体的文件名要看 &lt;code>/boot/grub/grub.cfg&lt;/code> 中的 menu 设置。&lt;/li>
+&lt;/ol>
+&lt;p>TODO&lt;/p></description></item><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
  内存逃逸
  &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h2>
@@ -186,46 +432,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">first&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">last&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">sudog&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>阻塞模式和非阻塞模式：由 select 是否包含 default 确定&lt;/p></description></item><item><title>关于我</title><link>/posts/about/</link><pubDate>Sun, 02 Mar 2025 23:10:09 +0800</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
-&lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>&lt;/blockquote>
-&lt;h3 id="目前在学的内容">
- 目前在学的内容
- &lt;a class="anchor" href="#%e7%9b%ae%e5%89%8d%e5%9c%a8%e5%ad%a6%e7%9a%84%e5%86%85%e5%ae%b9">#&lt;/a>
-&lt;/h3>
-&lt;ul>
-&lt;li>&lt;strong>golang&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>linux&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>kubernetes&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>kubevirt&lt;/strong>&lt;/li>
-&lt;li>ceph&lt;/li>
-&lt;li>openstack&lt;/li>
-&lt;li>terraform&lt;/li>
-&lt;li>postgresql&lt;/li>
-&lt;li>mysql&lt;/li>
-&lt;li>redis&lt;/li>
-&lt;li>sqlite&lt;/li>
-&lt;/ul>
-&lt;h3 id="我的设备">
- 我的设备
- &lt;a class="anchor" href="#%e6%88%91%e7%9a%84%e8%ae%be%e5%a4%87">#&lt;/a>
-&lt;/h3>
-&lt;ul>
-&lt;li>Macbook Pro 2018 15 inch 16+256&lt;/li>
-&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 64G内存+1TB固态
-&lt;ul>
-&lt;li>Ubuntu 22.04 + QEMU/KVM&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>5G CPE VN009&lt;/li>
-&lt;li>iPad mini6&lt;/li>
-&lt;li>OnePlus 9R&lt;/li>
-&lt;/ul>
-&lt;h3 id="联系方式">
- 联系方式
- &lt;a class="anchor" href="#%e8%81%94%e7%b3%bb%e6%96%b9%e5%bc%8f">#&lt;/a>
-&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>echo YWRtaW5AZ29jbi50b3AK | base64 -d
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Linux iptables</title><link>/posts/linux-iptables/</link><pubDate>Sun, 02 Mar 2025 10:09:37 +0800</pubDate><guid>/posts/linux-iptables/</guid><description>&lt;blockquote>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>阻塞模式和非阻塞模式：由 select 是否包含 default 确定&lt;/p></description></item><item><title>Linux iptables</title><link>/posts/linux-iptables/</link><pubDate>Sun, 02 Mar 2025 10:09:37 +0800</pubDate><guid>/posts/linux-iptables/</guid><description>&lt;blockquote>
 &lt;p>持续更新&amp;hellip;&lt;/p>&lt;/blockquote>
 &lt;h2 id="iptables-介绍">
  iptables 介绍
@@ -608,7 +815,39 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  默认的 Builder 实例
  &lt;a class="anchor" href="#%e9%bb%98%e8%ae%a4%e7%9a%84-builder-%e5%ae%9e%e4%be%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>Etcd</title><link>/posts/etcd/</link><pubDate>Sun, 25 Aug 2024 01:10:17 +0800</pubDate><guid>/posts/etcd/</guid><description/></item><item><title>Redis</title><link>/posts/redis/</link><pubDate>Sun, 25 Aug 2024 01:10:10 +0800</pubDate><guid>/posts/redis/</guid><description/></item><item><title>PostgreSQL</title><link>/posts/postgresql/</link><pubDate>Sun, 25 Aug 2024 01:10:04 +0800</pubDate><guid>/posts/postgresql/</guid><description/></item><item><title>MySQL</title><link>/posts/mysql/</link><pubDate>Sun, 25 Aug 2024 01:09:56 +0800</pubDate><guid>/posts/mysql/</guid><description/></item><item><title>MongoDB</title><link>/posts/mongodb/</link><pubDate>Sun, 25 Aug 2024 01:06:47 +0800</pubDate><guid>/posts/mongodb/</guid><description/></item><item><title>K8s Namespace</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description/></item><item><title>K8s Cgroup</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description/></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
+&lt;p>docker engine 会自动创建一个默认的 builder 实例，例如 &lt;code>default&lt;/code>。默认的驱动是 &lt;code>docker&lt;/code>，不支持多平台构建。&lt;/p></description></item><item><title>failed to reserve sandbox name</title><link>/posts/failed-to-reserve-sandbox-name/</link><pubDate>Sat, 31 Aug 2024 23:18:04 +0800</pubDate><guid>/posts/failed-to-reserve-sandbox-name/</guid><description>&lt;h2 id="问题描述">
+ 问题描述
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e6%8f%8f%e8%bf%b0">#&lt;/a>
+&lt;/h2>
+&lt;p>当 k8s 集群时间发生回退时, 会出现 &lt;code>failed to reserve sandbox name&lt;/code> 错误.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Aug &lt;span style="color:#ae81ff">31&lt;/span> 13:58:38 kind-control-plane kubelet&lt;span style="color:#f92672">[&lt;/span>554&lt;span style="color:#f92672">]&lt;/span>: E0831 13:58:38.610262 	&lt;span style="color:#ae81ff">554&lt;/span> log.go:32&lt;span style="color:#f92672">]&lt;/span> &lt;span style="color:#e6db74">&amp;#34;RunPodSandbox from runtime service failed&amp;#34;&lt;/span> err&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;r
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">pc error: code = Unknown desc = failed to reserve sandbox name \&amp;#34;kube-scheduler-kind-control-plane_kube-system_3ead35239782468d5c21d9cb3933d
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">bb2_0\&amp;#34;: name \&amp;#34;kube-scheduler-kind-control-plane_kube-system_3ead35239782468d5c21d9cb3933dbb2_0\&amp;#34; is reserved for \&amp;#34;e193fd73214c4db18ca31ed
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">c6aa2591445dba26d77b6df9d8956a9228031689e\&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="解决办法">
+ 解决办法
+ &lt;a class="anchor" href="#%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95">#&lt;/a>
+&lt;/h2>
+&lt;p>将 &lt;code>&amp;lt;sandbox-id&amp;gt;&lt;/code> 对应的容器删掉&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>crictl stopp &amp;lt;sandbox-id&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>crictl rmp &amp;lt;sandbox-id&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="相关-issue">
+ 相关 issue
+ &lt;a class="anchor" href="#%e7%9b%b8%e5%85%b3-issue">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/kubernetes/kubernetes/issues/126514">https://github.com/kubernetes/kubernetes/issues/126514&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/containerd/containerd/issues/9459">https://github.com/containerd/containerd/issues/9459&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="相关-pr">
+ 相关 PR
+ &lt;a class="anchor" href="#%e7%9b%b8%e5%85%b3-pr">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/kubernetes/kubernetes/pull/130551">https://github.com/kubernetes/kubernetes/pull/130551&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Etcd</title><link>/posts/etcd/</link><pubDate>Sun, 25 Aug 2024 01:10:17 +0800</pubDate><guid>/posts/etcd/</guid><description/></item><item><title>Redis</title><link>/posts/redis/</link><pubDate>Sun, 25 Aug 2024 01:10:10 +0800</pubDate><guid>/posts/redis/</guid><description/></item><item><title>PostgreSQL</title><link>/posts/postgresql/</link><pubDate>Sun, 25 Aug 2024 01:10:04 +0800</pubDate><guid>/posts/postgresql/</guid><description/></item><item><title>MySQL</title><link>/posts/mysql/</link><pubDate>Sun, 25 Aug 2024 01:09:56 +0800</pubDate><guid>/posts/mysql/</guid><description/></item><item><title>MongoDB</title><link>/posts/mongodb/</link><pubDate>Sun, 25 Aug 2024 01:06:47 +0800</pubDate><guid>/posts/mongodb/</guid><description/></item><item><title>K8s Namespace</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description/></item><item><title>K8s Cgroup</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description/></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
  &lt;code>virsh&lt;/code> 命令
  &lt;a class="anchor" href="#virsh-%e5%91%bd%e4%bb%a4">#&lt;/a>
 &lt;/h2>
@@ -636,118 +875,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vethe1841f6e ce:79:fc:e1:1e:0b N/A N/A
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> veth464995dc 82:a9:3b:a6:b5:49 N/A N/A
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> veth2370e2ac 4a:c8:32:5c:fb:34 N/A N/A
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Node Exporter</title><link>/posts/node-exporter/</link><pubDate>Wed, 03 Jul 2024 22:39:59 +0800</pubDate><guid>/posts/node-exporter/</guid><description>&lt;h2 id="node-exporter-安装">
- node-exporter 安装
- &lt;a class="anchor" href="#node-exporter-%e5%ae%89%e8%a3%85">#&lt;/a>
-&lt;/h2>
-&lt;h3 id="生成账号密码的-bcrypt-hash">
- 生成账号密码的 bcrypt hash
- &lt;a class="anchor" href="#%e7%94%9f%e6%88%90%e8%b4%a6%e5%8f%b7%e5%af%86%e7%a0%81%e7%9a%84-bcrypt-hash">#&lt;/a>
-&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>apt install apache2-utils -y
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>生成一个账号密码的 bcrypt hash&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>-B&lt;/code> 强制使用 bcrypt 算法&lt;/li>
-&lt;li>&lt;code>-C 10&lt;/code> 指定 bcrypt 的 cost 值为 10, golang bcrypt 默认 cost 值也为 10&lt;/li>
-&lt;/ul>
-&lt;p>注意修改下面的 &lt;code>username&lt;/code> 和 &lt;code>password&lt;/code> 为你要设置的账号密码&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># htpasswd -nbBC 10 username password&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>username:$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="关于-bcrypt">
- 关于 bcrypt
- &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-bcrypt">#&lt;/a>
-&lt;/h4>
-&lt;p>格式为 &lt;code>$2&amp;lt;a/b/x/y&amp;gt;$[cost]$[22 character salt][31 character hash]&lt;/code>&lt;/p>
-&lt;p>例如&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">\_&lt;/span>_/&lt;span style="color:#ae81ff">\/&lt;/span> &lt;span style="color:#ae81ff">\_&lt;/span>___________________/&lt;span style="color:#ae81ff">\_&lt;/span>____________________________/
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Alg Cost Salt Hash
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="运行-node-exporter">
- 运行 node-exporter
- &lt;a class="anchor" href="#%e8%bf%90%e8%a1%8c-node-exporter">#&lt;/a>
-&lt;/h3>
-&lt;ol>
-&lt;li>创建 &lt;code>prometheus&lt;/code> 配置文件 &lt;code>/etc/prometheus/web.yml&lt;/code>&lt;/li>
-&lt;li>创建 &lt;code>docker-compose.yml&lt;/code> 文件&lt;/li>
-&lt;li>运行 docker compose&lt;/li>
-&lt;/ol>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>PASS&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;$2y$10$poDYDLemE3r95gcQ.h8FdODudFaFZhwZCSX1RTwpI2s8V4Mwm0.lO&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/prometheus
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/web.yml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">basic_auth_users:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> # username: password
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheus: ${PASS}
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF&amp;gt; /etc/prometheus/docker-compose.yml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">services:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> node-exporter:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> image: quay.io/prometheus/node-exporter:latest
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> container_name: node-exporter
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> command: 
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--path.rootfs=/host&amp;#34;
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#34;--web.config.file=/etc/prometheus/web.yml&amp;#34;
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> network_mode: &amp;#34;host&amp;#34;
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> pid: host
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> restart: always
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> volumes:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - &amp;#39;/:/host:ro,rslave&amp;#39;
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - /etc/prometheus/web.yml:/etc/prometheus/web.yml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>docker compose -f /etc/prometheus/docker-compose.yml up -d
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="在-prometheus-中配置指标收集">
- 在 prometheus 中配置指标收集
- &lt;a class="anchor" href="#%e5%9c%a8-prometheus-%e4%b8%ad%e9%85%8d%e7%bd%ae%e6%8c%87%e6%a0%87%e6%94%b6%e9%9b%86">#&lt;/a>
-&lt;/h2>
-&lt;h3 id="方式一直接修改-prometheus-配置">
- 方式一：直接修改 prometheus 配置
- &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
-&lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>安装 Kube Prometheus Stack</title><link>/posts/kube-prometheus-stack/</link><pubDate>Wed, 03 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/kube-prometheus-stack/</guid><description>&lt;p>&lt;code>kube-prometheus-stack&lt;/code> 是 prometheus 的官方 helm charts，包含 &lt;a href="https://github.com/prometheus-operator/prometheus-operator">prometheus-operator&lt;/a>、&lt;a href="https://github.com/prometheus/prometheus">prometheus&lt;/a>、&lt;a href="https://github.com/grafana/grafana">grafana&lt;/a>、&lt;a href="https://github.com/prometheus/alertmanager">alertmanager&lt;/a>、&lt;a href="https://github.com/prometheus/node_exporter">node-exporter&lt;/a> 等组件。&lt;/p>
-&lt;h2 id="安装-kube-prometheus-stack">
- 安装 kube-prometheus-stack
- &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-kube-prometheus-stack">#&lt;/a>
-&lt;/h2>
-&lt;p>使用 helm charts 安装 kube-prometheus-stack&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir -p ~/charts/kube-prometheus-stack
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cd ~/charts/kube-prometheus-stack
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm repo update
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># values.yaml 用来查看默认值&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm show values prometheus-community/kube-prometheus-stack &amp;gt; values.yaml
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; custom-values.yaml
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheus:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> prometheusSpec:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> additionalScrapeConfigs: []
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> podMonitorSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> ruleSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> probeSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> scrapeConfigSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> serviceMonitorSelectorNilUsesHelmValues: false
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">prometheusOperator:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">grafana:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> service:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> type: NodePort
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">alertmanager:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">nodeExporter:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> enabled: true
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOF&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>helm upgrade --install --create-namespace --namespace monitoring kube-prometheus-stack prometheus-community/kube-prometheus-stack -f custom-values.yaml
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="配置说明">
- 配置说明
- &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e8%af%b4%e6%98%8e">#&lt;/a>
-&lt;/h3>
-&lt;p>有一个相关 issue 讨论：&lt;a href="https://github.com/prometheus-operator/kube-prometheus/issues/1392">servicemonitor not being discovered&lt;/a>&lt;/p></description></item><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>安装 Rook Ceph</title><link>/posts/rook-ceph/</link><pubDate>Tue, 02 Jul 2024 14:56:03 +0800</pubDate><guid>/posts/rook-ceph/</guid><description>&lt;p>使用 &lt;a href="../rke2/">RKE2 快速搭建 k8s 集群&lt;/a> 创建的集群&lt;/p>
 &lt;h2 id="安装-rook-ceph">
  安装 rook ceph
  &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-rook-ceph">#&lt;/a>
@@ -1483,7 +1611,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/h2>
 &lt;p>&lt;code>database/sql&lt;/code>提供了操作SQL数据库的通用接口, 需要结合&lt;code>database driver&lt;/code>同时使用, 这里是一些&lt;a href="https://go.dev/wiki/SQLDrivers">驱动列表&lt;/a>&lt;/p></description></item><item><title>OpenWrt</title><link>/posts/openwrt/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt/</guid><description>&lt;p>很久没折腾&lt;code>OpenWrt&lt;/code>了, 囊中羞涩, 没有其他合适的设备, 这次是在KVM虚机中运行使用(&lt;code>ALL IN BOOM!&lt;/code>)&lt;/p>
 &lt;p>先亮个当前的穷人版家庭网络拓扑图&lt;/p>
-&lt;p>&lt;img src="/posts/linux/imgs/home-network-topology-diagram.svg" alt="穷人版家庭网络拓扑图" />&lt;/p>
+&lt;p>&lt;img src="/linux/imgs/home-network-topology-diagram.svg" alt="穷人版家庭网络拓扑图" />&lt;/p>
 &lt;h2 id="准备qcow2镜像">
  准备&lt;code>qcow2&lt;/code>镜像
  &lt;a class="anchor" href="#%e5%87%86%e5%a4%87qcow2%e9%95%9c%e5%83%8f">#&lt;/a>
@@ -2057,6 +2185,41 @@ Another option is to run PRAGMA synchronous=OFF. This command will cause SQLite 
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git checkout your_workspace_branch
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 把暂存的代码从堆栈弹出到当前分支&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git stash pop
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>关于我</title><link>/posts/about/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
+&lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>&lt;/blockquote>
+&lt;h3 id="目前在学的内容">
+ 目前在学的内容
+ &lt;a class="anchor" href="#%e7%9b%ae%e5%89%8d%e5%9c%a8%e5%ad%a6%e7%9a%84%e5%86%85%e5%ae%b9">#&lt;/a>
+&lt;/h3>
+&lt;ul>
+&lt;li>&lt;strong>golang&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>linux&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>kubernetes&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>kubevirt&lt;/strong>&lt;/li>
+&lt;li>ceph&lt;/li>
+&lt;li>prometheus&lt;/li>
+&lt;li>postgresql&lt;/li>
+&lt;/ul>
+&lt;h3 id="我的设备">
+ 我的设备
+ &lt;a class="anchor" href="#%e6%88%91%e7%9a%84%e8%ae%be%e5%a4%87">#&lt;/a>
+&lt;/h3>
+&lt;ul>
+&lt;li>Macbook Pro 2018 15 inch 16+256&lt;/li>
+&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 64G内存+1TB固态
+&lt;ul>
+&lt;li>Ubuntu 22.04 + QEMU/KVM&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>5G CPE VN009&lt;/li>
+&lt;li>iPad mini6&lt;/li>
+&lt;li>OnePlus 9R&lt;/li>
+&lt;/ul>
+&lt;h3 id="联系方式">
+ 联系方式
+ &lt;a class="anchor" href="#%e8%81%94%e7%b3%bb%e6%96%b9%e5%bc%8f">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>echo YWRtaW5AZ29jbi50b3AK | base64 -d
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>友链</title><link>/posts/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/posts/links/</guid><description>&lt;style>
  .friend-link {
  display: flex;

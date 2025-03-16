@@ -1,4 +1,142 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's blog</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's blog</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Rclone 使用笔记</title><link>/posts/rclone/</link><pubDate>Thu, 04 Apr 2024 15:56:58 +0800</pubDate><guid>/posts/rclone/</guid><description>&lt;blockquote>
+&lt;p>使用&lt;code>rclone&lt;/code>和&lt;code>alist&lt;/code>提供的&lt;code>webdav&lt;/code>接口将阿里云盘&lt;code>mount&lt;/code>到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件&lt;/p>&lt;/blockquote>
+&lt;h2 id="下载安装rclone">
+ 下载安装&lt;code>rclone&lt;/code>
+ &lt;a class="anchor" href="#%e4%b8%8b%e8%bd%bd%e5%ae%89%e8%a3%85rclone">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl https://rclone.org/install.sh | bash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="配置rclone-config">
+ 配置&lt;code>rclone config&lt;/code>
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%aerclone-config">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># rclone config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>No remotes found, make a new one?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>n&lt;span style="color:#f92672">)&lt;/span> New remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>s&lt;span style="color:#f92672">)&lt;/span> Set configuration password
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>q&lt;span style="color:#f92672">)&lt;/span> Quit config
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>n/s/q&amp;gt; n
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter name &lt;span style="color:#66d9ef">for&lt;/span> new remote.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>name&amp;gt; alist
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option Storage.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Type of storage to configure.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Choose a number from below, or type in your own value.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">1&lt;/span> / 1Fichier
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>fichier&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">51&lt;/span> / WebDAV
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>webdav&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Storage&amp;gt; &lt;span style="color:#ae81ff">51&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option url.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>URL of http host to connect to.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>E.g. https://example.com.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.lan/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option vendor.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Name of the WebDAV site/service/software you are using.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Choose a number from below, or type in your own value.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Press Enter to leave empty.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">1&lt;/span> / Fastmail Files
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>fastmail&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">2&lt;/span> / Nextcloud
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>nextcloud&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">3&lt;/span> / Owncloud
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>owncloud&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">4&lt;/span> / Sharepoint Online, authenticated by Microsoft account
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>sharepoint&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">5&lt;/span> / Sharepoint with NTLM authentication, usually self-hosted or on-premises
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>sharepoint-ntlm&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">6&lt;/span> / rclone WebDAV server to serve a remote over HTTP via the WebDAV protocol
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>rclone&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">7&lt;/span> / Other site/service or software
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">\ &lt;/span>&lt;span style="color:#f92672">(&lt;/span>other&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>vendor&amp;gt; &lt;span style="color:#ae81ff">7&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option user.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>User name.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>In &lt;span style="color:#66d9ef">case&lt;/span> NTLM authentication is used, the username should be in the format &lt;span style="color:#e6db74">&amp;#39;Domain\User&amp;#39;&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value. Press Enter to leave empty.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>user&amp;gt; admin
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option pass.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Password.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Choose an alternative below. Press Enter &lt;span style="color:#66d9ef">for&lt;/span> the default &lt;span style="color:#f92672">(&lt;/span>n&lt;span style="color:#f92672">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y&lt;span style="color:#f92672">)&lt;/span> Yes, type in my own password
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>g&lt;span style="color:#f92672">)&lt;/span> Generate random password
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>n&lt;span style="color:#f92672">)&lt;/span> No, leave this optional password blank &lt;span style="color:#f92672">(&lt;/span>default&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y/g/n&amp;gt; y
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter the password:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>password:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Confirm the password:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>password:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option bearer_token.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Bearer token instead of user/pass &lt;span style="color:#f92672">(&lt;/span>e.g. a Macaroon&lt;span style="color:#f92672">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value. Press Enter to leave empty.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>bearer_token&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Edit advanced config?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y&lt;span style="color:#f92672">)&lt;/span> Yes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>n&lt;span style="color:#f92672">)&lt;/span> No &lt;span style="color:#f92672">(&lt;/span>default&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y/n&amp;gt; n
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuration complete.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Options:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- type: webdav
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.lan/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- vendor: other
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- user: admin
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- pass: *** ENCRYPTED ***
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Keep this &lt;span style="color:#e6db74">&amp;#34;alist&amp;#34;&lt;/span> remote?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y&lt;span style="color:#f92672">)&lt;/span> Yes this is OK &lt;span style="color:#f92672">(&lt;/span>default&lt;span style="color:#f92672">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>e&lt;span style="color:#f92672">)&lt;/span> Edit this remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>d&lt;span style="color:#f92672">)&lt;/span> Delete this remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>y/e/d&amp;gt; y
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Current remotes:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Name Type
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">====&lt;/span> &lt;span style="color:#f92672">====&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>alist webdav
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>e&lt;span style="color:#f92672">)&lt;/span> Edit existing remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>n&lt;span style="color:#f92672">)&lt;/span> New remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>d&lt;span style="color:#f92672">)&lt;/span> Delete remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>r&lt;span style="color:#f92672">)&lt;/span> Rename remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>c&lt;span style="color:#f92672">)&lt;/span> Copy remote
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>s&lt;span style="color:#f92672">)&lt;/span> Set configuration password
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>q&lt;span style="color:#f92672">)&lt;/span> Quit config
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>e/n/d/r/c/s/q&amp;gt; q
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="查看有哪些remote">
+ 查看有哪些remote
+ &lt;a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e6%9c%89%e5%93%aa%e4%ba%9bremote">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># rclone listremotes&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>alist:
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="查看某个remote下的目录或文件">
+ 查看某个&lt;code>remote&lt;/code>下的目录或文件
+ &lt;a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aaremote%e4%b8%8b%e7%9a%84%e7%9b%ae%e5%bd%95%e6%88%96%e6%96%87%e4%bb%b6">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># rclone lsd alist:/ali/video/诛仙&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -1 2024-04-02 12:27:23 -1 诛仙.第1季.2022-2023.4K.全26集
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> -1 2024-04-02 12:27:24 -1 诛仙.第2季.2024
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># rclone ls alist:/ali/video/诛仙/诛仙.第2季.2024&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">959919343&lt;/span> 第27集-Zhu.Xian-2024-03-29-4k-HEVC-H265.AAC-WEB-DL.mkv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">995844543&lt;/span> 第28集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">1012470661&lt;/span> 第29集-Zhu.Xian-2024-03-29-4K-HEVC-H265.AAC-WEB-DL.mkv
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="将alist-mount-到目录">
+ 将&lt;code>alist&lt;/code> mount 到目录
+ &lt;a class="anchor" href="#%e5%b0%86alist-mount-%e5%88%b0%e7%9b%ae%e5%bd%95">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo mkdir -p /mnt/alist
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sudo chmod &lt;span style="color:#ae81ff">777&lt;/span> /mnt/alist
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># --header &amp;#34;Referer:https://www.aliyundrive.com/&amp;#34; 是必须要有的&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rclone mount --cache-dir&lt;span style="color:#f92672">=&lt;/span>/tmp --vfs-cache-mode&lt;span style="color:#f92672">=&lt;/span>writes --header &lt;span style="color:#e6db74">&amp;#34;Referer:https://www.aliyundrive.com/&amp;#34;&lt;/span> alist: /mnt/alist/
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>配置开机自动挂载&lt;/p></description></item><item><title>Shell Script</title><link>/posts/shell-script/</link><pubDate>Sat, 23 Mar 2024 09:43:34 +0800</pubDate><guid>/posts/shell-script/</guid><description>&lt;blockquote>
 &lt;p>最近写的shell脚本比较多，记录一些常用命令, 相当于记录一个索引, 以后用时可以快速回忆起来.&lt;/p>&lt;/blockquote>
 &lt;h2 id="binbash">
  &lt;code>#!/bin/bash&lt;/code>

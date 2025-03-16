@@ -1,6 +1,6 @@
 {
-  "name": "gobai's blog",
-  "short_name": "gobai's blog",
+  "name": "gobai's notes",
+  "short_name": "gobai's notes",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
