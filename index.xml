@@ -142,7 +142,137 @@
  方式一：直接修改 prometheus 配置
  &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
 &lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Linux 磁盘分区</title><link>/posts/partitioning-disks/</link><pubDate>Sat, 15 Mar 2025 20:31:35 +0800</pubDate><guid>/posts/partitioning-disks/</guid><description>&lt;p>&lt;a href="https://www.baeldung.com/linux/partitioning-disks">https://www.baeldung.com/linux/partitioning-disks&lt;/a>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Filebrowser 安装</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;p>在 k8s 中安装 &lt;a href="https://github.com/filebrowser/filebrowser">filebrowser&lt;/a>&lt;/p>
+&lt;p>装完后默认密码 &lt;code>admin&lt;/code> / &lt;code>admin&lt;/code>, &lt;a href="https://filebrowser.org/installation">File Browser Install&lt;/a>&lt;/p>
+&lt;p>配置文件样例: &lt;a href="https://github.com/filebrowser/filebrowser/blob/master/docker/root/defaults/settings.json">settings.json&lt;/a>&lt;/p>
+&lt;p>关于数据持久化，都是持久化在 &lt;code>ceph&lt;/code> 块存储中，使用 &lt;code>sc/ceph-block&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>数据库存储在 &lt;code>pvc/filebrowser-database-pvc&lt;/code> 中，分配 &lt;code>1Gi&lt;/code>&lt;/li>
+&lt;li>文件目录存储在 &lt;code>pvc/filebrowser-data-pvc&lt;/code> 中，分配 &lt;code>50Gi&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">Namespace&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">ConfigMap&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">data&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">settings.json&lt;/span>: |&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> {
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;port&amp;#34;: 80,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;baseURL&amp;#34;: &amp;#34;&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;address&amp;#34;: &amp;#34;&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;log&amp;#34;: &amp;#34;stdout&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;database&amp;#34;: &amp;#34;/database/filebrowser.db&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> &amp;#34;root&amp;#34;: &amp;#34;/srv&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> }&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">PersistentVolumeClaim&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-database-pvc&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">accessModes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">ReadWriteOnce&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">storageClassName&lt;/span>: &lt;span style="color:#ae81ff">ceph-block&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">resources&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">requests&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">storage&lt;/span>: &lt;span style="color:#ae81ff">1Gi&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">PersistentVolumeClaim&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-data-pvc&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">accessModes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">ReadWriteOnce&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">storageClassName&lt;/span>: &lt;span style="color:#ae81ff">ceph-block&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">resources&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">requests&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">storage&lt;/span>: &lt;span style="color:#ae81ff">50Gi&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">apps/v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">Deployment&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">labels&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">app&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">replicas&lt;/span>: &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">selector&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">matchLabels&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">app&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">template&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">labels&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">app&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">containers&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">image&lt;/span>: &lt;span style="color:#ae81ff">filebrowser/filebrowser:v2&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ports&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">containerPort&lt;/span>: &lt;span style="color:#ae81ff">80&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">volumeMounts&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">mountPath&lt;/span>: &lt;span style="color:#ae81ff">/config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-database&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">mountPath&lt;/span>: &lt;span style="color:#ae81ff">/database&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-data&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">mountPath&lt;/span>: &lt;span style="color:#ae81ff">/srv&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">volumes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">configMap&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">key&lt;/span>: &lt;span style="color:#ae81ff">settings.json&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">path&lt;/span>: &lt;span style="color:#ae81ff">settings.json&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-database&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">persistentVolumeClaim&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">claimName&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-database-pvc&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-data&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">persistentVolumeClaim&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">claimName&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-data-pvc&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">Service&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">selector&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">app&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ports&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">port&lt;/span>: &lt;span style="color:#ae81ff">80&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">targetPort&lt;/span>: &lt;span style="color:#ae81ff">80&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">type&lt;/span>: &lt;span style="color:#ae81ff">ClusterIP&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>---
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">apiVersion&lt;/span>: &lt;span style="color:#ae81ff">networking.k8s.io/v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">kind&lt;/span>: &lt;span style="color:#ae81ff">Ingress&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">metadata&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser-ingress&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">namespace&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">annotations&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">nginx.ingress.kubernetes.io/ssl-redirect&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;false&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spec&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">rules&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">host&lt;/span>: &lt;span style="color:#ae81ff">file.home.local&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">http&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">paths&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">path&lt;/span>: &lt;span style="color:#ae81ff">/&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">pathType&lt;/span>: &lt;span style="color:#ae81ff">Prefix&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">backend&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">service&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">filebrowser&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">port&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">number&lt;/span>: &lt;span style="color:#ae81ff">80&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Linux 磁盘分区</title><link>/posts/partitioning-disks/</link><pubDate>Sat, 15 Mar 2025 20:31:35 +0800</pubDate><guid>/posts/partitioning-disks/</guid><description>&lt;p>&lt;a href="https://www.baeldung.com/linux/partitioning-disks">https://www.baeldung.com/linux/partitioning-disks&lt;/a>
 &lt;a href="https://en.wikipedia.org/wiki/Master_boot_record">https://en.wikipedia.org/wiki/Master_boot_record&lt;/a>
 &lt;a href="https://www.cnblogs.com/god-of-death/p/18221794">https://www.cnblogs.com/god-of-death/p/18221794&lt;/a>&lt;/p>
 &lt;h2 id="概览">
@@ -918,7 +1048,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  &lt;tr>
  &lt;td>k8s-node01&lt;/td>
  &lt;td>8核16G&lt;/td>
- &lt;td>192.168.1.218 (&lt;code>lb.k8s.lan&lt;/code>)&lt;/td>
+ &lt;td>192.168.1.218 (&lt;code>lb.k8s.local&lt;/code>)&lt;/td>
  &lt;td>50GB / 100GB*1&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -948,7 +1078,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/rancher/rke2
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">tls-san:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - lb.k8s.lan
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - lb.k8s.local
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">write-kubeconfig-mode: &amp;#34;0600&amp;#34;
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">disable-cloud-controller: true
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
@@ -974,7 +1104,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  &lt;code>tls-san&lt;/code>
  &lt;a class="anchor" href="#tls-san">#&lt;/a>
 &lt;/h5>
-&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item><item><title>创建虚拟机时使用 cloudinit 初始化</title><link>/posts/create-vm-with-cloudinit/</link><pubDate>Mon, 01 Jul 2024 01:56:57 +0800</pubDate><guid>/posts/create-vm-with-cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">
+&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.local&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item><item><title>创建虚拟机时使用 cloudinit 初始化</title><link>/posts/create-vm-with-cloudinit/</link><pubDate>Mon, 01 Jul 2024 01:56:57 +0800</pubDate><guid>/posts/create-vm-with-cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">
  cloudinit 介绍
  &lt;a class="anchor" href="#cloudinit-%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -1264,7 +1394,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>URL of http host to connect to.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>E.g. https://example.com.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value.
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.lan/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.local/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option vendor.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Name of the WebDAV site/service/software you are using.
@@ -1317,7 +1447,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuration complete.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Options:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- type: webdav
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.lan/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.local/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- vendor: other
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- user: admin
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- pass: *** ENCRYPTED ***
