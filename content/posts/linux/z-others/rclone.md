@@ -39,7 +39,7 @@ Option url.
 URL of http host to connect to.
 E.g. https://example.com.
 Enter a value.
-url> http://alist.home.lan/dav/
+url> http://alist.home.local/dav/
 
 Option vendor.
 Name of the WebDAV site/service/software you are using.
@@ -92,7 +92,7 @@ y/n> n
 Configuration complete.
 Options:
 - type: webdav
-- url: http://alist.home.lan/dav/
+- url: http://alist.home.local/dav/
 - vendor: other
 - user: admin
 - pass: *** ENCRYPTED ***

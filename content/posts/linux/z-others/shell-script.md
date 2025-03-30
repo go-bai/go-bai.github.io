@@ -412,7 +412,7 @@ ln -nsf /opt/app_archives/\${APP_NAME}_archive/app_\${APP_NAME}.sh /usr/bin/\${A
 ### 设置alias
 
 ```bash
-mc alias set {NAME} http://minio.lan:9000 {USER} {PASSWORD}
+mc alias set {NAME} http://minio.local:9000 {USER} {PASSWORD}
 ```
 
 ### 设置匿名用户对某bucket权限

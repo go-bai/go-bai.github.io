@@ -230,7 +230,7 @@ network:
 -         - 223.5.5.5
 +         - 192.168.1.99
 +       search:
-+         - lan
++         - local
       interfaces:
         - enp1s0
       parameters:
