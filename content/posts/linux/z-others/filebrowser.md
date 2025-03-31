@@ -1,11 +1,11 @@
 ---
-title: "Filebrowser 安装"
+title: "Filebrowser 部署"
 date: 2025-03-30T20:35:54+08:00
 # bookComments: false
 # bookSearchExclude: false
 ---
 
-在 k8s 中安装 [filebrowser](https://github.com/filebrowser/filebrowser)
+在 k8s 中部署 [filebrowser](https://github.com/filebrowser/filebrowser)
 
 装完后默认密码 `admin` / `admin`, [File Browser Install](https://filebrowser.org/installation)
 
@@ -82,8 +82,13 @@ spec:
         app: filebrowser
     spec:
       containers:
-      - name: filebrowser
-        image: filebrowser/filebrowser:v2
+      - env:
+        - name: PUID
+          value: "0"
+        - name: PGID
+          value: "0"
+        name: filebrowser
+        image: filebrowser/filebrowser:s6
         ports:
         - containerPort: 80
         volumeMounts:
@@ -97,9 +102,6 @@ spec:
       - name: filebrowser-config
         configMap:
           name: filebrowser-config
-          items:
-          - key: settings.json
-            path: settings.json
       - name: filebrowser-database
         persistentVolumeClaim:
           claimName: filebrowser-database-pvc
@@ -118,25 +120,4 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-  type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: filebrowser-ingress
-  namespace: filebrowser
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-spec:
-  rules:
-  - host: file.home.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: filebrowser
-            port:
-              number: 80
 ```
