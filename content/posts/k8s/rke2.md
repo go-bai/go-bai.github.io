@@ -7,7 +7,7 @@ date: 2024-07-01T21:24:49+08:00
 
 | 主机名 | 配置 | ip (域名) | 系统盘 / 数据盘 |
 | --- | --- | --- | --- |
-| k8s-node01 | 8核16G | 192.168.1.218 (`lb.k8s.local`) | 50GB / 100GB*1 |
+| k8s-node01 | 8核16G | 192.168.1.218 (`lb.k8s.lan`) | 50GB / 100GB*1 |
 | k8s-node02 | 8核16G | 192.168.1.219 | 50GB / 100GB*1 |
 | k8s-node03 | 8核16G | 192.168.1.220 | 50GB / 100GB*1 |
 
@@ -22,7 +22,7 @@ date: 2024-07-01T21:24:49+08:00
 mkdir -p /etc/rancher/rke2
 cat <<EOF > /etc/rancher/rke2/config.yaml
 tls-san:
-  - lb.k8s.local
+  - lb.k8s.lan
 write-kubeconfig-mode: "0600"
 disable-cloud-controller: true
 # cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
@@ -46,7 +46,7 @@ systemctl start rke2-server.service
 
 ##### `tls-san`
 
-`tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样就可以通过 `lb.k8s.local` 和 各个 server 节点 ip 访问 apiserver 服务.
+`tls-san` 在 server 的 TLS 证书中增加了多个地址作为 `Subject Alternative Name`, 这样就可以通过 `lb.k8s.lan` 和 各个 server 节点 ip 访问 apiserver 服务.
 
 ##### `etcd-expose-metrics`
 
@@ -112,10 +112,10 @@ func (e *ETCD) listenMetricsURLs(reset bool) string {
 token=<edit-me>
 mkdir -p /etc/rancher/rke2
 cat <<EOF > /etc/rancher/rke2/config.yaml
-server: https://lb.k8s.local:9345
+server: https://lb.k8s.lan:9345
 token: $token
 tls-san:
-  - lb.k8s.local
+  - lb.k8s.lan
 write-kubeconfig-mode: "0600"
 disable-cloud-controller: true
 # cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
