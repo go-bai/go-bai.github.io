@@ -80,7 +80,7 @@
  GC 流程
  &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>GC 划分为五个阶段&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
  make 和 new 的区别
  &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
 &lt;/h2>
