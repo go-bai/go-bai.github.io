@@ -37,4 +37,47 @@ date: 2025-03-05T13:10:46+08:00
 
 ### GC 流程
 
-GC 划分为五个阶段
+![Go GC: Latency Problem Solved slide no 12](https://agrim123.github.io/images/GC%20Algorithm%20Phases.png)
+
+#### 标记设置 Mark Setup (`STW`)
+
+打开[写入屏障](https://en.wikipedia.org/wiki/Write_barrier)
+
+需要STW, 所有 goroutine 需要暂停工作并执行, 没有抢占之前这里如果存在 `tight loop operation` 会消耗很长等待的时间.
+
+#### 并发标记 Marking Concurrent
+
+一旦写入屏障打开, 并发标记就开始工作, 标记阶段主要是标记出还在使用的堆内存.
+
+回收器(`collector`) 会占用 `25%` 的可用 CPU 容量, 使用 Goroutine 执行回收工作并且使用和应用 Goroutine 相同的 P 和 M.
+
+标记流程为: 
+
+TODO 补充三色标记流程
+
+1. 寻找根节点, 把 `全局数据区` 和 `栈区` 的节点标记为 `灰色`
+
+标记辅助(Mark Assist)可以用来加速标记阶段执行. 通过 `runtime.gcAssistAlloc` 函数实现, 当某个goroutine分配内存过快时，调度器会强制其执行更多标记工作
+
+#### 标记终止 Mark Termination (`STW`)
+
+关闭写入屏障, 执行各种清理任务并计算下一个回收目标.
+
+应用程序恢复到全功率.
+
+#### 并发清除 Sweeping Concurrent
+
+清除是指回收 `reclaim` 与堆内存中未被标记为在使用的值关联的内存.
+
+> 注意这里的 reclaim 不一定是被操作系统立即回收的, 表现形式就是回收了, 但是进程占用的内存没少.
+
+TODO: 补充 reclaim 的操作系统相关接口调用
+
+### GC 对应用性能影响
+
+1. 窃取 25% CPU 容量
+2. STW 延时
+
+## 参考
+
+- [Go's garbage collector](https://agrim123.github.io/posts/go-garbage-collector.html)
