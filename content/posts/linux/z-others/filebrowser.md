@@ -120,4 +120,24 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+---
+ apiVersion: networking.k8s.io/v1
+ kind: Ingress
+ metadata:
+   name: filebrowser-ingress
+   namespace: filebrowser
+   annotations:
+     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+ spec:
+   rules:
+   - host: file.lan
+     http:
+       paths:
+       - path: /
+         pathType: Prefix
+         backend:
+           service:
+             name: filebrowser
+             port:
+               number: 80
 ```

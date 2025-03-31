@@ -26,15 +26,41 @@ prometheus:
     probeSelectorNilUsesHelmValues: false
     scrapeConfigSelectorNilUsesHelmValues: false
     serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "ceph-block"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
   service:
     type: NodePort
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: ['prometheus.lan']
+  replicas: 1
+  retention: 10d
 
 prometheusOperator:
   enabled: true
 
+# grafana service
 grafana:
   service:
     type: NodePort
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: ['grafana.lan']
+  persistence:
+    enabled: true
+    type: sts
+    storageClassName: "ceph-block"
+    accessModes:
+      - ReadWriteOnce
+    size: 20Gi
 
 alertmanager:
   enabled: true
