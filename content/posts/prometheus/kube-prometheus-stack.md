@@ -120,6 +120,13 @@ items:
 
 ## 配置 grafana dashboard
 
+默认账号密码:
+
+```
+账号：admin
+密码：prom-operator
+```
+
 导入一个查看 node exporter 的 dashboard
 
 https://grafana.com/grafana/dashboards/16098-node-exporter-dashboard-20240520-job/
