@@ -1029,7 +1029,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  &lt;tr>
  &lt;td>k8s-node01&lt;/td>
  &lt;td>8核16G&lt;/td>
- &lt;td>192.168.1.218 (&lt;code>lb.k8s.local&lt;/code>)&lt;/td>
+ &lt;td>192.168.1.218 (&lt;code>lb.k8s.lan&lt;/code>)&lt;/td>
  &lt;td>50GB / 100GB*1&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -1059,7 +1059,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir -p /etc/rancher/rke2
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#e6db74">&amp;lt;&amp;lt;EOF &amp;gt; /etc/rancher/rke2/config.yaml
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">tls-san:
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - lb.k8s.local
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> - lb.k8s.lan
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">write-kubeconfig-mode: &amp;#34;0600&amp;#34;
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">disable-cloud-controller: true
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"># cni 单独部署, 如无特殊需求, 这里也可以直接指定 flannel 或 calico
@@ -1085,7 +1085,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  &lt;code>tls-san&lt;/code>
  &lt;a class="anchor" href="#tls-san">#&lt;/a>
 &lt;/h5>
-&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.local&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item><item><title>创建虚拟机时使用 cloudinit 初始化</title><link>/posts/create-vm-with-cloudinit/</link><pubDate>Mon, 01 Jul 2024 01:56:57 +0800</pubDate><guid>/posts/create-vm-with-cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">
+&lt;p>&lt;code>tls-san&lt;/code> 在 server 的 TLS 证书中增加了多个地址作为 &lt;code>Subject Alternative Name&lt;/code>, 这样就可以通过 &lt;code>lb.k8s.lan&lt;/code> 和 各个 server 节点 ip 访问 apiserver 服务.&lt;/p></description></item><item><title>创建虚拟机时使用 cloudinit 初始化</title><link>/posts/create-vm-with-cloudinit/</link><pubDate>Mon, 01 Jul 2024 01:56:57 +0800</pubDate><guid>/posts/create-vm-with-cloudinit/</guid><description>&lt;h2 id="cloudinit-介绍">
  cloudinit 介绍
  &lt;a class="anchor" href="#cloudinit-%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -1375,7 +1375,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>URL of http host to connect to.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>E.g. https://example.com.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value.
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.local/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.lan/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option vendor.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Name of the WebDAV site/service/software you are using.
@@ -1428,7 +1428,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuration complete.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Options:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- type: webdav
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.local/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.lan/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- vendor: other
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- user: admin
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- pass: *** ENCRYPTED ***

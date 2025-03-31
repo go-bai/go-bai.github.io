@@ -145,7 +145,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>URL of http host to connect to.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>E.g. https://example.com.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Enter a value.
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.local/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>url&amp;gt; http://alist.home.lan/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Option vendor.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Name of the WebDAV site/service/software you are using.
@@ -198,7 +198,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuration complete.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Options:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- type: webdav
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.local/dav/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- url: http://alist.home.lan/dav/
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- vendor: other
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- user: admin
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- pass: *** ENCRYPTED ***
