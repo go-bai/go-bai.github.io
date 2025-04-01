@@ -1,5 +1,5 @@
 <!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/posts/linux/z-others/"><meta property="og:site_name" content="gobai's notes"><meta property="og:title" content="其他"><meta property="og:locale" content="en_us"><meta property="og:type" content="website"><title>其他 | gobai's notes</title>
-<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/linux/z-others/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.52aef3f37ec1c50fcf2bccae3423d0c2487afc9c163535ad87cc643fed90bd51.js></script><link rel=alternate type=application/rss+xml href=/posts/linux/z-others/index.xml title="gobai's notes"></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/linux/z-others/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.e60bfc4c4409978348b17405b36b811c66ff66578cf249a5dd5267da2f06d352.js></script><link rel=alternate type=application/rss+xml href=/posts/linux/z-others/index.xml title="gobai's notes"></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
 <input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's notes</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><span>Golang</span><ul><li><input type=checkbox id=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class=toggle>
 <label for=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class="flex justify-between"><a role=button>语言基础</a></label><ul><li><a href=/posts/golang-memory-escape/>内存逃逸</a></li><li><a href=/posts/golang-gc/>GC 垃圾回收</a></li><li><a href=/posts/golang-make-and-new/>make 与 new 区别</a></li><li><a href=/posts/golang-gmp/>GMP 模型</a></li></ul></li><li><input type=checkbox id=section-42d8c4148cb4c5a3e3d8addaded05197 class=toggle>
 <label for=section-42d8c4148cb4c5a3e3d8addaded05197 class="flex justify-between"><a role=button>数据结构</a></label><ul><li><a href=/posts/golang-chan/>Channel</a></li></ul></li><li><input type=checkbox id=section-1ca588caf6263863db394d8b5e8e27c7 class=toggle>
@@ -123,25 +123,25 @@
 </span></span><span style=display:flex><span>  - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>80</span>
 </span></span><span style=display:flex><span>    <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>80</span>
 </span></span><span style=display:flex><span>---
-</span></span><span style=display:flex><span> <span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>networking.k8s.io/v1</span>
-</span></span><span style=display:flex><span> <span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Ingress</span>
-</span></span><span style=display:flex><span> <span style=color:#f92672>metadata</span>:
-</span></span><span style=display:flex><span>   <span style=color:#f92672>name</span>: <span style=color:#ae81ff>filebrowser-ingress</span>
-</span></span><span style=display:flex><span>   <span style=color:#f92672>namespace</span>: <span style=color:#ae81ff>filebrowser</span>
-</span></span><span style=display:flex><span>   <span style=color:#f92672>annotations</span>:
-</span></span><span style=display:flex><span>     <span style=color:#f92672>nginx.ingress.kubernetes.io/ssl-redirect</span>: <span style=color:#e6db74>&#34;false&#34;</span>
-</span></span><span style=display:flex><span> <span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>   <span style=color:#f92672>rules</span>:
-</span></span><span style=display:flex><span>   - <span style=color:#f92672>host</span>: <span style=color:#ae81ff>file.lan</span>
-</span></span><span style=display:flex><span>     <span style=color:#f92672>http</span>:
-</span></span><span style=display:flex><span>       <span style=color:#f92672>paths</span>:
-</span></span><span style=display:flex><span>       - <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/</span>
-</span></span><span style=display:flex><span>         <span style=color:#f92672>pathType</span>: <span style=color:#ae81ff>Prefix</span>
-</span></span><span style=display:flex><span>         <span style=color:#f92672>backend</span>:
-</span></span><span style=display:flex><span>           <span style=color:#f92672>service</span>:
-</span></span><span style=display:flex><span>             <span style=color:#f92672>name</span>: <span style=color:#ae81ff>filebrowser</span>
-</span></span><span style=display:flex><span>             <span style=color:#f92672>port</span>:
-</span></span><span style=display:flex><span>               <span style=color:#f92672>number</span>: <span style=color:#ae81ff>80</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>networking.k8s.io/v1</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Ingress</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>filebrowser-ingress</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>namespace</span>: <span style=color:#ae81ff>filebrowser</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>annotations</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>nginx.ingress.kubernetes.io/proxy-body-size</span>: <span style=color:#e6db74>&#34;0&#34;</span>  
+</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>rules</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>host</span>: <span style=color:#ae81ff>file.lan</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>http</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>paths</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>pathType</span>: <span style=color:#ae81ff>Prefix</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>backend</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>service</span>:
+</span></span><span style=display:flex><span>            <span style=color:#f92672>name</span>: <span style=color:#ae81ff>filebrowser</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>port</span>:
+</span></span><span style=display:flex><span>              <span style=color:#f92672>number</span>: <span style=color:#ae81ff>80</span>
 </span></span></code></pre></div></div></article><article class="markdown book-post"><h2><a href=/posts/rclone/>Rclone 使用笔记</a></h2><div class="flex align-center text-small book-post-date"><img src=/svg/calendar.svg class=book-icon alt>
 <span>2024-04-04</span></div><div class=book-post-content><blockquote><p>使用<code>rclone</code>和<code>alist</code>提供的<code>webdav</code>接口将阿里云盘<code>mount</code>到Ubuntu 22.04的目录上, 实现像访问本地文件一样访问阿里云盘内的文件</p></blockquote><h2 id=下载安装rclone>下载安装<code>rclone</code>
 <a class=anchor href=#%e4%b8%8b%e8%bd%bd%e5%ae%89%e8%a3%85rclone>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>curl https://rclone.org/install.sh | bash
