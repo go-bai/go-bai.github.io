@@ -1,4 +1,13 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;p>在 k8s 中部署 &lt;a href="https://github.com/filebrowser/filebrowser">filebrowser&lt;/a>&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
+ Filebrowser 介绍
+ &lt;a class="anchor" href="#filebrowser-%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>Filebrowser&lt;/code> 可以通过 web 管理指定文件目录, 并且支持多用户隔离在不同子目录下.&lt;/p>
+&lt;h2 id="filebrowser-部署在-k8s-中">
+ Filebrowser 部署在 k8s 中
+ &lt;a class="anchor" href="#filebrowser-%e9%83%a8%e7%bd%b2%e5%9c%a8-k8s-%e4%b8%ad">#&lt;/a>
+&lt;/h2>
+&lt;p>在 k8s 中部署 &lt;a href="https://github.com/filebrowser/filebrowser">filebrowser&lt;/a>&lt;/p>
 &lt;p>装完后默认密码 &lt;code>admin&lt;/code> / &lt;code>admin&lt;/code>, &lt;a href="https://filebrowser.org/installation">File Browser Install&lt;/a>&lt;/p>
 &lt;p>配置文件样例: &lt;a href="https://github.com/filebrowser/filebrowser/blob/master/docker/root/defaults/settings.json">settings.json&lt;/a>&lt;/p>
 &lt;p>关于数据持久化，都是持久化在 &lt;code>ceph&lt;/code> 块存储中，使用 &lt;code>sc/ceph-block&lt;/code>&lt;/p>
