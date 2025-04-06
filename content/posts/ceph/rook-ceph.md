@@ -45,6 +45,8 @@ cat <<EOF > custom-values.yaml
 toolbox:
   enabled: true
 cephClusterSpec:
+  dashboard:
+    ssl: false
   storage:
     useAllNodes: false
     useAllDevices: false
@@ -58,6 +60,11 @@ cephClusterSpec:
       - name: "k8s-node03"
         devices:
           - name: "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-1"
+ingress:
+  dashboard:
+    host:
+      name: ceph.lan
+    ingressClassName: nginx
 cephFileSystems: []
 cephBlockPoolsVolumeSnapshotClass:
   enabled: true

@@ -5,6 +5,12 @@ date: 2025-03-30T20:35:54+08:00
 # bookSearchExclude: false
 ---
 
+## Filebrowser 介绍
+
+`Filebrowser` 可以通过 web 管理指定文件目录, 并且支持多用户隔离在不同子目录下.
+
+## Filebrowser 部署在 k8s 中
+
 在 k8s 中部署 [filebrowser](https://github.com/filebrowser/filebrowser)
 
 装完后默认密码 `admin` / `admin`, [File Browser Install](https://filebrowser.org/installation)
