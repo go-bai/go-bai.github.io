@@ -46,6 +46,7 @@ toolbox:
   enabled: true
 cephClusterSpec:
   dashboard:
+    # 禁用 SSL, 一般运行在 nginx 后面
     ssl: false
   storage:
     useAllNodes: false
