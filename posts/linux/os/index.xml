@@ -1,4 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>OS on gobai's notes</title><link>/posts/linux/os/</link><description>Recent content in OS on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/os/index.xml" rel="self" type="application/rss+xml"/><item><title>Linux 启动流程 (BIOS)</title><link>/posts/linux-boot-process-bios/</link><pubDate>Thu, 13 Mar 2025 11:46:16 +0800</pubDate><guid>/posts/linux-boot-process-bios/</guid><description>&lt;h2 id="启动流程">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>OS on gobai's notes</title><link>/posts/linux/os/</link><description>Recent content in OS on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/os/index.xml" rel="self" type="application/rss+xml"/><item><title>Netpoll</title><link>/posts/netpoll/</link><pubDate>Wed, 09 Apr 2025 21:23:26 +0800</pubDate><guid>/posts/netpoll/</guid><description>&lt;p>关于 &lt;code>select&lt;/code>, &lt;code>poll&lt;/code> 和 &lt;code>epoll&lt;/code> 系统调用&lt;/p>
+&lt;h2 id="select">
+ &lt;code>select&lt;/code>
+ &lt;a class="anchor" href="#select">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="poll">
+ &lt;code>poll&lt;/code>
+ &lt;a class="anchor" href="#poll">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="epoll">
+ &lt;code>epoll&lt;/code>
+ &lt;a class="anchor" href="#epoll">#&lt;/a>
+&lt;/h2></description></item><item><title>Linux 启动流程 (BIOS)</title><link>/posts/linux-boot-process-bios/</link><pubDate>Thu, 13 Mar 2025 11:46:16 +0800</pubDate><guid>/posts/linux-boot-process-bios/</guid><description>&lt;h2 id="启动流程">
  启动流程
  &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h2>

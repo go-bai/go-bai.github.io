@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>语言基础 on gobai's notes</title><link>/posts/golang/language-basics/</link><description>Recent content in 语言基础 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/language-basics/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>语言基础 on gobai's notes</title><link>/posts/golang/language-basics/</link><description>Recent content in 语言基础 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/language-basics/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
  内存逃逸
  &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h2>
@@ -8,22 +8,25 @@
  1. 指针逃逸
  &lt;a class="anchor" href="#1-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h3>
-&lt;p>算是最常见的了，函数中初始化一个局部变量，返回了这个变量的指针，因为指针的存在，变量的内存不能随着函数结束而回收，因此只能分配在堆上。&lt;/p>
-&lt;h3 id="2-interface-动态类型逃逸">
- 2. &lt;code>interface{}&lt;/code> 动态类型逃逸
- &lt;a class="anchor" href="#2-interface-%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;ol>
+&lt;li>函数返回指向局部变量的指针，变量内存不能随着函数结束而回收，只能分配在堆上&lt;/li>
+&lt;li>函数调用其他寿命更长的函数时，将局部变量指针传递过去，同理。&lt;/li>
+&lt;/ol>
+&lt;h3 id="2-将变量存储到-interface-变量中">
+ 2. 将变量存储到 &lt;code>interface{}&lt;/code> 变量中
+ &lt;a class="anchor" href="#2-%e5%b0%86%e5%8f%98%e9%87%8f%e5%ad%98%e5%82%a8%e5%88%b0-interface-%e5%8f%98%e9%87%8f%e4%b8%ad">#&lt;/a>
 &lt;/h3>
-&lt;p>如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
-&lt;p>如传递给 &lt;code>fmt.Println()&lt;/code> 的参数&lt;/p>
+&lt;p>TODO 如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
+&lt;p>&lt;a href="https://goperf.dev/01-common-patterns/interface-boxing/">https://goperf.dev/01-common-patterns/interface-boxing/&lt;/a>&lt;/p>
 &lt;h3 id="3-栈空间不足">
  3. 栈空间不足
  &lt;a class="anchor" href="#3-%e6%a0%88%e7%a9%ba%e9%97%b4%e4%b8%8d%e8%b6%b3">#&lt;/a>
 &lt;/h3>
-&lt;p>分配大变量，如大 slice，会有可能栈空间不足，然后编译器将其分配在堆上&lt;/p>
-&lt;p>tcmalloc&lt;/p>
-&lt;h3 id="4-闭包">
- 4. 闭包
- &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85">#&lt;/a>
+&lt;p>每个 &lt;code>goroutine&lt;/code> 都维护着一个自己的栈区，初始大小 &lt;code>2KB&lt;/code>，栈结构经过了分段栈到&lt;a href="https://docs.google.com/document/d/1wAaf1rYoM4S4gtnPh0zOlGzWtrZFQ5suE8qr2sD8uWQ/pub">连续栈&lt;/a>的发展。&lt;/p>
+&lt;p>分配大变量，如大 slice，或者大小不确定的变量，会有可能栈空间不足，然后编译器将其分配在堆上，虽然栈会自动增长，但是也有大小限制(TODO)。&lt;/p>
+&lt;h3 id="4-闭包捕获变量">
+ 4. 闭包捕获变量
+ &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85%e6%8d%95%e8%8e%b7%e5%8f%98%e9%87%8f">#&lt;/a>
 &lt;/h3>
 &lt;p>当一个闭包函数引用了外部变量并且会执行后续读写操作，则变量会被逃逸到堆上。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>
@@ -40,7 +43,11 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">in&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	println(&lt;span style="color:#a6e22e">in&lt;/span>()) &lt;span style="color:#75715e">// 1&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>GC 垃圾回收</title><link>/posts/golang-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/golang-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="5-变量地址存储在引用类型对象中">
+ 5. 变量地址存储在引用类型对象中
+ &lt;a class="anchor" href="#5-%e5%8f%98%e9%87%8f%e5%9c%b0%e5%9d%80%e5%ad%98%e5%82%a8%e5%9c%a8%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e5%af%b9%e8%b1%a1%e4%b8%ad">#&lt;/a>
+&lt;/h3>
+&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
  GC 垃圾回收
  &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
 &lt;/h2>
@@ -80,7 +87,7 @@
  GC 流程
  &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
  make 和 new 的区别
  &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
 &lt;/h2>
@@ -103,7 +110,7 @@ new返回指向该类型零值的指针&lt;/p>
  &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
 &lt;/h3>
 &lt;p>make会分配内存并初始化数据结构
-new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/golang-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/golang-gmp/</guid><description>&lt;h2 id="csp">
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
  CSP
  &lt;a class="anchor" href="#csp">#&lt;/a>
 &lt;/h2>

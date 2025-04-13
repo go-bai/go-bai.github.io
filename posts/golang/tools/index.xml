@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>开发工具 on gobai's notes</title><link>/posts/golang/tools/</link><description>Recent content in 开发工具 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/tools/index.xml" rel="self" type="application/rss+xml"/><item><title>Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
+ 介绍
+ &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;a href="https://github.com/go-delve/delve">Delve&lt;/a> 是 Go 编程语言的调试器。&lt;/p>
+&lt;h2 id="原理">
+ 原理
+ &lt;a class="anchor" href="#%e5%8e%9f%e7%90%86">#&lt;/a>
+&lt;/h2>
+&lt;p>TODO&lt;/p>
+&lt;h2 id="在-vscode-中使用">
+ 在 vscode 中使用
+ &lt;a class="anchor" href="#%e5%9c%a8-vscode-%e4%b8%ad%e4%bd%bf%e7%94%a8">#&lt;/a>
+&lt;/h2>
+&lt;p>将 &lt;code>request&lt;/code> 设置为 &lt;code>attach&lt;/code> 并且 &lt;code>processId&lt;/code> 设置为 0, 这样就会每次执行&lt;/p>
+&lt;p>在 go 项目根目录下设置 &lt;code>.vscode/launch.json&lt;/code> 文件如下:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>&amp;quot;type&amp;quot;: &amp;quot;go&amp;quot;&lt;/code>: 配置类型为 go&lt;/li>
+&lt;li>&lt;code>&amp;quot;request&amp;quot;: &amp;quot;attach&amp;quot;&lt;/code>: 这里配置为 attach 到一个已经运行的进程&lt;/li>
+&lt;li>&lt;code>&amp;quot;mode&amp;quot;: &amp;quot;local&amp;quot;&lt;/code>: 相当于 attach 到本地进程&lt;/li>
+&lt;li>&lt;code>&amp;quot;processId&amp;quot;: 0&lt;/code>: 相当于没指定 pid, 每次启动 debug 会让选择进程&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Use IntelliSense to learn about possible attributes.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// Hover to view descriptions of existing attributes.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">&amp;#34;version&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;0.2.0&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;configurations&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Attach to Process&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;go&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;request&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;attach&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;mode&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;local&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;processId&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/golang/vscode-go/blob/master/docs/debugging.md">github.com/golang/vscode-go/docs/debugging&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
+ 介绍
+ &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>testing&lt;/code> 包为 &lt;code>Go&lt;/code> 包自动化测试提供支持，它与 &lt;code>go test&lt;/code> 命令一起使用，该命令可以自动执行下面这种格式的函数。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">TestXxx&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">testing&lt;/span>.&lt;span style="color:#a6e22e">T&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>其中函数名中的 &lt;code>Xxx&lt;/code> 不能以小写字母开头。&lt;/p>
+&lt;p>在函数中，使用 &lt;code>Error&lt;/code>, &lt;code>Fail&lt;/code> 或相关的函数表示失败。&lt;/p>
+&lt;p>要编写测试函数，需要县创建一个以 &lt;code>_test.go&lt;/code> 结尾的文件，该文件会被排除在常规包构建之外，但将在运行 &lt;code>go test&lt;/code> 命令时被包含在内。&lt;/p>
+&lt;p>一般将 &lt;code>_test.go&lt;/code> 文件创建在要被测试的函数的同包下面&lt;/p>
+&lt;h2 id="测试函数示例">
+ 测试函数示例
+ &lt;a class="anchor" href="#%e6%b5%8b%e8%af%95%e5%87%bd%e6%95%b0%e7%a4%ba%e4%be%8b">#&lt;/a>
+&lt;/h2>
+&lt;p>比如这里我要验证 &lt;code>interface&lt;/code> 与 &lt;code>nil&lt;/code> 是否相等&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// test/interface_test/interface_test.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">interface_test&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> &lt;span style="color:#e6db74">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">TestInterfaceNil&lt;/span>(&lt;span style="color:#a6e22e">t&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">testing&lt;/span>.&lt;span style="color:#a6e22e">T&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">var&lt;/span> &lt;span style="color:#a6e22e">a&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">var&lt;/span> &lt;span style="color:#a6e22e">b&lt;/span> = (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#66d9ef">int&lt;/span>)(&lt;span style="color:#66d9ef">nil&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">a&lt;/span> = &lt;span style="color:#a6e22e">b&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">a&lt;/span> &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#a6e22e">t&lt;/span>.&lt;span style="color:#a6e22e">Fatal&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;a == nil&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="go-test-参数">
+ go test 参数
+ &lt;a class="anchor" href="#go-test-%e5%8f%82%e6%95%b0">#&lt;/a>
+&lt;/h3>
+&lt;p>有一些常用参数，可以通过 &lt;code>go help test&lt;/code> 和 &lt;code>go help testflag&lt;/code> 查看。&lt;/p></description></item></channel></rss>

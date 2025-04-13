@@ -1,4 +1,35 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Storage on gobai's notes</title><link>/posts/linux/storage/</link><description>Recent content in Storage on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/storage/index.xml" rel="self" type="application/rss+xml"/><item><title>Linux 磁盘分区</title><link>/posts/partitioning-disks/</link><pubDate>Sat, 15 Mar 2025 20:31:35 +0800</pubDate><guid>/posts/partitioning-disks/</guid><description>&lt;p>&lt;a href="https://www.baeldung.com/linux/partitioning-disks">https://www.baeldung.com/linux/partitioning-disks&lt;/a>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Storage on gobai's notes</title><link>/posts/linux/storage/</link><description>Recent content in Storage on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/storage/index.xml" rel="self" type="application/rss+xml"/><item><title>proc filesystem</title><link>/posts/procfs/</link><pubDate>Wed, 09 Apr 2025 21:28:03 +0800</pubDate><guid>/posts/procfs/</guid><description>&lt;p>&lt;code>procfs&lt;/code> 是一个特殊的文件系统，包含一个伪文件系统（启动时动态生成的文件系统），用于通过内核访问进程信息。这个文件系统通常被挂载到 &lt;code>/proc&lt;/code> 目录。由于 &lt;code>proc&lt;/code> 不是一个真正的文件系统，它也就不占用存储空间，只是占用有限的内存。&lt;/p>
+&lt;p>下面以 &lt;code>bash&lt;/code> 进程为例查看 &lt;code>/proc/PID/&lt;/code> 下的信息。&lt;/p>
+&lt;h2 id="procpidexe">
+ /proc/PID/exe
+ &lt;a class="anchor" href="#procpidexe">#&lt;/a>
+&lt;/h2>
+&lt;p>指向原始的可执行文件&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -lh /proc/3553026/exe 
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwxrwxrwx &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">0&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:09 /proc/3553026/exe -&amp;gt; /usr/bin/bash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="procpidfd">
+ /proc/PID/fd
+ &lt;a class="anchor" href="#procpidfd">#&lt;/a>
+&lt;/h2>
+&lt;p>是一个目录, 包含此进程打开的所有文件描述符 (file descriptors)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -lhv /proc/3553026/fd
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>total &lt;span style="color:#ae81ff">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">0&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">1&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">2&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">255&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="todo">
+ TODO
+ &lt;a class="anchor" href="#todo">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://docs.kernel.org/filesystems/proc.html">The /proc Filesystem&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://zh.wikipedia.org/wiki/Procfs">wiki/Procfs&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Linux 磁盘分区</title><link>/posts/partitioning-disks/</link><pubDate>Sat, 15 Mar 2025 20:31:35 +0800</pubDate><guid>/posts/partitioning-disks/</guid><description>&lt;p>&lt;a href="https://www.baeldung.com/linux/partitioning-disks">https://www.baeldung.com/linux/partitioning-disks&lt;/a>
 &lt;a href="https://en.wikipedia.org/wiki/Master_boot_record">https://en.wikipedia.org/wiki/Master_boot_record&lt;/a>
 &lt;a href="https://www.cnblogs.com/god-of-death/p/18221794">https://www.cnblogs.com/god-of-death/p/18221794&lt;/a>&lt;/p>
 &lt;h2 id="概览">

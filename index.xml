@@ -168,7 +168,158 @@
  方式一：直接修改 prometheus 配置
  &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
 &lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
+ 介绍
+ &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;a href="https://github.com/go-delve/delve">Delve&lt;/a> 是 Go 编程语言的调试器。&lt;/p>
+&lt;h2 id="原理">
+ 原理
+ &lt;a class="anchor" href="#%e5%8e%9f%e7%90%86">#&lt;/a>
+&lt;/h2>
+&lt;p>TODO&lt;/p>
+&lt;h2 id="在-vscode-中使用">
+ 在 vscode 中使用
+ &lt;a class="anchor" href="#%e5%9c%a8-vscode-%e4%b8%ad%e4%bd%bf%e7%94%a8">#&lt;/a>
+&lt;/h2>
+&lt;p>将 &lt;code>request&lt;/code> 设置为 &lt;code>attach&lt;/code> 并且 &lt;code>processId&lt;/code> 设置为 0, 这样就会每次执行&lt;/p>
+&lt;p>在 go 项目根目录下设置 &lt;code>.vscode/launch.json&lt;/code> 文件如下:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>&amp;quot;type&amp;quot;: &amp;quot;go&amp;quot;&lt;/code>: 配置类型为 go&lt;/li>
+&lt;li>&lt;code>&amp;quot;request&amp;quot;: &amp;quot;attach&amp;quot;&lt;/code>: 这里配置为 attach 到一个已经运行的进程&lt;/li>
+&lt;li>&lt;code>&amp;quot;mode&amp;quot;: &amp;quot;local&amp;quot;&lt;/code>: 相当于 attach 到本地进程&lt;/li>
+&lt;li>&lt;code>&amp;quot;processId&amp;quot;: 0&lt;/code>: 相当于没指定 pid, 每次启动 debug 会让选择进程&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Use IntelliSense to learn about possible attributes.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// Hover to view descriptions of existing attributes.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">&amp;#34;version&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;0.2.0&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;configurations&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Attach to Process&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;go&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;request&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;attach&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;mode&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;local&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;processId&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/golang/vscode-go/blob/master/docs/debugging.md">github.com/golang/vscode-go/docs/debugging&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
+ 介绍
+ &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>testing&lt;/code> 包为 &lt;code>Go&lt;/code> 包自动化测试提供支持，它与 &lt;code>go test&lt;/code> 命令一起使用，该命令可以自动执行下面这种格式的函数。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">TestXxx&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">testing&lt;/span>.&lt;span style="color:#a6e22e">T&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>其中函数名中的 &lt;code>Xxx&lt;/code> 不能以小写字母开头。&lt;/p>
+&lt;p>在函数中，使用 &lt;code>Error&lt;/code>, &lt;code>Fail&lt;/code> 或相关的函数表示失败。&lt;/p>
+&lt;p>要编写测试函数，需要县创建一个以 &lt;code>_test.go&lt;/code> 结尾的文件，该文件会被排除在常规包构建之外，但将在运行 &lt;code>go test&lt;/code> 命令时被包含在内。&lt;/p>
+&lt;p>一般将 &lt;code>_test.go&lt;/code> 文件创建在要被测试的函数的同包下面&lt;/p>
+&lt;h2 id="测试函数示例">
+ 测试函数示例
+ &lt;a class="anchor" href="#%e6%b5%8b%e8%af%95%e5%87%bd%e6%95%b0%e7%a4%ba%e4%be%8b">#&lt;/a>
+&lt;/h2>
+&lt;p>比如这里我要验证 &lt;code>interface&lt;/code> 与 &lt;code>nil&lt;/code> 是否相等&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// test/interface_test/interface_test.go&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">interface_test&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> &lt;span style="color:#e6db74">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">TestInterfaceNil&lt;/span>(&lt;span style="color:#a6e22e">t&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">testing&lt;/span>.&lt;span style="color:#a6e22e">T&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">var&lt;/span> &lt;span style="color:#a6e22e">a&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">var&lt;/span> &lt;span style="color:#a6e22e">b&lt;/span> = (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#66d9ef">int&lt;/span>)(&lt;span style="color:#66d9ef">nil&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">a&lt;/span> = &lt;span style="color:#a6e22e">b&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#a6e22e">a&lt;/span> &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#66d9ef">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#a6e22e">t&lt;/span>.&lt;span style="color:#a6e22e">Fatal&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;a == nil&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="go-test-参数">
+ go test 参数
+ &lt;a class="anchor" href="#go-test-%e5%8f%82%e6%95%b0">#&lt;/a>
+&lt;/h3>
+&lt;p>有一些常用参数，可以通过 &lt;code>go help test&lt;/code> 和 &lt;code>go help testflag&lt;/code> 查看。&lt;/p></description></item><item><title>interface</title><link>/posts/go-interface/</link><pubDate>Thu, 10 Apr 2025 23:33:00 +0800</pubDate><guid>/posts/go-interface/</guid><description>&lt;h2 id="interface-底层结构">
+ &lt;code>interface&lt;/code> 底层结构
+ &lt;a class="anchor" href="#interface-%e5%ba%95%e5%b1%82%e7%bb%93%e6%9e%84">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>interface{}&lt;/code> 底层存储结构如下所示：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// ----------- runtime/runtime2.go -----------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">iface&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">tab&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">itab&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#a6e22e">unsafe&lt;/span>.&lt;span style="color:#a6e22e">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">eface&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">_type&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">_type&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#a6e22e">unsafe&lt;/span>.&lt;span style="color:#a6e22e">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">itab&lt;/span> = &lt;span style="color:#a6e22e">abi&lt;/span>.&lt;span style="color:#a6e22e">ITab&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">_type&lt;/span> = &lt;span style="color:#a6e22e">abi&lt;/span>.&lt;span style="color:#a6e22e">Type&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// ----------- internal/abi/iface.go -----------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// The first word of every non-empty interface type contains an *ITab.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// It records the underlying concrete type (Type), the interface type it&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// is implementing (Inter), and some ancillary information.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">//&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// allocated in non-garbage-collected memory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">ITab&lt;/span> &lt;span style="color:#66d9ef">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Inter&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">InterfaceType&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Type&lt;/span> &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">Type&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Hash&lt;/span> &lt;span style="color:#66d9ef">uint32&lt;/span> &lt;span style="color:#75715e">// copy of Type.Hash. Used for type switches.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Fun&lt;/span> [&lt;span style="color:#ae81ff">1&lt;/span>]&lt;span style="color:#66d9ef">uintptr&lt;/span> &lt;span style="color:#75715e">// variable sized. fun[0]==0 means Type does not implement Inter.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到 &lt;code>interface{}&lt;/code> 底层被存储为两种类型:&lt;/p></description></item><item><title>proc filesystem</title><link>/posts/procfs/</link><pubDate>Wed, 09 Apr 2025 21:28:03 +0800</pubDate><guid>/posts/procfs/</guid><description>&lt;p>&lt;code>procfs&lt;/code> 是一个特殊的文件系统，包含一个伪文件系统（启动时动态生成的文件系统），用于通过内核访问进程信息。这个文件系统通常被挂载到 &lt;code>/proc&lt;/code> 目录。由于 &lt;code>proc&lt;/code> 不是一个真正的文件系统，它也就不占用存储空间，只是占用有限的内存。&lt;/p>
+&lt;p>下面以 &lt;code>bash&lt;/code> 进程为例查看 &lt;code>/proc/PID/&lt;/code> 下的信息。&lt;/p>
+&lt;h2 id="procpidexe">
+ /proc/PID/exe
+ &lt;a class="anchor" href="#procpidexe">#&lt;/a>
+&lt;/h2>
+&lt;p>指向原始的可执行文件&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -lh /proc/3553026/exe 
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwxrwxrwx &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">0&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:09 /proc/3553026/exe -&amp;gt; /usr/bin/bash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="procpidfd">
+ /proc/PID/fd
+ &lt;a class="anchor" href="#procpidfd">#&lt;/a>
+&lt;/h2>
+&lt;p>是一个目录, 包含此进程打开的所有文件描述符 (file descriptors)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -lhv /proc/3553026/fd
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>total &lt;span style="color:#ae81ff">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">0&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">1&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">2&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>lrwx------ &lt;span style="color:#ae81ff">1&lt;/span> root root &lt;span style="color:#ae81ff">64&lt;/span> 4月 &lt;span style="color:#ae81ff">10&lt;/span> 22:06 &lt;span style="color:#ae81ff">255&lt;/span> -&amp;gt; /dev/pts/14
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="todo">
+ TODO
+ &lt;a class="anchor" href="#todo">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="参考">
+ 参考
+ &lt;a class="anchor" href="#%e5%8f%82%e8%80%83">#&lt;/a>
+&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://docs.kernel.org/filesystems/proc.html">The /proc Filesystem&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://zh.wikipedia.org/wiki/Procfs">wiki/Procfs&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Netpoll</title><link>/posts/netpoll/</link><pubDate>Wed, 09 Apr 2025 21:23:26 +0800</pubDate><guid>/posts/netpoll/</guid><description>&lt;p>关于 &lt;code>select&lt;/code>, &lt;code>poll&lt;/code> 和 &lt;code>epoll&lt;/code> 系统调用&lt;/p>
+&lt;h2 id="select">
+ &lt;code>select&lt;/code>
+ &lt;a class="anchor" href="#select">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="poll">
+ &lt;code>poll&lt;/code>
+ &lt;a class="anchor" href="#poll">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="epoll">
+ &lt;code>epoll&lt;/code>
+ &lt;a class="anchor" href="#epoll">#&lt;/a>
+&lt;/h2></description></item><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
  Filebrowser 介绍
  &lt;a class="anchor" href="#filebrowser-%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -410,7 +561,7 @@
 &lt;ol>
 &lt;li>&lt;code>boot loader&lt;/code>(一般是&lt;code>grub&lt;/code>) 加载内核 &lt;code>vmlinuz&lt;/code> 和 initial RAM disk &lt;code>initrd.img&lt;/code>, 具体的文件名要看 &lt;code>/boot/grub/grub.cfg&lt;/code> 中的 menu 设置。&lt;/li>
 &lt;/ol>
-&lt;p>TODO&lt;/p></description></item><item><title>内存逃逸</title><link>/posts/golang-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/golang-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+&lt;p>TODO&lt;/p></description></item><item><title>内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
  内存逃逸
  &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h2>
@@ -420,22 +571,25 @@
  1. 指针逃逸
  &lt;a class="anchor" href="#1-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h3>
-&lt;p>算是最常见的了，函数中初始化一个局部变量，返回了这个变量的指针，因为指针的存在，变量的内存不能随着函数结束而回收，因此只能分配在堆上。&lt;/p>
-&lt;h3 id="2-interface-动态类型逃逸">
- 2. &lt;code>interface{}&lt;/code> 动态类型逃逸
- &lt;a class="anchor" href="#2-interface-%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e9%80%83%e9%80%b8">#&lt;/a>
+&lt;ol>
+&lt;li>函数返回指向局部变量的指针，变量内存不能随着函数结束而回收，只能分配在堆上&lt;/li>
+&lt;li>函数调用其他寿命更长的函数时，将局部变量指针传递过去，同理。&lt;/li>
+&lt;/ol>
+&lt;h3 id="2-将变量存储到-interface-变量中">
+ 2. 将变量存储到 &lt;code>interface{}&lt;/code> 变量中
+ &lt;a class="anchor" href="#2-%e5%b0%86%e5%8f%98%e9%87%8f%e5%ad%98%e5%82%a8%e5%88%b0-interface-%e5%8f%98%e9%87%8f%e4%b8%ad">#&lt;/a>
 &lt;/h3>
-&lt;p>如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
-&lt;p>如传递给 &lt;code>fmt.Println()&lt;/code> 的参数&lt;/p>
+&lt;p>TODO 如果函数参数为 &lt;code>interface{}&lt;/code>，编译期间很难确定其参数的类型以及大小，也会发生逃逸。&lt;/p>
+&lt;p>&lt;a href="https://goperf.dev/01-common-patterns/interface-boxing/">https://goperf.dev/01-common-patterns/interface-boxing/&lt;/a>&lt;/p>
 &lt;h3 id="3-栈空间不足">
  3. 栈空间不足
  &lt;a class="anchor" href="#3-%e6%a0%88%e7%a9%ba%e9%97%b4%e4%b8%8d%e8%b6%b3">#&lt;/a>
 &lt;/h3>
-&lt;p>分配大变量，如大 slice，会有可能栈空间不足，然后编译器将其分配在堆上&lt;/p>
-&lt;p>tcmalloc&lt;/p>
-&lt;h3 id="4-闭包">
- 4. 闭包
- &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85">#&lt;/a>
+&lt;p>每个 &lt;code>goroutine&lt;/code> 都维护着一个自己的栈区，初始大小 &lt;code>2KB&lt;/code>，栈结构经过了分段栈到&lt;a href="https://docs.google.com/document/d/1wAaf1rYoM4S4gtnPh0zOlGzWtrZFQ5suE8qr2sD8uWQ/pub">连续栈&lt;/a>的发展。&lt;/p>
+&lt;p>分配大变量，如大 slice，或者大小不确定的变量，会有可能栈空间不足，然后编译器将其分配在堆上，虽然栈会自动增长，但是也有大小限制(TODO)。&lt;/p>
+&lt;h3 id="4-闭包捕获变量">
+ 4. 闭包捕获变量
+ &lt;a class="anchor" href="#4-%e9%97%ad%e5%8c%85%e6%8d%95%e8%8e%b7%e5%8f%98%e9%87%8f">#&lt;/a>
 &lt;/h3>
 &lt;p>当一个闭包函数引用了外部变量并且会执行后续读写操作，则变量会被逃逸到堆上。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">package&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>
@@ -452,7 +606,11 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">in&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">Increase&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	println(&lt;span style="color:#a6e22e">in&lt;/span>()) &lt;span style="color:#75715e">// 1&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>GC 垃圾回收</title><link>/posts/golang-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/golang-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="5-变量地址存储在引用类型对象中">
+ 5. 变量地址存储在引用类型对象中
+ &lt;a class="anchor" href="#5-%e5%8f%98%e9%87%8f%e5%9c%b0%e5%9d%80%e5%ad%98%e5%82%a8%e5%9c%a8%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e5%af%b9%e8%b1%a1%e4%b8%ad">#&lt;/a>
+&lt;/h3>
+&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
  GC 垃圾回收
  &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
 &lt;/h2>
@@ -492,7 +650,7 @@
  GC 流程
  &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/golang-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/golang-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
  make 和 new 的区别
  &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
 &lt;/h2>
@@ -515,7 +673,7 @@ new返回指向该类型零值的指针&lt;/p>
  &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
 &lt;/h3>
 &lt;p>make会分配内存并初始化数据结构
-new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/golang-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/golang-gmp/</guid><description>&lt;h2 id="csp">
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
  CSP
  &lt;a class="anchor" href="#csp">#&lt;/a>
 &lt;/h2>
@@ -559,7 +717,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  P 是调度队列，包含缓存信息
  &lt;a class="anchor" href="#p-%e6%98%af%e8%b0%83%e5%ba%a6%e9%98%9f%e5%88%97%e5%8c%85%e5%90%ab%e7%bc%93%e5%ad%98%e4%bf%a1%e6%81%af">#&lt;/a>
 &lt;/h3>
-&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item><item><title>Golang Map</title><link>/posts/golang-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/golang-map/</guid><description/></item><item><title>Golang Slice</title><link>/posts/golang-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/golang-slice/</guid><description/></item><item><title>Channel</title><link>/posts/golang-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/golang-chan/</guid><description>&lt;h3 id="channel-数据结构">
+&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item><item><title>map</title><link>/posts/go-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/go-map/</guid><description/></item><item><title>slice</title><link>/posts/go-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/go-slice/</guid><description/></item><item><title>channel</title><link>/posts/go-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/go-chan/</guid><description>&lt;h3 id="channel-数据结构">
  channel 数据结构
  &lt;a class="anchor" href="#channel-%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#&lt;/a>
 &lt;/h3>
@@ -1176,6 +1334,23 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">EOFALL&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>chmod +x /usr/bin/gen-cloudinit-iso
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="cloud-init-user-data-中指定账户密码可选">
+ cloud-init &lt;code>user-data&lt;/code> 中指定账户密码(可选)
+ &lt;a class="anchor" href="#cloud-init-user-data-%e4%b8%ad%e6%8c%87%e5%ae%9a%e8%b4%a6%e6%88%b7%e5%af%86%e7%a0%81%e5%8f%af%e9%80%89">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#cloud-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ssh_pwauth: True
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>chpasswd:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> list: |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> root:password
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expire: False
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="cloud-init-user-data-中禁用网络配置">
+ cloud-init &lt;code>user-data&lt;/code> 中禁用网络配置
+ &lt;a class="anchor" href="#cloud-init-user-data-%e4%b8%ad%e7%a6%81%e7%94%a8%e7%bd%91%e7%bb%9c%e9%85%8d%e7%bd%ae">#&lt;/a>
+&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#cloud-config&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>network:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> config: disabled
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="创建虚拟机时使用-cloudinit">
  创建虚拟机时使用 cloudinit
  &lt;a class="anchor" href="#%e5%88%9b%e5%bb%ba%e8%99%9a%e6%8b%9f%e6%9c%ba%e6%97%b6%e4%bd%bf%e7%94%a8-cloudinit">#&lt;/a>
