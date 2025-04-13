@@ -39,6 +39,25 @@ EOFALL
 chmod +x /usr/bin/gen-cloudinit-iso
 ```
 
+### cloud-init `user-data` 中指定账户密码(可选)
+
+```bash
+#cloud-config
+ssh_pwauth: True
+chpasswd:
+  list: |
+     root:password
+  expire: False
+```
+
+### cloud-init `user-data` 中禁用网络配置
+
+```bash
+#cloud-config
+network:
+  config: disabled
+```
+
 ## 创建虚拟机时使用 cloudinit
 
 创建虚拟机之前创建 cloudinit iso, 并通过 cdrom 挂载
