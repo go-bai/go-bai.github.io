@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>链表 on gobai's notes</title><link>/posts/leetcode/linked-list/</link><description>Recent content in 链表 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/leetcode/linked-list/index.xml" rel="self" type="application/rss+xml"/><item><title>25. K 个一组翻转链表</title><link>/posts/reverse-nodes-in-k-group/</link><pubDate>Mon, 14 Apr 2025 20:37:53 +0800</pubDate><guid>/posts/reverse-nodes-in-k-group/</guid><description>&lt;h2 id="题目描述">
+ 题目描述
+ &lt;a class="anchor" href="#%e9%a2%98%e7%9b%ae%e6%8f%8f%e8%bf%b0">#&lt;/a>
+&lt;/h2>
+&lt;p>给你链表的头节点 &lt;code>head&lt;/code> ，每 &lt;code>k&lt;/code> 个节点一组进行翻转，请你返回修改后的链表。&lt;/p>
+&lt;p>&lt;code>k&lt;/code> 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 &lt;code>k&lt;/code> 的整数倍，那么请将最后剩余的节点保持原有顺序。&lt;/p>
+&lt;p>你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。&lt;/p>
+&lt;hr>
+&lt;p>&lt;strong>示例 1：&lt;/strong>&lt;/p>
+&lt;p>&lt;img src="https://assets.leetcode.com/uploads/2020/10/03/reverse_ex1.jpg" alt="" />&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>输入：&lt;/strong> &lt;code>head = [1,2,3,4,5], k = 2&lt;/code>&lt;/p>
+&lt;p>&lt;strong>输出：&lt;/strong> &lt;code>[2,1,4,3,5]&lt;/code>&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;p>&lt;strong>示例 2：&lt;/strong>&lt;/p>
+&lt;p>&lt;img src="https://assets.leetcode.com/uploads/2020/10/03/reverse_ex2.jpg" alt="" />&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>输入：&lt;/strong> &lt;code>head = [1,2,3,4,5], k = 3&lt;/code>&lt;/p>
+&lt;p>&lt;strong>输出：&lt;/strong> &lt;code>[3,2,1,4,5]&lt;/code>&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;p>&lt;strong>提示：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>链表中的节点数目为 &lt;code>n&lt;/code>&lt;/li>
+&lt;li>&lt;code>1 &amp;lt;= k &amp;lt;= n &amp;lt;= 5000&lt;/code>&lt;/li>
+&lt;li>&lt;code>0 &amp;lt;= Node.val &amp;lt;= 1000&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>进阶：&lt;/strong> 你可以设计一个只用 &lt;code>O(1)&lt;/code> 额外内存空间的算法解决此问题吗？&lt;/p>
+&lt;h2 id="思路">
+ 思路
+ &lt;a class="anchor" href="#%e6%80%9d%e8%b7%af">#&lt;/a>
+&lt;/h2>
+&lt;h2 id="代码">
+ 代码
+ &lt;a class="anchor" href="#%e4%bb%a3%e7%a0%81">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">TODO&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>
