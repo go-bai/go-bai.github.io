@@ -1,0 +1,246 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content='最近更新了家中 OpenWrt 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:
+
+
+  准备 qcow2 镜像
+  #
+
+首先下载最新的镜像, 截止目前最新版为23.05.3, 我这里下载的是x86-64的镜像
+text
+wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
+
+  配置宿主机桥接网络
+  #
+
+/etc/netplan/ 目录只放 01-all.yaml 配置文件并执行 netplan apply 应用配置。
+因为 USB 网卡重启后名称会变, 所以我这里通过 mac match 作了一个别名
+network:
+  version: 2
+  renderer: NetworkManager
+
+  ethernets:
+    enp1s0:
+      dhcp4: false
+      dhcp6: false
+    usb-nic:
+      match:
+        macaddress: "68:da:73:a1:c7:13"
+      dhcp4: false
+      dhcp6: false
+
+  bridges:
+    br0:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 192.168.1.100/24
+      routes:
+        - to: default
+          via: 192.168.1.99
+      nameservers:
+        addresses:
+          - 192.168.1.99
+        search:
+          - lan
+      interfaces:
+        - enp1s0
+      parameters:
+        stp: false
+    br1:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 192.168.31.100/24
+      interfaces:
+        - usb-nic
+      parameters:
+        stp: false
+
+  启动 OpenWrt 虚拟机
+  #
+
+我是用 libvirt 来管理qemu/kvm虚拟机, 如果没安装要先安装'><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/posts/openwrt-v2/"><meta property="og:site_name" content="gobai's notes"><meta property="og:title" content="OpenWrt v2"><meta property="og:description" content='最近更新了家中 OpenWrt 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:
+准备 qcow2 镜像 # 首先下载最新的镜像, 截止目前最新版为23.05.3, 我这里下载的是x86-64的镜像 text
+wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2 配置宿主机桥接网络 # /etc/netplan/ 目录只放 01-all.yaml 配置文件并执行 netplan apply 应用配置。
+因为 USB 网卡重启后名称会变, 所以我这里通过 mac match 作了一个别名
+network: version: 2 renderer: NetworkManager ethernets: enp1s0: dhcp4: false dhcp6: false usb-nic: match: macaddress: "68:da:73:a1:c7:13" dhcp4: false dhcp6: false bridges: br0: dhcp4: false dhcp6: false addresses: - 192.168.1.100/24 routes: - to: default via: 192.168.1.99 nameservers: addresses: - 192.168.1.99 search: - lan interfaces: - enp1s0 parameters: stp: false br1: dhcp4: false dhcp6: false addresses: - 192.168.31.100/24 interfaces: - usb-nic parameters: stp: false 启动 OpenWrt 虚拟机 # 我是用 libvirt 来管理qemu/kvm虚拟机, 如果没安装要先安装'><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-01-06T17:38:38+08:00"><meta property="article:modified_time" content="2025-05-08T13:51:22+00:00"><title>OpenWrt v2 | gobai's notes</title>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/posts/openwrt-v2/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.1ec1141791424bf1957b652e1be8b4c3268021d892fc1019354af06c058ba84e.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's notes</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><span>Golang</span><ul><li><input type=checkbox id=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class=toggle>
+<label for=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class="flex justify-between"><a role=button>语言基础</a></label><ul><li><a href=/posts/go-memory-escape/>内存逃逸</a></li><li><a href=/posts/go-gc/>GC 垃圾回收</a></li><li><a href=/posts/go-make-and-new/>make 与 new 区别</a></li><li><a href=/posts/go-gmp/>GMP 模型</a></li></ul></li><li><input type=checkbox id=section-42d8c4148cb4c5a3e3d8addaded05197 class=toggle>
+<label for=section-42d8c4148cb4c5a3e3d8addaded05197 class="flex justify-between"><a role=button>数据结构</a></label><ul><li><a href=/posts/go-interface/>interface</a></li><li><a href=/posts/go-chan/>channel</a></li></ul></li><li><input type=checkbox id=section-1ca588caf6263863db394d8b5e8e27c7 class=toggle>
+<label for=section-1ca588caf6263863db394d8b5e8e27c7 class="flex justify-between"><a role=button>标准库</a></label><ul></ul></li><li><input type=checkbox id=section-241d5557475d85971162af97f6d52ccb class=toggle>
+<label for=section-241d5557475d85971162af97f6d52ccb class="flex justify-between"><a role=button>三方库</a></label><ul><li><a href=/posts/sqlx-vs-xorm/>sqlx vs xorm</a></li></ul></li><li><input type=checkbox id=section-da889a16058efe316dfcb82b9003429e class=toggle>
+<label for=section-da889a16058efe316dfcb82b9003429e class="flex justify-between"><a role=button>开发工具</a></label><ul><li><a href=/posts/go-delve/>Delve</a></li><li><a href=/posts/go-testing/>Testing</a></li></ul></li><li><input type=checkbox id=section-fcb09aa495225b08f1e972b051618bb6 class=toggle>
+<label for=section-fcb09aa495225b08f1e972b051618bb6 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/solve-timezone-issue-in-go-application-in-container/>Go应用在容器中的时区</a></li><li><a href=/posts/go-app-reduce-size/>减小go程序编译后的体积</a></li></ul></li></ul></li><li><input type=checkbox id=section-f91fe725fab4dcbef0dd504359ff7b63 class=toggle checked>
+<label for=section-f91fe725fab4dcbef0dd504359ff7b63 class="flex justify-between"><a role=button>Linux</a></label><ul><li><input type=checkbox id=section-176ad016ae09a9f0440dca17617492cb class=toggle checked>
+<label for=section-176ad016ae09a9f0440dca17617492cb class="flex justify-between"><a role=button>Network</a></label><ul><li><a href=/posts/linux-iptables/>Linux iptables</a></li><li><a href=/posts/linux-bridge/>Linux Bridge</a></li><li><a href=/posts/wireless-to-wired-network/>无线转有线网络</a></li><li><a href=/posts/openwrt/>OpenWrt</a></li><li><a href=/posts/openwrt-v2/ class=active>OpenWrt v2</a></li><li><a href=/posts/dhclient/>dhclient 问题</a></li><li><a href=/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>在 Ubuntu 22.04 使用 netplan 创建桥接网络</a></li></ul></li><li><input type=checkbox id=section-33e3a313f4903205bd4597f5f4045be9 class=toggle>
+<label for=section-33e3a313f4903205bd4597f5f4045be9 class="flex justify-between"><a role=button>OS</a></label><ul><li><a href=/posts/netpoll/>Netpoll</a></li><li><a href=/posts/linux-boot-process-bios/>Linux 启动流程 (BIOS)</a></li><li><a href=/posts/multi-bootable-usb/>Multi-Bootable USB</a></li></ul></li><li><input type=checkbox id=section-3b63411eed8d0cecdd3250e70daaaace class=toggle>
+<label for=section-3b63411eed8d0cecdd3250e70daaaace class="flex justify-between"><a role=button>Storage</a></label><ul><li><a href=/posts/procfs/>proc filesystem</a></li><li><a href=/posts/partitioning-disks/>Linux 磁盘分区</a></li><li><a href=/posts/inode/>Linux 文件系统之 inode</a></li><li><a href=/posts/delete-partition-and-expand-another/>删除分区并扩容另一个分区和根文件系统</a></li></ul></li><li><input type=checkbox id=section-244a9b038b0e0aa873cb558da61a18b1 class=toggle>
+<label for=section-244a9b038b0e0aa873cb558da61a18b1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/filebrowser/>Filebrowser 部署</a></li><li><a href=/posts/rclone/>Rclone 使用笔记</a></li><li><a href=/posts/shell-script/>Shell Script</a></li><li><a href=/posts/ubuntu-config/>Ubuntu Config</a></li><li><a href=/posts/systemd-journal/>About Systemd</a></li></ul></li></ul></li><li><input type=checkbox id=section-db6ac5e9808e911c643d4dada0e07ebd class=toggle>
+<label for=section-db6ac5e9808e911c643d4dada0e07ebd class="flex justify-between"><a role=button>Kubernetes</a></label><ul><li><a href=/posts/k8s-informer/>k8s informer 介绍</a></li><li><a href=/posts/flannel/>深入了解 Kubernetes CNI 网络插件 Flannel</a></li><li><a href=/posts/kube-scheduler/>Kube Scheduler</a></li><li><a href=/posts/cri/>CRI 工作原理</a></li><li><a href=/posts/cni/>CNI 工作原理</a></li><li><a href=/posts/csi/>CSI 工作原理</a></li><li><a href=/posts/builing-multi-platform-container-images-guide/>构建多平台容器镜像</a></li><li><a href=/posts/rke2/>RKE2 安装 k8s 集群</a></li><li><a href=/posts/controller-runtime/>Controller Runtime</a></li><li><input type=checkbox id=section-8edd6114a0c1ce280c6628362e538ba7 class=toggle>
+<label for=section-8edd6114a0c1ce280c6628362e538ba7 class="flex justify-between"><a role=button>问题记录</a></label><ul><li><a href=/posts/failed-to-reserve-sandbox-name/>failed to reserve sandbox name</a></li></ul></li></ul></li><li><input type=checkbox id=section-45ed28834a9c7fe37d3e4d15606fec65 class=toggle>
+<label for=section-45ed28834a9c7fe37d3e4d15606fec65 class="flex justify-between"><a role=button>Database</a></label><ul><li><a href=/posts/sqlite3/>SQLite3</a></li></ul></li><li><span>Virtualization</span><ul><li><input type=checkbox id=section-7c5a43731ddd199a055dda51c8660688 class=toggle>
+<label for=section-7c5a43731ddd199a055dda51c8660688 class="flex justify-between"><a role=button>KubeVirt</a></label><ul><li><a href=/posts/kubevirt-sidecar/>Kubevirt Hook Sidecar</a></li></ul></li><li><input type=checkbox id=section-01c36c077fb673b3c49c2a334c82e286 class=toggle>
+<label for=section-01c36c077fb673b3c49c2a334c82e286 class="flex justify-between"><a role=button>libvirt</a></label><ul><li><a href=/posts/libvirt/>Libvirt 使用笔记</a></li><li><a href=/posts/create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a></li></ul></li></ul></li><li><input type=checkbox id=section-51c4e989897e79573c9215830bc89f6c class=toggle>
+<label for=section-51c4e989897e79573c9215830bc89f6c class="flex justify-between"><a role=button>Prometheus</a></label><ul><li><a href=/posts/prometheus-basics/>Prometheus 基础</a></li><li><a href=/posts/kube-prometheus-stack/>kube-prometheus-stack 安装</a></li><li><a href=/posts/node-exporter/>node-exporter 安装</a></li></ul></li><li><input type=checkbox id=section-3dd648d0479248759f2c07b8d5ee80be class=toggle>
+<label for=section-3dd648d0479248759f2c07b8d5ee80be class="flex justify-between"><a role=button>Ceph</a></label><ul><li><a href=/posts/rook-ceph/>安装 Rook Ceph</a></li></ul></li><li><input type=checkbox id=section-ba2b1bb537fff210d58a51efd7bbb7f9 class=toggle>
+<label for=section-ba2b1bb537fff210d58a51efd7bbb7f9 class="flex justify-between"><a role=button>LeetCode</a></label><ul><li><input type=checkbox id=section-3ef90a077ef0405107c088f6e344d4df class=toggle>
+<label for=section-3ef90a077ef0405107c088f6e344d4df class="flex justify-between"><a role=button>链表</a></label><ul><li><a href=/posts/reverse-nodes-in-k-group/>25. K 个一组翻转链表</a></li></ul></li></ul></li><li><input type=checkbox id=section-bceaf15d0fd4d92497330a70b95e69d1 class=toggle>
+<label for=section-bceaf15d0fd4d92497330a70b95e69d1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li><li class=book-section-flat><span>&lt;&lt; 链接 >></span><ul><li><a href=/posts/about/>关于我</a></li><li><a href=/posts/links/>友链</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>OpenWrt v2</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#准备-qcow2-镜像>准备 qcow2 镜像</a></li><li><a href=#配置宿主机桥接网络>配置宿主机桥接网络</a></li><li><a href=#启动-openwrt-虚拟机>启动 OpenWrt 虚拟机</a></li><li><a href=#配置-openwrt-网络>配置 OpenWrt 网络</a></li><li><a href=#更换-openwrt-软件源>更换 OpenWrt 软件源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#配置-lan-口-dhcp-服务>配置 LAN 口 DHCP 服务</a></li><li><a href=#配置无线网>配置无线网</a><ul><li><a href=#将-ax200-无线网卡直通到虚拟机>将 AX200 无线网卡直通到虚拟机</a></li><li><a href=#配置-ax200-无线网卡为-ap-模式>配置 AX200 无线网卡为 AP 模式</a></li></ul></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#参考>参考</a></li></ul></nav></aside></header><article class="markdown book-post"><h1>OpenWrt v2</h1><div class="flex align-center text-small book-post-date"><img src=/svg/calendar.svg class=book-icon alt>
+<span>2024-01-06</span></div><div class=book-post-content><p>最近更新了家中 <code>OpenWrt</code> 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:</p><p><img src=/posts/linux/imgs/allinone.drawio.png alt=穷人版家庭网络拓扑图></p><h2 id=准备-qcow2-镜像>准备 qcow2 镜像
+<a class=anchor href=#%e5%87%86%e5%a4%87-qcow2-%e9%95%9c%e5%83%8f>#</a></h2><p>首先下载最新的<a href=https://downloads.openwrt.org/releases>镜像</a>, 截止目前最新版为<code>23.05.3</code>, 我这里下载的是x86-64的镜像
+<a href=openwrt.md>text</a></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+</span></span><span style=display:flex><span>gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+</span></span><span style=display:flex><span>qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
+</span></span></code></pre></div><h2 id=配置宿主机桥接网络>配置宿主机桥接网络
+<a class=anchor href=#%e9%85%8d%e7%bd%ae%e5%ae%bf%e4%b8%bb%e6%9c%ba%e6%a1%a5%e6%8e%a5%e7%bd%91%e7%bb%9c>#</a></h2><p><code>/etc/netplan/</code> 目录只放 <code>01-all.yaml</code> 配置文件并执行 <code>netplan apply</code> 应用配置。</p><p>因为 USB 网卡重启后名称会变, 所以我这里通过 mac match 作了一个别名</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>network</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>version</span>: <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>renderer</span>: <span style=color:#ae81ff>NetworkManager</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ethernets</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>enp1s0</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp4</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp6</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>usb-nic</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>match</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>macaddress</span>: <span style=color:#e6db74>&#34;68:da:73:a1:c7:13&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp4</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp6</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>bridges</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>br0</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp4</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp6</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>addresses</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>192.168.1.100</span><span style=color:#ae81ff>/24</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>routes</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>to</span>: <span style=color:#ae81ff>default</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>via</span>: <span style=color:#ae81ff>192.168.1.99</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>nameservers</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>addresses</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>192.168.1.99</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>search</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>lan</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>interfaces</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>enp1s0</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>parameters</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>stp</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>br1</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp4</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>dhcp6</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>addresses</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>192.168.31.100</span><span style=color:#ae81ff>/24</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>interfaces</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#ae81ff>usb-nic</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>parameters</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>stp</span>: <span style=color:#66d9ef>false</span>
+</span></span></code></pre></div><h2 id=启动-openwrt-虚拟机>启动 OpenWrt 虚拟机
+<a class=anchor href=#%e5%90%af%e5%8a%a8-openwrt-%e8%99%9a%e6%8b%9f%e6%9c%ba>#</a></h2><p>我是用 <code>libvirt</code> 来管理qemu/kvm虚拟机, 如果没安装要先安装</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>apt install virt-manager qemu bridge-utils -y
+</span></span></code></pre></div><p>我这里将镜像复制到了 <code>/var/lib/libvirt/disks/</code> 目录下</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
+</span></span></code></pre></div><p>使用<code>virt-install</code>运行虚拟机, 这里网卡使用<code>virtio</code>类型并桥接到之前文档里创建的 <code>br0</code> 和 <code>br1</code> 上, 选择<code>virtio</code>是因为性能最好, 可以达到<code>10Gbps</code>以上</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>virt-install <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --name openwrt <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --memory <span style=color:#ae81ff>512</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --vcpus <span style=color:#ae81ff>1</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --network bridge<span style=color:#f92672>=</span>br0,model<span style=color:#f92672>=</span>virtio <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --network bridge<span style=color:#f92672>=</span>br1,model<span style=color:#f92672>=</span>virtio <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --disk path<span style=color:#f92672>=</span>/var/lib/libvirt/disks/openwrt.qcow2,bus<span style=color:#f92672>=</span>virtio <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --os-type linux <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --os-variant generic <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --machine q35 <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --import <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --autostart <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --graphics none <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --noautoconsole
+</span></span></code></pre></div><h2 id=配置-openwrt-网络>配置 OpenWrt 网络
+<a class=anchor href=#%e9%85%8d%e7%bd%ae-openwrt-%e7%bd%91%e7%bb%9c>#</a></h2><p>连接<code>console</code>配置网络</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>virsh console openwrt
+</span></span></code></pre></div><p>修改网络配置文件 <code>/etc/config/network</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>config interface <span style=color:#e6db74>&#39;loopback&#39;</span>
+</span></span><span style=display:flex><span>  option device <span style=color:#e6db74>&#39;lo&#39;</span>
+</span></span><span style=display:flex><span>  option proto <span style=color:#e6db74>&#39;static&#39;</span>
+</span></span><span style=display:flex><span>  option ipaddr <span style=color:#e6db74>&#39;127.0.0.1&#39;</span>
+</span></span><span style=display:flex><span>  option netmask <span style=color:#e6db74>&#39;255.0.0.0&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>config device <span style=color:#e6db74>&#39;lan_br&#39;</span>
+</span></span><span style=display:flex><span>  option name <span style=color:#e6db74>&#39;br-lan&#39;</span>
+</span></span><span style=display:flex><span>  option type <span style=color:#e6db74>&#39;bridge&#39;</span>
+</span></span><span style=display:flex><span>  list ports <span style=color:#e6db74>&#39;eth0&#39;</span>
+</span></span><span style=display:flex><span>  list ports <span style=color:#e6db74>&#39;phy0-ap0&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>config interface <span style=color:#e6db74>&#39;lan&#39;</span>
+</span></span><span style=display:flex><span>  option device <span style=color:#e6db74>&#39;br-lan&#39;</span>
+</span></span><span style=display:flex><span>  option proto <span style=color:#e6db74>&#39;static&#39;</span>
+</span></span><span style=display:flex><span>  option ipaddr <span style=color:#e6db74>&#39;192.168.1.99&#39;</span>
+</span></span><span style=display:flex><span>  option netmask <span style=color:#e6db74>&#39;255.255.255.0&#39;</span>
+</span></span><span style=display:flex><span>  option ipv6 <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span><span style=display:flex><span>  list dns <span style=color:#e6db74>&#39;223.5.5.5&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>config interface <span style=color:#e6db74>&#39;wan&#39;</span>
+</span></span><span style=display:flex><span>  option device <span style=color:#e6db74>&#39;eth1&#39;</span>
+</span></span><span style=display:flex><span>  option proto <span style=color:#e6db74>&#39;static&#39;</span>
+</span></span><span style=display:flex><span>  option ipaddr <span style=color:#e6db74>&#39;192.168.31.88&#39;</span>
+</span></span><span style=display:flex><span>  option netmask <span style=color:#e6db74>&#39;255.255.255.0&#39;</span>
+</span></span><span style=display:flex><span>  option ipv6 <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span><span style=display:flex><span>  option gateway <span style=color:#e6db74>&#39;192.168.31.1&#39;</span>
+</span></span><span style=display:flex><span>  option type <span style=color:#e6db74>&#39;bridge&#39;</span>
+</span></span></code></pre></div><p>修改之后重启网络</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>service network restart
+</span></span></code></pre></div><p>测试路由和DNS解析是否正常: <code>ping baidu.com</code>, 一切OK再继续下面的</p><h2 id=更换-openwrt-软件源>更换 OpenWrt 软件源
+<a class=anchor href=#%e6%9b%b4%e6%8d%a2-openwrt-%e8%bd%af%e4%bb%b6%e6%ba%90>#</a></h2><p>大陆码农生存必备技能了, 这里使用的中科大的源, 配置文件位于 <code>/etc/opkg/distfeeds.conf</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>src/gz openwrt_core http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/targets/x86/64/packages
+</span></span><span style=display:flex><span>src/gz openwrt_base http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/base
+</span></span><span style=display:flex><span>src/gz openwrt_luci http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/luci
+</span></span><span style=display:flex><span>src/gz openwrt_packages http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/packages
+</span></span><span style=display:flex><span>src/gz openwrt_routing http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/routing
+</span></span><span style=display:flex><span>src/gz openwrt_telephony http://mirrors.ustc.edu.cn/openwrt/releases/23.05.3/packages/x86_64/telephony
+</span></span></code></pre></div><p>然后更新一下</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>opkg update
+</span></span></code></pre></div><h2 id=扩容根分区和文件系统>扩容根分区和文件系统
+<a class=anchor href=#%e6%89%a9%e5%ae%b9%e6%a0%b9%e5%88%86%e5%8c%ba%e5%92%8c%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f>#</a></h2><p>如果觉得默认的100M左右就够用了可以跳过这步</p><p>这个文档里的脚本只支持x86的ext4和squashfs镜像创建的虚机, 自动检测根分区和文件系统, 将空闲空间分给根分区和文件系统</p><p><a href=https://openwrt.org/docs/guide-user/advanced/expand_root>openwrt.org/docs/guide-user/advanced/expand_root</a></p><p>扩容之后就使用起来就不用扣扣搜搜的了</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>root@OpenWrt:~# df -hT /
+</span></span><span style=display:flex><span>Filesystem           Type            Size      Used Available Use% Mounted on
+</span></span><span style=display:flex><span>/dev/root            ext4          994.8M     56.9M    921.9M   6% /
+</span></span></code></pre></div><h2 id=配置-lan-口-dhcp-服务>配置 LAN 口 DHCP 服务
+<a class=anchor href=#%e9%85%8d%e7%bd%ae-lan-%e5%8f%a3-dhcp-%e6%9c%8d%e5%8a%a1>#</a></h2><p>修改配置文件 <code>/etc/config/dhcp</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>config dhcp <span style=color:#e6db74>&#39;lan&#39;</span>
+</span></span><span style=display:flex><span>        option interface <span style=color:#e6db74>&#39;lan&#39;</span>
+</span></span><span style=display:flex><span>        option start <span style=color:#e6db74>&#39;150&#39;</span>
+</span></span><span style=display:flex><span>        option limit <span style=color:#e6db74>&#39;100&#39;</span>
+</span></span><span style=display:flex><span>        option leasetime <span style=color:#e6db74>&#39;12h&#39;</span>
+</span></span><span style=display:flex><span>        option ignore <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span></code></pre></div><p>修改之后重启 <code>service dnsmasq restart</code>, 配置之后有段时间dhcp server没正常运行, 可通过 <code>logread -e dnsmasq</code> 查看服务日志排查.</p><p>正常运行之后dhcp server会监听67端口</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>root@OpenWrt:~# netstat -anp | grep :67
+</span></span><span style=display:flex><span>udp        <span style=color:#ae81ff>0</span>      <span style=color:#ae81ff>0</span> 0.0.0.0:67              0.0.0.0:*                           27573/dnsmasq
+</span></span></code></pre></div><h2 id=配置无线网>配置无线网
+<a class=anchor href=#%e9%85%8d%e7%bd%ae%e6%97%a0%e7%ba%bf%e7%bd%91>#</a></h2><h3 id=将-ax200-无线网卡直通到虚拟机>将 AX200 无线网卡直通到虚拟机
+<a class=anchor href=#%e5%b0%86-ax200-%e6%97%a0%e7%ba%bf%e7%bd%91%e5%8d%a1%e7%9b%b4%e9%80%9a%e5%88%b0%e8%99%9a%e6%8b%9f%e6%9c%ba>#</a></h3><p>直接在 Virtual Machine Manager 中选择 <code>Add Hardware</code> -> <code>PCI Host Device</code> 即可</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>$ lspci -D | grep AX200
+</span></span><span style=display:flex><span>0000:02:00.0 Network controller: Intel Corporation Wi-Fi <span style=color:#ae81ff>6</span> AX200 <span style=color:#f92672>(</span>rev 1a<span style=color:#f92672>)</span>
+</span></span></code></pre></div><ul><li><code>0000</code>: 这是 Domain 号, 通常是 0000</li><li><code>02</code>: 这是 Bus 号</li><li><code>00</code>: 这是 Device 号, 在 libvirt XML 中对应 slot</li><li><code>0</code>: 这是 Function 号</li></ul><p>也可以通过命令行的方式, 先创建一个 <code>pci-device.xml</code> 文件, 其中 <code>bus</code> <code>slot</code> 和 <code>function</code> 从上面 lspci 结果获取</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;hostdev</span> <span style=color:#a6e22e>mode=</span><span style=color:#e6db74>&#39;subsystem&#39;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#39;pci&#39;</span> <span style=color:#a6e22e>managed=</span><span style=color:#e6db74>&#39;yes&#39;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&lt;source&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;address</span> <span style=color:#a6e22e>domain=</span><span style=color:#e6db74>&#39;0x0000&#39;</span> <span style=color:#a6e22e>bus=</span><span style=color:#e6db74>&#39;0x02&#39;</span> <span style=color:#a6e22e>slot=</span><span style=color:#e6db74>&#39;0x00&#39;</span> <span style=color:#a6e22e>function=</span><span style=color:#e6db74>&#39;0x0&#39;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&lt;/source&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/hostdev&gt;</span>
+</span></span></code></pre></div><p>然后热添加到虚拟机中并持久化进配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>virsh attach-device openwrt pci-device.xml --live --config
+</span></span></code></pre></div><h3 id=配置-ax200-无线网卡为-ap-模式>配置 AX200 无线网卡为 AP 模式
+<a class=anchor href=#%e9%85%8d%e7%bd%ae-ax200-%e6%97%a0%e7%ba%bf%e7%bd%91%e5%8d%a1%e4%b8%ba-ap-%e6%a8%a1%e5%bc%8f>#</a></h3><p>默认情况下, OpenWrt 的系统(system)菜单下面找不到无线(wireless)选项，需要进行下面的安装</p><p>无线网卡型号是 AX200 的驱动安装:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>opkg update
+</span></span><span style=display:flex><span><span style=color:#75715e># 针对 intel 网卡</span>
+</span></span><span style=display:flex><span>opkg install kmod-iwlwifi
+</span></span><span style=display:flex><span>opkg install iwlwifi-firmware-ax200
+</span></span><span style=display:flex><span><span style=color:#75715e># 需要重启</span>
+</span></span><span style=display:flex><span>reboot
+</span></span></code></pre></div><p>修改文件 <code>/etc/config/wireless</code> 设置 AP 模式, AX200型号网卡受iwlwifi驱动限制, 只能在2.4GHz带宽下工作</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>config wifi-device <span style=color:#e6db74>&#39;radio0&#39;</span>
+</span></span><span style=display:flex><span>  option type <span style=color:#e6db74>&#39;mac80211&#39;</span>
+</span></span><span style=display:flex><span>  option path <span style=color:#e6db74>&#39;pci0000:00/0000:00:01.4/0000:05:00.0&#39;</span>
+</span></span><span style=display:flex><span>  option htmode <span style=color:#e6db74>&#39;HT20&#39;</span>
+</span></span><span style=display:flex><span>  option disable <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span><span style=display:flex><span>  option cell_density <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span><span style=display:flex><span>  option band <span style=color:#e6db74>&#39;2g&#39;</span>
+</span></span><span style=display:flex><span>  option channel <span style=color:#e6db74>&#39;11&#39;</span>
+</span></span><span style=display:flex><span>  option country <span style=color:#e6db74>&#39;CN&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>config wifi-iface <span style=color:#e6db74>&#39;default_radio0&#39;</span>
+</span></span><span style=display:flex><span>  option device <span style=color:#e6db74>&#39;radio0&#39;</span>
+</span></span><span style=display:flex><span>  option network <span style=color:#e6db74>&#39;lan&#39;</span>
+</span></span><span style=display:flex><span>  option mode <span style=color:#e6db74>&#39;ap&#39;</span>
+</span></span><span style=display:flex><span>  option ssid <span style=color:#e6db74>&#39;OpenWrt&#39;</span>
+</span></span><span style=display:flex><span>  option encryption <span style=color:#e6db74>&#39;psk2&#39;</span>
+</span></span><span style=display:flex><span>  option key <span style=color:#e6db74>&#39;88888888&#39;</span>
+</span></span><span style=display:flex><span>  option disable <span style=color:#e6db74>&#39;0&#39;</span>
+</span></span></code></pre></div><p>重新加载</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>wifi
+</span></span></code></pre></div><h2 id=安装openclash>安装<code>OpenClash</code>
+<a class=anchor href=#%e5%ae%89%e8%a3%85openclash>#</a></h2><p>和 <a href=../openwrt>OpenWrt</a> 中配置一样</p><h2 id=参考>参考
+<a class=anchor href=#%e5%8f%82%e8%80%83>#</a></h2><ol><li><a href=https://openwrt.org/docs/guide-user/virtualization/qemu#virtualization_proper>OpenWrt in QEMU</a></li><li><a href=https://openwrt.org/docs/guide-user/advanced/expand_root>OpenWrt: Expanding root partition and filesystem</a></li><li><a href=https://openwrt.org/docs/guide-user/base-system/dhcp>OpenWrt: DHCP and DNS configuration /etc/config/dhcp</a></li><li><a href=https://openwrt.org/docs/guide-user/base-system/clarifying_interface_usage>OpenWrt: Clarifying the term &ldquo;Interface&rdquo;</a></li><li><a href=https://github.com/vernesong/OpenClash/wiki/%E5%AE%89%E8%A3%85>OpenClash 安装</a></li></ol></div></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/49a45302953e94b7a98527fd46f9833eb8a0c8fa title='Last modified by go-bai | 2025-05-08' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
+<span>2025-05-08</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#准备-qcow2-镜像>准备 qcow2 镜像</a></li><li><a href=#配置宿主机桥接网络>配置宿主机桥接网络</a></li><li><a href=#启动-openwrt-虚拟机>启动 OpenWrt 虚拟机</a></li><li><a href=#配置-openwrt-网络>配置 OpenWrt 网络</a></li><li><a href=#更换-openwrt-软件源>更换 OpenWrt 软件源</a></li><li><a href=#扩容根分区和文件系统>扩容根分区和文件系统</a></li><li><a href=#配置-lan-口-dhcp-服务>配置 LAN 口 DHCP 服务</a></li><li><a href=#配置无线网>配置无线网</a><ul><li><a href=#将-ax200-无线网卡直通到虚拟机>将 AX200 无线网卡直通到虚拟机</a></li><li><a href=#配置-ax200-无线网卡为-ap-模式>配置 AX200 无线网卡为 AP 模式</a></li></ul></li><li><a href=#安装openclash>安装<code>OpenClash</code></a></li><li><a href=#参考>参考</a></li></ul></nav></div></aside></main></body></html>
