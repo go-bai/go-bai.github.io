@@ -1,3 +1,9 @@
+.PHONY: init
+init:
+	CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
+	git submodule update --init --recursive
+	git submodule foreach git pull origin master
+
 .PHONY: push
 push:
 	git submodule update --recursive --remote

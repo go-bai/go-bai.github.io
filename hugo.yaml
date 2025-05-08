@@ -6,7 +6,7 @@ enableRobotsTXT: true
 enableGitInfo: true # auto update time based on git record, like: Last modified by go-bai | 2025-03-02
 
 permalinks:
-  posts: "/posts/:filename/"
+  posts: "/posts/:contentbasename/"
 
 params:
   BookTheme: auto

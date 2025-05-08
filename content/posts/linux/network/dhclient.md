@@ -1,5 +1,5 @@
 ---
-title: "dhclient"
+title: "dhclient 问题"
 date: 2023-10-09T21:37:55+08:00
 ---
 

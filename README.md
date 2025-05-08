@@ -1,4 +1,6 @@
-### prerequisites
+# README
+
+## prerequisites
 
 ```bash
 ➜  ~ gcc --version
@@ -11,31 +13,25 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 go version go1.23.1 linux/amd64
 ```
 
-### install hugo extended
+## init
 
 ```bash
-CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest
+make init
 ```
 
-### pull theme submodule
-
-```bash
-git submodule update --init
-```
-
-### add a new page
+## add a new page
 
 ```bash
 hugo new content posts/linux/jq-command.md
 ```
 
-### preview
+## preview
 
 ```bash
 make server
 ```
 
-### git push
+## git push
 
 ```bash
 make git-push
