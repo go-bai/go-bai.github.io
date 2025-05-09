@@ -41,8 +41,7 @@ make git-push
 
 ### 自定义hugo `toc`的目录
 
-https://gohugo.io/getting-started/configuration-markup/#table-of-contents
-https://gohugo.io/content-management/toc/
+[#table-of-contents](https://gohugo.io/getting-started/configuration-markup/#table-of-contents)
 
 ```yaml
 markup:
