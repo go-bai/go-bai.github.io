@@ -82,7 +82,7 @@ apt install virt-manager qemu bridge-utils -y
 qemu-img create -f qcow2 -F qcow2 -b /var/lib/libvirt/images/openwrt.qcow2 /var/lib/libvirt/disks/openwrt.qcow2 1G
 ```
 
-使用`virt-install`运行虚拟机, 这里网卡使用`virtio`类型并桥接到之前文档里创建的 `br0` 和 `br1` 上, 选择`virtio`是因为性能最好, 可以达到`10Gbps`以上
+使用`virt-install`运行虚拟机, 这里网卡使用`virtio`类型并桥接到之前文档里创建的 `br0` 和 `br1` 上, 选择`virtio`是因为性能好, 可以达到 `20Gbps`
 
 ```bash
 virt-install \
