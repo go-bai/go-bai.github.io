@@ -1,5 +1,5 @@
 ---
-title: "Delve"
+title: "Go Delve"
 date: 2025-04-12T00:00:41+08:00
 # bookComments: false
 # bookSearchExclude: false

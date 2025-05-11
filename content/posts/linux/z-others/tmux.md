@@ -63,3 +63,4 @@ brew install tmux
 | 光标切换到其他窗格       | `Ctrl+b <arrow key>`         |
 | 调整窗格大小             | `Ctrl+b Ctrl+<arrow key>`    |
 | 关闭当前窗格             | `Ctrl+b x`                   |
+| **窗格内滚动查看**       | `Ctrl+b [`                   |

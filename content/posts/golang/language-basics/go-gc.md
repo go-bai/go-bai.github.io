@@ -1,5 +1,5 @@
 ---
-title: "GC 垃圾回收"
+title: "Go GC 垃圾回收"
 date: 2025-03-05T13:10:46+08:00
 # bookComments: false
 # bookSearchExclude: false

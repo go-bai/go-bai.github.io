@@ -1,5 +1,5 @@
 ---
-title: "interface"
+title: "Go interface"
 date: 2025-04-10T23:33:00+08:00
 # bookComments: false
 # bookSearchExclude: false

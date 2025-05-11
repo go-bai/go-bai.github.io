@@ -1,5 +1,5 @@
 ---
-title: "channel"
+title: "Go channel"
 date: 2025-03-05T12:46:50+08:00
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "内存逃逸"
+title: "Go 内存逃逸"
 date: 2025-03-05T13:23:47+08:00
 # bookComments: false
 # bookSearchExclude: false

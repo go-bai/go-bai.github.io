@@ -1,5 +1,5 @@
 ---
-title: "GMP 模型"
+title: "Go GMP 模型"
 date: 2025-03-05T13:07:55+08:00
 # bookComments: false
 # bookSearchExclude: false

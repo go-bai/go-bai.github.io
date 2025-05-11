@@ -1,5 +1,5 @@
 ---
-title: "make 与 new 区别"
+title: "Go make 与 new 区别"
 date: 2025-03-05T13:08:26+08:00
 # bookComments: false
 # bookSearchExclude: false

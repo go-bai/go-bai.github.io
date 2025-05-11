@@ -17,10 +17,14 @@ clean:
 	rm -rf resources
 	rm -rf .hugo_build.lock
 
+.PHONY: gen-blog-index
+gen-blog-index:
+	bash scripts/gen-blog-index.sh
+
 .PHONY: build
-build: clean
+build: clean gen-blog-index
 	hugo --minify
 
 .PHONY: server
-server: clean
+server: clean gen-blog-index
 	hugo server --bind 0.0.0.0 --minify --disableFastRender
