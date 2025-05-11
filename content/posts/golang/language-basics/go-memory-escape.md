@@ -63,7 +63,7 @@ func main() {
 
 slice 和 map 的值不是指针类型时不会逃逸
 
-### 6. 初始化 chennel
+### 6. 初始化 channel
 
 `channel` 一定是跨 `goroutine` 使用的，直接初始化在堆中
 

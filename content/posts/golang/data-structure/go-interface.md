@@ -90,7 +90,7 @@ ret = err
 return ret
 ```
 
-> 上述代码中, 相当于把一个类型为 `*MyError` 但是值为 `nil` 的变量赋值给了 `inerface{}` 类型的 `ret`，因为 `ret` 有实现 `error` 接口的方法 `func Error() string`，所以底层使用 `iface` 存储，其中:
+> 上述代码中, 相当于把一个类型为 `*MyError` 但是值为 `nil` 的变量赋值给了 `interface{}` 类型的 `ret`，因为 `ret` 有实现 `error` 接口的方法 `func Error() string`，所以底层使用 `iface` 存储，其中:
 >
 > - `iface.tab.Type` 会存储 `*MyError` 类型
 > - `iface.data` 为 nil
