@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>开发工具 on gobai's notes</title><link>/posts/golang/tools/</link><description>Recent content in 开发工具 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/tools/index.xml" rel="self" type="application/rss+xml"/><item><title>Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>开发工具 on gobai's notes</title><link>/posts/golang/tools/</link><description>Recent content in 开发工具 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/tools/index.xml" rel="self" type="application/rss+xml"/><item><title>Go Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
  介绍
  &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -41,7 +41,7 @@
 &lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://github.com/golang/vscode-go/blob/master/docs/debugging.md">github.com/golang/vscode-go/docs/debugging&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
+&lt;/ul></description></item><item><title>Go Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
  介绍
  &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>

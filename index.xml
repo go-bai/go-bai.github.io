@@ -297,8 +297,74 @@
  &lt;td>关闭当前窗格&lt;/td>
  &lt;td>&lt;code>Ctrl+b x&lt;/code>&lt;/td>
  &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;strong>窗格内滚动查看&lt;/strong>&lt;/td>
+ &lt;td>&lt;code>Ctrl+b [&lt;/code>&lt;/td>
+ &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>25. K 个一组翻转链表</title><link>/posts/reverse-nodes-in-k-group/</link><pubDate>Mon, 14 Apr 2025 20:37:53 +0800</pubDate><guid>/posts/reverse-nodes-in-k-group/</guid><description>&lt;h2 id="题目描述">
+&lt;/table></description></item><item><title>OpenWrt v2</title><link>/posts/openwrt-v2/</link><pubDate>Sat, 10 May 2025 17:38:38 +0800</pubDate><guid>/posts/openwrt-v2/</guid><description>&lt;p>最近更新了家中 &lt;code>OpenWrt&lt;/code> 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:&lt;/p>
+&lt;p>&lt;img src="/posts/linux/imgs/allinone.drawio.png" alt="穷人版家庭网络拓扑图" />&lt;/p>
+&lt;h2 id="准备-qcow2-镜像">
+ 准备 qcow2 镜像
+ &lt;a class="anchor" href="#%e5%87%86%e5%a4%87-qcow2-%e9%95%9c%e5%83%8f">#&lt;/a>
+&lt;/h2>
+&lt;p>首先下载最新的&lt;a href="https://downloads.openwrt.org/releases">镜像&lt;/a>, 截止目前最新版为&lt;code>23.05.3&lt;/code>, 我这里下载的是x86-64的镜像
+&lt;a href="openwrt.md">text&lt;/a>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="配置宿主机桥接网络">
+ 配置宿主机桥接网络
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e5%ae%bf%e4%b8%bb%e6%9c%ba%e6%a1%a5%e6%8e%a5%e7%bd%91%e7%bb%9c">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>/etc/netplan/&lt;/code> 目录只放 &lt;code>01-all.yaml&lt;/code> 配置文件并执行 &lt;code>netplan apply&lt;/code> 应用配置。&lt;/p>
+&lt;p>因为 USB 网卡重启后名称会变, 所以我这里通过 mac match 作了一个别名&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">network&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">version&lt;/span>: &lt;span style="color:#ae81ff">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">renderer&lt;/span>: &lt;span style="color:#ae81ff">NetworkManager&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ethernets&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">enp1s0&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">usb-nic&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">match&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">macaddress&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;68:da:73:a1:c7:13&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">bridges&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">br0&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.1.100&lt;/span>&lt;span style="color:#ae81ff">/24&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">routes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">to&lt;/span>: &lt;span style="color:#ae81ff">default&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">via&lt;/span>: &lt;span style="color:#ae81ff">192.168.1.99&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">nameservers&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.1.99&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">search&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">lan&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">interfaces&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">enp1s0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">parameters&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">stp&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">br1&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.31.100&lt;/span>&lt;span style="color:#ae81ff">/24&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">interfaces&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">usb-nic&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">parameters&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">stp&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="启动-openwrt-虚拟机">
+ 启动 OpenWrt 虚拟机
+ &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8-openwrt-%e8%99%9a%e6%8b%9f%e6%9c%ba">#&lt;/a>
+&lt;/h2>
+&lt;p>我是用 &lt;code>libvirt&lt;/code> 来管理qemu/kvm虚拟机, 如果没安装要先安装&lt;/p></description></item><item><title>25. K 个一组翻转链表</title><link>/posts/reverse-nodes-in-k-group/</link><pubDate>Mon, 14 Apr 2025 20:37:53 +0800</pubDate><guid>/posts/reverse-nodes-in-k-group/</guid><description>&lt;h2 id="题目描述">
  题目描述
  &lt;a class="anchor" href="#%e9%a2%98%e7%9b%ae%e6%8f%8f%e8%bf%b0">#&lt;/a>
 &lt;/h2>
@@ -334,7 +400,7 @@
  &lt;a class="anchor" href="#%e4%bb%a3%e7%a0%81">#&lt;/a>
 &lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">TODO&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Go Delve</title><link>/posts/go-delve/</link><pubDate>Sat, 12 Apr 2025 00:00:41 +0800</pubDate><guid>/posts/go-delve/</guid><description>&lt;h2 id="介绍">
  介绍
  &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -377,7 +443,7 @@
 &lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://github.com/golang/vscode-go/blob/master/docs/debugging.md">github.com/golang/vscode-go/docs/debugging&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
+&lt;/ul></description></item><item><title>Go Testing</title><link>/posts/go-testing/</link><pubDate>Fri, 11 Apr 2025 23:28:54 +0800</pubDate><guid>/posts/go-testing/</guid><description>&lt;h2 id="介绍">
  介绍
  &lt;a class="anchor" href="#%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
@@ -409,7 +475,7 @@
  go test 参数
  &lt;a class="anchor" href="#go-test-%e5%8f%82%e6%95%b0">#&lt;/a>
 &lt;/h3>
-&lt;p>有一些常用参数，可以通过 &lt;code>go help test&lt;/code> 和 &lt;code>go help testflag&lt;/code> 查看。&lt;/p></description></item><item><title>interface</title><link>/posts/go-interface/</link><pubDate>Thu, 10 Apr 2025 23:33:00 +0800</pubDate><guid>/posts/go-interface/</guid><description>&lt;h2 id="interface-底层结构">
+&lt;p>有一些常用参数，可以通过 &lt;code>go help test&lt;/code> 和 &lt;code>go help testflag&lt;/code> 查看。&lt;/p></description></item><item><title>Go interface</title><link>/posts/go-interface/</link><pubDate>Thu, 10 Apr 2025 23:33:00 +0800</pubDate><guid>/posts/go-interface/</guid><description>&lt;h2 id="interface-底层结构">
  &lt;code>interface&lt;/code> 底层结构
  &lt;a class="anchor" href="#interface-%e5%ba%95%e5%b1%82%e7%bb%93%e6%9e%84">#&lt;/a>
 &lt;/h2>
@@ -727,7 +793,7 @@
 &lt;ol>
 &lt;li>&lt;code>boot loader&lt;/code>(一般是&lt;code>grub&lt;/code>) 加载内核 &lt;code>vmlinuz&lt;/code> 和 initial RAM disk &lt;code>initrd.img&lt;/code>, 具体的文件名要看 &lt;code>/boot/grub/grub.cfg&lt;/code> 中的 menu 设置。&lt;/li>
 &lt;/ol>
-&lt;p>TODO&lt;/p></description></item><item><title>内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+&lt;p>TODO&lt;/p></description></item><item><title>Go 内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
  内存逃逸
  &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h2>
@@ -776,7 +842,7 @@
  5. 变量地址存储在引用类型对象中
  &lt;a class="anchor" href="#5-%e5%8f%98%e9%87%8f%e5%9c%b0%e5%9d%80%e5%ad%98%e5%82%a8%e5%9c%a8%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e5%af%b9%e8%b1%a1%e4%b8%ad">#&lt;/a>
 &lt;/h3>
-&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>Go GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
  GC 垃圾回收
  &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
 &lt;/h2>
@@ -816,7 +882,7 @@
  GC 流程
  &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>Go make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
  make 和 new 的区别
  &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
 &lt;/h2>
@@ -839,7 +905,7 @@ new返回指向该类型零值的指针&lt;/p>
  &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
 &lt;/h3>
 &lt;p>make会分配内存并初始化数据结构
-new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>Go GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
  CSP
  &lt;a class="anchor" href="#csp">#&lt;/a>
 &lt;/h2>
@@ -883,7 +949,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  P 是调度队列，包含缓存信息
  &lt;a class="anchor" href="#p-%e6%98%af%e8%b0%83%e5%ba%a6%e9%98%9f%e5%88%97%e5%8c%85%e5%90%ab%e7%bc%93%e5%ad%98%e4%bf%a1%e6%81%af">#&lt;/a>
 &lt;/h3>
-&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item><item><title>map</title><link>/posts/go-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/go-map/</guid><description/></item><item><title>slice</title><link>/posts/go-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/go-slice/</guid><description/></item><item><title>channel</title><link>/posts/go-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/go-chan/</guid><description>&lt;h3 id="channel-数据结构">
+&lt;p>P 取 processor 首字母，为 M 的执行提供上下文，保存 M 执行 G 时的一些资源，例如本地可执行 G 队列、memory cache等。一个M只有绑定P才可以执行goroutine，当M阻塞时，整个P会被传递给其他M，或者说整个P被接管。&lt;/p></description></item><item><title>Go map</title><link>/posts/go-map/</link><pubDate>Wed, 05 Mar 2025 12:49:36 +0800</pubDate><guid>/posts/go-map/</guid><description/></item><item><title>Go slice</title><link>/posts/go-slice/</link><pubDate>Wed, 05 Mar 2025 12:49:22 +0800</pubDate><guid>/posts/go-slice/</guid><description/></item><item><title>Go channel</title><link>/posts/go-chan/</link><pubDate>Wed, 05 Mar 2025 12:46:50 +0800</pubDate><guid>/posts/go-chan/</guid><description>&lt;h3 id="channel-数据结构">
  channel 数据结构
  &lt;a class="anchor" href="#channel-%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#&lt;/a>
 &lt;/h3>
@@ -2154,69 +2220,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  配置网络
  &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e7%bd%91%e7%bb%9c">#&lt;/a>
 &lt;/h2>
-&lt;p>连接&lt;code>console&lt;/code>配置网络&lt;/p></description></item><item><title>OpenWrt v2</title><link>/posts/openwrt-v2/</link><pubDate>Sat, 06 Jan 2024 17:38:38 +0800</pubDate><guid>/posts/openwrt-v2/</guid><description>&lt;p>最近更新了家中 &lt;code>OpenWrt&lt;/code> 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:&lt;/p>
-&lt;p>&lt;img src="/posts/linux/imgs/allinone.drawio.png" alt="穷人版家庭网络拓扑图" />&lt;/p>
-&lt;h2 id="准备-qcow2-镜像">
- 准备 qcow2 镜像
- &lt;a class="anchor" href="#%e5%87%86%e5%a4%87-qcow2-%e9%95%9c%e5%83%8f">#&lt;/a>
-&lt;/h2>
-&lt;p>首先下载最新的&lt;a href="https://downloads.openwrt.org/releases">镜像&lt;/a>, 截止目前最新版为&lt;code>23.05.3&lt;/code>, 我这里下载的是x86-64的镜像
-&lt;a href="openwrt.md">text&lt;/a>&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget https://mirror-03.infra.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>gunzip openwrt-23.05.3-x86-64-generic-ext4-combined.img.gz
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>qemu-img convert -f raw openwrt-23.05.3-x86-64-generic-ext4-combined.img -O qcow2 /var/lib/libvirt/images/openwrt.qcow2
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="配置宿主机桥接网络">
- 配置宿主机桥接网络
- &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e5%ae%bf%e4%b8%bb%e6%9c%ba%e6%a1%a5%e6%8e%a5%e7%bd%91%e7%bb%9c">#&lt;/a>
-&lt;/h2>
-&lt;p>&lt;code>/etc/netplan/&lt;/code> 目录只放 &lt;code>01-all.yaml&lt;/code> 配置文件并执行 &lt;code>netplan apply&lt;/code> 应用配置。&lt;/p>
-&lt;p>因为 USB 网卡重启后名称会变, 所以我这里通过 mac match 作了一个别名&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">network&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">version&lt;/span>: &lt;span style="color:#ae81ff">2&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">renderer&lt;/span>: &lt;span style="color:#ae81ff">NetworkManager&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ethernets&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">enp1s0&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">usb-nic&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">match&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">macaddress&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;68:da:73:a1:c7:13&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">bridges&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">br0&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.1.100&lt;/span>&lt;span style="color:#ae81ff">/24&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">routes&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">to&lt;/span>: &lt;span style="color:#ae81ff">default&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">via&lt;/span>: &lt;span style="color:#ae81ff">192.168.1.99&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">nameservers&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.1.99&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">search&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">lan&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">interfaces&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">enp1s0&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">parameters&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">stp&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">br1&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp4&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dhcp6&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">addresses&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">192.168.31.100&lt;/span>&lt;span style="color:#ae81ff">/24&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">interfaces&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">usb-nic&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">parameters&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">stp&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="启动-openwrt-虚拟机">
- 启动 OpenWrt 虚拟机
- &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8-openwrt-%e8%99%9a%e6%8b%9f%e6%9c%ba">#&lt;/a>
-&lt;/h2>
-&lt;p>我是用 &lt;code>libvirt&lt;/code> 来管理qemu/kvm虚拟机, 如果没安装要先安装&lt;/p></description></item><item><title>dhclient 问题</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
+&lt;p>连接&lt;code>console&lt;/code>配置网络&lt;/p></description></item><item><title>dhclient 问题</title><link>/posts/dhclient/</link><pubDate>Mon, 09 Oct 2023 21:37:55 +0800</pubDate><guid>/posts/dhclient/</guid><description>&lt;p>在机器上使用&lt;code>netplan&lt;/code>+&lt;code>NetworkManager&lt;/code>配置&lt;a href="../creating-a-bridged-network-with-netplan-on-ubuntu-22-04">bridged network&lt;/a>之后&lt;/p>
 &lt;p>最近经常电脑用着用着就不能联网了，发现&lt;code>enp1s0&lt;/code>总是偶尔冒出一个&lt;code>ipv4&lt;/code>地址，并且路由表会多出一个从&lt;code>enp1s0&lt;/code>出去的&lt;code>default&lt;/code>路由。后来看&lt;code>journalctl&lt;/code>日志发现是&lt;code>dhclient&lt;/code>搞的事情(学艺不精, 没第一时间联系起来)。&lt;/p>
 &lt;p>下面是部分日志：&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>➜ ~ journalctl -n &lt;span style="color:#ae81ff">1000000&lt;/span> | grep &lt;span style="color:#e6db74">&amp;#39;192.168.1.22\|enp1s0&amp;#39;&lt;/span>

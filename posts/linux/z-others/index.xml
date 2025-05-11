@@ -127,6 +127,10 @@
  &lt;td>关闭当前窗格&lt;/td>
  &lt;td>&lt;code>Ctrl+b x&lt;/code>&lt;/td>
  &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;strong>窗格内滚动查看&lt;/strong>&lt;/td>
+ &lt;td>&lt;code>Ctrl+b [&lt;/code>&lt;/td>
+ &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
  Filebrowser 介绍

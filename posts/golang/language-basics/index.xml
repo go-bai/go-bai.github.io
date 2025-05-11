@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>语言基础 on gobai's notes</title><link>/posts/golang/language-basics/</link><description>Recent content in 语言基础 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/language-basics/index.xml" rel="self" type="application/rss+xml"/><item><title>内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>语言基础 on gobai's notes</title><link>/posts/golang/language-basics/</link><description>Recent content in 语言基础 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/golang/language-basics/index.xml" rel="self" type="application/rss+xml"/><item><title>Go 内存逃逸</title><link>/posts/go-memory-escape/</link><pubDate>Wed, 05 Mar 2025 13:23:47 +0800</pubDate><guid>/posts/go-memory-escape/</guid><description>&lt;h2 id="内存逃逸">
  内存逃逸
  &lt;a class="anchor" href="#%e5%86%85%e5%ad%98%e9%80%83%e9%80%b8">#&lt;/a>
 &lt;/h2>
@@ -47,7 +47,7 @@
  5. 变量地址存储在引用类型对象中
  &lt;a class="anchor" href="#5-%e5%8f%98%e9%87%8f%e5%9c%b0%e5%9d%80%e5%ad%98%e5%82%a8%e5%9c%a8%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e5%af%b9%e8%b1%a1%e4%b8%ad">#&lt;/a>
 &lt;/h3>
-&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
+&lt;p>如将变量地址保存在 切片(slice)、映射(map)、通道(channel)、 接口(interface) 以及 函数(func) 中，那么此变量会逃逸到堆上.&lt;/p></description></item><item><title>Go GC 垃圾回收</title><link>/posts/go-gc/</link><pubDate>Wed, 05 Mar 2025 13:10:46 +0800</pubDate><guid>/posts/go-gc/</guid><description>&lt;h2 id="gc-垃圾回收">
  GC 垃圾回收
  &lt;a class="anchor" href="#gc-%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6">#&lt;/a>
 &lt;/h2>
@@ -87,7 +87,7 @@
  GC 流程
  &lt;a class="anchor" href="#gc-%e6%b5%81%e7%a8%8b">#&lt;/a>
 &lt;/h3>
-&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
+&lt;p>&lt;img src="https://agrim123.github.io/images/GC%20Algorithm%20Phases.png" alt="Go GC: Latency Problem Solved slide no 12" />&lt;/p></description></item><item><title>Go make 与 new 区别</title><link>/posts/go-make-and-new/</link><pubDate>Wed, 05 Mar 2025 13:08:26 +0800</pubDate><guid>/posts/go-make-and-new/</guid><description>&lt;h2 id="make-和-new-的区别">
  make 和 new 的区别
  &lt;a class="anchor" href="#make-%e5%92%8c-new-%e7%9a%84%e5%8c%ba%e5%88%ab">#&lt;/a>
 &lt;/h2>
@@ -110,7 +110,7 @@ new返回指向该类型零值的指针&lt;/p>
  &lt;a class="anchor" href="#3-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d">#&lt;/a>
 &lt;/h3>
 &lt;p>make会分配内存并初始化数据结构
-new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
+new只分配内存，并把内存置零，不做初始化&lt;/p></description></item><item><title>Go GMP 模型</title><link>/posts/go-gmp/</link><pubDate>Wed, 05 Mar 2025 13:07:55 +0800</pubDate><guid>/posts/go-gmp/</guid><description>&lt;h2 id="csp">
  CSP
  &lt;a class="anchor" href="#csp">#&lt;/a>
 &lt;/h2>
