@@ -1,4 +1,134 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>tmux 使用笔记</title><link>/posts/tmux/</link><pubDate>Sun, 11 May 2025 15:56:58 +0800</pubDate><guid>/posts/tmux/</guid><description>&lt;p>&lt;code>tmux&lt;/code> 是一个强大的终端复用工具，可以在一个终端窗口中管理多个会话、窗口和窗格。&lt;strong>一个令我相见恨晚的工具&lt;/strong>，下面记录一下安装和常用命令与快捷键。&lt;/p>
+&lt;h2 id="安装">
+ 安装
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85">#&lt;/a>
+&lt;/h2>
+&lt;p>在 Debian / Ubuntu 使用 apt 安装&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>apt install tmux
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>在 MacOS 使用 brew 安装&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>brew install tmux
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="使用">
+ 使用
+ &lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8">#&lt;/a>
+&lt;/h2>
+&lt;p>以下是常用的快捷键和命令&lt;/p>
+&lt;blockquote>
+&lt;p>也可以用使用 &lt;code>Ctrl+b ?&lt;/code> 查看所有快捷键&lt;/p>&lt;/blockquote>
+&lt;h3 id="1-session-会话管理">
+ 1. session 会话管理
+ &lt;a class="anchor" href="#1-session-%e4%bc%9a%e8%af%9d%e7%ae%a1%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>功能&lt;/th>
+ &lt;th>命令&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>创建新 session 并指定名称&lt;/td>
+ &lt;td>&lt;code>tmux new -s &amp;lt;session-name&amp;gt;&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>列出当前所有 session&lt;/td>
+ &lt;td>&lt;code>tmux ls&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>常用的几个 session 管理快捷键如下&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>功能&lt;/th>
+ &lt;th>快捷键&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>切换多个 session&lt;/td>
+ &lt;td>&lt;code>Ctrl+b s&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>分离当前 session&lt;/td>
+ &lt;td>&lt;code>Ctrl+b d&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>重命名当前 session&lt;/td>
+ &lt;td>&lt;code>Ctrl+b $&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h3 id="2-window-窗口管理">
+ 2. window 窗口管理
+ &lt;a class="anchor" href="#2-window-%e7%aa%97%e5%8f%a3%e7%ae%a1%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>功能&lt;/th>
+ &lt;th>快捷键&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>切换多个窗口&lt;/td>
+ &lt;td>&lt;code>Ctrl+b w&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>切换到下一个窗口&lt;/td>
+ &lt;td>&lt;code>Ctrl+b n&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>切换到前一个窗口&lt;/td>
+ &lt;td>&lt;code>Ctrl+b p&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>创建一个新窗口&lt;/td>
+ &lt;td>&lt;code>Ctrl+b c&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>给当前窗口命名&lt;/td>
+ &lt;td>&lt;code>Ctrl+b ,&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h3 id="3-pane-窗格管理">
+ 3. pane 窗格管理
+ &lt;a class="anchor" href="#3-pane-%e7%aa%97%e6%a0%bc%e7%ae%a1%e7%90%86">#&lt;/a>
+&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>功能&lt;/th>
+ &lt;th>快捷键&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>划分左右两个窗格&lt;/td>
+ &lt;td>&lt;code>Ctrl+b %&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>划分上下两个窗格&lt;/td>
+ &lt;td>&lt;code>Ctrl+b &amp;quot;&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>光标切换到其他窗格&lt;/td>
+ &lt;td>&lt;code>Ctrl+b &amp;lt;arrow key&amp;gt;&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>调整窗格大小&lt;/td>
+ &lt;td>&lt;code>Ctrl+b Ctrl+&amp;lt;arrow key&amp;gt;&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>关闭当前窗格&lt;/td>
+ &lt;td>&lt;code>Ctrl+b x&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>Filebrowser 部署</title><link>/posts/filebrowser/</link><pubDate>Sun, 30 Mar 2025 20:35:54 +0800</pubDate><guid>/posts/filebrowser/</guid><description>&lt;h2 id="filebrowser-介绍">
  Filebrowser 介绍
  &lt;a class="anchor" href="#filebrowser-%e4%bb%8b%e7%bb%8d">#&lt;/a>
 &lt;/h2>
