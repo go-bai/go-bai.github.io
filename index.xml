@@ -1100,108 +1100,19 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  关于 CRI
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cri">#&lt;/a>
 &lt;/h2>
-&lt;p>CRI 全称为 &lt;code>Container Runtime Interface&lt;/code>, 容器运行时接口&lt;/p>
-&lt;p>&lt;a href="https://github.com/kubernetes/cri-api">https://github.com/kubernetes/cri-api&lt;/a>&lt;/p>
-&lt;p>containerd 的 &lt;code>criService&lt;/code> 有实现下面这个 &lt;code>RuntimeServiceServer&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// RuntimeServiceServer is the server API for RuntimeService service.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">type&lt;/span> &lt;span style="color:#a6e22e">RuntimeServiceServer&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Version returns the runtime name, runtime version, and runtime API version.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Version&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">VersionResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RunPodSandbox creates and starts a pod-level sandbox. Runtimes must ensure&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// the sandbox is in the ready state on success.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RunPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RunPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopPodSandbox stops any running process that is part of the sandbox and&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaims network resources (e.g., IP addresses) allocated to the sandbox.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If there are any running containers in the sandbox, they must be forcibly&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// terminated.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if all relevant&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// resources have already been reclaimed. kubelet will call StopPodSandbox&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// at least once before calling RemovePodSandbox. It will also attempt to&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reclaim resources eagerly, as soon as a sandbox is not needed. Hence,&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// multiple StopPodSandbox calls are expected.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemovePodSandbox removes the sandbox. If there are any running containers&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// in the sandbox, they must be forcibly terminated and removed.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the sandbox has&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemovePodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemovePodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStatus returns the status of the PodSandbox. If the PodSandbox is not&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandbox returns a list of PodSandboxes.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandbox&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CreateContainer creates a new container in specified PodSandbox&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CreateContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CreateContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StartContainer starts the container.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StartContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StartContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// StopContainer stops a running container with a grace period (i.e., timeout).&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been stopped.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The runtime must forcibly kill the container after the grace period is&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// reached.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">StopContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StopContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RemoveContainer removes the container. If the container is running, the&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// container must be forcibly removed.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This call is idempotent, and must not return an error if the container has&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// already been removed.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RemoveContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RemoveContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainers lists all containers by filters.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainers&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainersResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStatus returns status of the container. If the container is not&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// present, returns an error.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStatus&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateContainerResources updates ContainerConfig of the container synchronously.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// If runtime fails to transactionally update the requested resources, an error is returned.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateContainerResources&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateContainerResourcesResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ReopenContainerLog asks runtime to reopen the stdout/stderr log file&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// for the container. This is often called after the log file has been&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// rotated. If the container is not running, container runtime can choose&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// to either create a new log file and return nil, or return an error.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Once it returns error, new container log file MUST NOT be created.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ReopenContainerLog&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ReopenContainerLogResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ExecSync runs a command in a container synchronously.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ExecSync&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecSyncResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Exec prepares a streaming endpoint to execute a command in the container.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Exec&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ExecResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Attach prepares a streaming endpoint to attach to a running container.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Attach&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">AttachResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PortForward prepares a streaming endpoint to forward ports from a PodSandbox.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PortForward&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PortForwardResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ContainerStats returns stats of the container. If the container does not&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListContainerStats returns stats of all running containers.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListContainerStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListContainerStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// PodSandboxStats returns stats of the pod sandbox. If the pod sandbox does not&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// exist, the call returns an error.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">PodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">PodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxStats returns stats of the pod sandboxes matching a filter.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxStats&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxStatsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// UpdateRuntimeConfig updates the runtime configuration based on the given request.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">UpdateRuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">UpdateRuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Status returns the status of the runtime.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">Status&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">StatusResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// CheckpointContainer checkpoints a container&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">CheckpointContainer&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">CheckpointContainerResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// GetContainerEvents gets container events from the CRI runtime&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">GetContainerEvents&lt;/span>(&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">GetEventsRequest&lt;/span>, &lt;span style="color:#a6e22e">RuntimeService_GetContainerEventsServer&lt;/span>) &lt;span style="color:#66d9ef">error&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// This list should be static at startup: either the client and server restart together when&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// adding or removing metrics descriptors, or they should not change.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// Put differently, if ListPodSandboxMetrics references a name that is not described in the initial&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListMetricDescriptors call, then the metric will not be broadcasted.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListMetricDescriptors&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListMetricDescriptorsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// ListPodSandboxMetrics gets pod sandbox metrics from CRI Runtime&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">ListPodSandboxMetrics&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">ListPodSandboxMetricsResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// RuntimeConfig returns configuration information of the runtime.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// A couple of notes:&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - The RuntimeConfigRequest object is not to be confused with the contents of UpdateRuntimeConfigRequest.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The former is for having runtime tell Kubelet what to do, the latter vice versa.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// - It is the expectation of the Kubelet that these fields are static for the lifecycle of the Kubelet.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// The Kubelet will not re-request the RuntimeConfiguration after startup, and CRI implementations should&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#75715e">// avoid updating them without a full node reboot.&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#a6e22e">RuntimeConfig&lt;/span>(&lt;span style="color:#a6e22e">context&lt;/span>.&lt;span style="color:#a6e22e">Context&lt;/span>, &lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigRequest&lt;/span>) (&lt;span style="color:#f92672">*&lt;/span>&lt;span style="color:#a6e22e">RuntimeConfigResponse&lt;/span>, &lt;span style="color:#66d9ef">error&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;p>CRI 全称为 &lt;code>Container Runtime Interface&lt;/code> (容器运行时接口), 是 &lt;code>kubelet&lt;/code> 与 容器运行时进行通讯的主要协议。&lt;/p>
+&lt;p>是 k8s 根据 &lt;a href="https://github.com/opencontainers/runtime-spec/releases">OCI runtime-spec&lt;/a>&lt;/p>
+&lt;p>&lt;img src="/posts/k8s/imgs/kubelet-cri.drawio.png" alt="kubelet-cri" />&lt;/p>
+&lt;p>&lt;a href="https://github.com/kubernetes/cri-api">cri-api&lt;/a> 主要定义了六个接口:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>staging/src/k8s.io/cri-api/
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>├── pkg
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ ├── apis
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ ├── runtime
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ │ └── v1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ │ ├── api.pb.go &lt;span style="color:#f92672">{&lt;/span>RuntimeServiceClient RuntimeServiceServer ImageServiceClient ImageServiceServer&lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ │ ├── api.proto
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ │ └── constants.go
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>│ │ ├── services.go &lt;span style="color:#f92672">{&lt;/span>RuntimeService ImageManagerService&lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>CNI 工作原理</title><link>/posts/cni/</link><pubDate>Sun, 17 Nov 2024 20:30:06 +0800</pubDate><guid>/posts/cni/</guid><description>&lt;h2 id="关于-cni">
  关于 CNI
  &lt;a class="anchor" href="#%e5%85%b3%e4%ba%8e-cni">#&lt;/a>
@@ -1403,7 +1314,69 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://github.com/kubernetes/kubernetes/pull/130551">https://github.com/kubernetes/kubernetes/pull/130551&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Etcd</title><link>/posts/etcd/</link><pubDate>Sun, 25 Aug 2024 01:10:17 +0800</pubDate><guid>/posts/etcd/</guid><description/></item><item><title>Redis</title><link>/posts/redis/</link><pubDate>Sun, 25 Aug 2024 01:10:10 +0800</pubDate><guid>/posts/redis/</guid><description/></item><item><title>PostgreSQL</title><link>/posts/postgresql/</link><pubDate>Sun, 25 Aug 2024 01:10:04 +0800</pubDate><guid>/posts/postgresql/</guid><description/></item><item><title>MySQL</title><link>/posts/mysql/</link><pubDate>Sun, 25 Aug 2024 01:09:56 +0800</pubDate><guid>/posts/mysql/</guid><description/></item><item><title>MongoDB</title><link>/posts/mongodb/</link><pubDate>Sun, 25 Aug 2024 01:06:47 +0800</pubDate><guid>/posts/mongodb/</guid><description/></item><item><title>K8s Namespace</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description/></item><item><title>K8s Cgroup</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description/></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
+&lt;/ul></description></item><item><title>Etcd</title><link>/posts/etcd/</link><pubDate>Sun, 25 Aug 2024 01:10:17 +0800</pubDate><guid>/posts/etcd/</guid><description/></item><item><title>Redis</title><link>/posts/redis/</link><pubDate>Sun, 25 Aug 2024 01:10:10 +0800</pubDate><guid>/posts/redis/</guid><description/></item><item><title>PostgreSQL</title><link>/posts/postgresql/</link><pubDate>Sun, 25 Aug 2024 01:10:04 +0800</pubDate><guid>/posts/postgresql/</guid><description/></item><item><title>MySQL</title><link>/posts/mysql/</link><pubDate>Sun, 25 Aug 2024 01:09:56 +0800</pubDate><guid>/posts/mysql/</guid><description/></item><item><title>MongoDB</title><link>/posts/mongodb/</link><pubDate>Sun, 25 Aug 2024 01:06:47 +0800</pubDate><guid>/posts/mongodb/</guid><description/></item><item><title>k8s namespaces</title><link>/posts/k8s-namespace/</link><pubDate>Mon, 05 Aug 2024 23:07:12 +0800</pubDate><guid>/posts/k8s-namespace/</guid><description>&lt;blockquote>
+&lt;p>一个 namespace 将全局系统资源封装在一个抽象中，使得 namespace 内的进程看起来像是拥有该全局资源的独立实例。
+对全局资源的更改只对属于同一 namespace 的其他进程可见。&lt;/p>&lt;/blockquote>
+&lt;p>Linux 上可用的 namespace 有:&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>namespace 类型&lt;/th>
+ &lt;th>隔离内容&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>cgroup&lt;/td>
+ &lt;td>Cgroup 根目录&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>ipc&lt;/td>
+ &lt;td>System V IPC, POSIX 消息队列&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>network&lt;/td>
+ &lt;td>网络设备、协议栈、端口等&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>mount&lt;/td>
+ &lt;td>挂载点&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>pid&lt;/td>
+ &lt;td>进程 ID&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>time&lt;/td>
+ &lt;td>启动时间和单调时钟&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>user&lt;/td>
+ &lt;td>用户和组 ID&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>uts&lt;/td>
+ &lt;td>主机名和 NIS 域名&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>k8s cgroups</title><link>/posts/k8s-cgroup/</link><pubDate>Mon, 05 Aug 2024 23:07:04 +0800</pubDate><guid>/posts/k8s-cgroup/</guid><description>&lt;p>目前主要用 cgroup v2, 下面记录 k8s 如何通过 cgroup v2 管理 cpu 和 memory 资源&lt;/p>
+&lt;h2 id="k8s-使用-cgroup-对容器进行资源管理">
+ k8s 使用 cgroup 对容器进行资源管理
+ &lt;a class="anchor" href="#k8s-%e4%bd%bf%e7%94%a8-cgroup-%e5%af%b9%e5%ae%b9%e5%99%a8%e8%bf%9b%e8%a1%8c%e8%b5%84%e6%ba%90%e7%ae%a1%e7%90%86">#&lt;/a>
+&lt;/h2>
+&lt;ol>
+&lt;li>kubelet 启动时会创建不同 QOS 级别的 root cgroup&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>&lt;code>Guaranteed&lt;/code>: &lt;code>/sys/fs/cgroup/kubepods.slice/&lt;/code>&lt;/li>
+&lt;li>&lt;code>Burstable&lt;/code>: &lt;code>/sys/fs/cgroup/kubepods.slice/kubepods-burstable.slice&lt;/code>&lt;/li>
+&lt;li>&lt;code>BestEffort&lt;/code>: &lt;code>/sys/fs/cgroup/kubepods.slice/kubepods-besteffort.slice&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;ol start="2">
+&lt;li>kubelet 通过 CRI 调用 container runtime 创建 sandbox 和 container&lt;/li>
+&lt;/ol>
+&lt;p>这里有个注意点：根据 pod QOS 类型不同, cgroup 创建的目录也不一样, 但是 container runtime 是不知道 kubelet 定义的 QOS 级别的, 所以 kubelet 通过 CRI 调用 container runtime 时会携带 &lt;code>CgroupParent&lt;/code> 来指定对应 QOS 对应的 cgroup parent.&lt;/p>
+&lt;p>最终 container runtime 调用 runc 创建 sandbox 和 container, 并且会设置对应的 cgroup 和设置 &lt;code>cpu.max&lt;/code> 与 &lt;code>memory.max&lt;/code>, 将 sandbox 和 container 启动进程的 PID 添加进 &lt;code>cgroup.procs&lt;/code>&lt;/p></description></item><item><title>Libvirt 使用笔记</title><link>/posts/libvirt/</link><pubDate>Sat, 27 Jul 2024 22:57:08 +0800</pubDate><guid>/posts/libvirt/</guid><description>&lt;h2 id="virsh-命令">
  &lt;code>virsh&lt;/code> 命令
  &lt;a class="anchor" href="#virsh-%e5%91%bd%e4%bb%a4">#&lt;/a>
 &lt;/h2>
