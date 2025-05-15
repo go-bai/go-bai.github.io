@@ -2428,15 +2428,57 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  &lt;a class="anchor" href="#%e8%ae%b0%e5%bd%95%e6%88%91%e7%9a%84vscode%e4%bd%bf%e7%94%a8%e7%9a%84%e6%89%a9%e5%b1%95%e6%8f%92%e4%bb%b6">#&lt;/a>
 &lt;/h2>
 &lt;p>持续补充中&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=wayou.vscode-icons-mac">vscode-icons-mac&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens">GitLens&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=golang.go">Go&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh">Remote - SSH&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Remisa.shellman">shellman&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=humao.rest-client">REST Client&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree">Todo Tree&lt;/a>&lt;/li>
-&lt;/ul>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>插件名称&lt;/th>
+ &lt;th>推荐指数&lt;/th>
+ &lt;th>备注&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh">Remote - SSH&lt;/a>&lt;/td>
+ &lt;td>* * * * *&lt;/td>
+ &lt;td>&lt;strong>远程连接服务器进行开发&lt;/strong>，支持完整的VSCode功能&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=golang.go">Go&lt;/a>&lt;/td>
+ &lt;td>* * * * *&lt;/td>
+ &lt;td>Go语言开发必备，提供代码补全、格式化、调试等功能&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items/?itemName=hediet.vscode-drawio">Draw.io Integration&lt;/a>&lt;/td>
+ &lt;td>* * * * *&lt;/td>
+ &lt;td>&lt;strong>创建 &lt;code>*.drawio.png&lt;/code> 文件&lt;/strong> 可以直接绘制流程/架构图&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=humao.rest-client">REST Client&lt;/a>&lt;/td>
+ &lt;td>* * * * *&lt;/td>
+ &lt;td>在VSCode中 &lt;code>*.http&lt;/code> 文件中直接&lt;strong>发送HTTP请求&lt;/strong>，测试API&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens">GitLens&lt;/a>&lt;/td>
+ &lt;td>* * * * *&lt;/td>
+ &lt;td>增强Git功能，&lt;strong>查看代码行历史&lt;/strong>、作者等信息&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=wayou.vscode-icons-mac">vscode-icons-mac&lt;/a>&lt;/td>
+ &lt;td>* * * *&lt;/td>
+ &lt;td>为VSCode添加macOS风格的文件图标&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree">Todo Tree&lt;/a>&lt;/td>
+ &lt;td>* * * *&lt;/td>
+ &lt;td>高亮并整理代码中的TODO/FIXME等注释&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;a href="https://marketplace.visualstudio.com/items?itemName=Remisa.shellman">shellman&lt;/a>&lt;/td>
+ &lt;td>* * *&lt;/td>
+ &lt;td>Shell脚本开发辅助工具，提供代码片段和补全&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
 &lt;h2 id="一些配置">
  一些配置
  &lt;a class="anchor" href="#%e4%b8%80%e4%ba%9b%e9%85%8d%e7%bd%ae">#&lt;/a>
