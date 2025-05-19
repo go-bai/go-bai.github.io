@@ -114,7 +114,7 @@ kubectl label --overwrite ns kube-flannel pod-security.kubernetes.io/enforce=pri
 helm upgrade --install --namespace kube-flannel flannel flannel/flannel -f custom-values.yaml
 ```
 
-注意:
+##### MTU 配置
 
 > `mtu` 是设置的外部网络的 `mtu`, 即 underlay 网络的 `mtu`, `vxlan` 因为需要封装 `vxlan header(50 bytes)`, 所以会比外部网络的 `mtu` 小 `50`, 代码如下
 
@@ -195,6 +195,6 @@ func newVXLANDevice(devAttrs *vxlanDeviceAttrs) (*vxlanDevice, error) {
 }
 ```
 
----
+##### `DirectRouting` 配置
 
-TODO: `DirectRouting` 优化
+如果设置了 `DirectRouting`, 则 `vxlan` backend 监听到 subnet event 直接检查本地到对应 node 的 public ip 是否在一个子网, 可以通过 `ip route get x.x.x.x` 获取路由是否包含 `gateway`(via ...), 如果不包含则是在同一个子网，就只需要配置一个 `ip route` 即可
