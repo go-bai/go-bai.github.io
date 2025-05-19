@@ -48,7 +48,7 @@ TODO
 
 VXLAN 协议是一个隧道协议, 用来解决 VLAN ID 在 IEEE 802.1q 中限制只能有 4096(12bit) 个的问题. 在 VXLAN 中, VXLAN 标识符(VNI)的大小扩展至 16777216(24bit).
 
-VXLAN 由 [IETF RFC7348](https://datatracker.ietf.org/doc/html/rfc7348) 描述, 并且被很多厂商实现(如linux kernel vxlan module)了, 该协议使用单个目的端口(一般是`4789`)运行在 UDP 之上.
+VXLAN 由 [IETF RFC7348](https://datatracker.ietf.org/doc/html/rfc7348) 描述, 并且被很多厂商实现(如linux kernel vxlan module)了, 该协议使用单个目的端口(当前再 Linux 上默认使用 `8472`)运行在 UDP 之上.
 
 VXLAN 采用 MAC in UDP 的封装方式.
 
@@ -88,16 +88,16 @@ podCidr: "10.42.0.0/16"
 flannel:
   image:
     repository: docker.io/flannel/flannel
-    tag: v0.26.2
+    tag: v0.26.7
   image_cni:
     repository: docker.io/flannel/flannel-cni-plugin
-    tag: v1.6.0-flannel1
+    tag: v1.7.1-flannel1
   args:
   - "--ip-masq"
   - "--kube-subnet-mgr"
   backend: "vxlan"
-  backendPort: 4789
-  mtu: 1450
+  backendPort: 8472
+  mtu: 1500
   vni: 4096
 
 netpol:
@@ -107,13 +107,94 @@ netpol:
   - "--v=2"
   image:
     repository: registry.k8s.io/networking/kube-network-policies
-    tag: v0.4.0
+    tag: v0.7.0
 EOF
 kubectl create ns kube-flannel
 kubectl label --overwrite ns kube-flannel pod-security.kubernetes.io/enforce=privileged
 helm upgrade --install --namespace kube-flannel flannel flannel/flannel -f custom-values.yaml
 ```
 
+注意:
+
+> `mtu` 是设置的外部网络的 `mtu`, 即 underlay 网络的 `mtu`, `vxlan` 因为需要封装 `vxlan header(50 bytes)`, 所以会比外部网络的 `mtu` 小 `50`, 代码如下
+
+```golang
+// pkg/backend/vxlan/vxlan.go
+func (be *VXLANBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup, config *subnet.Config) (backend.Network, error) {
+	cfg := struct {
+		VNI           int
+		Port          int
+		MTU           int
+		GBP           bool
+		Learning      bool
+		DirectRouting bool
+	}{
+		VNI: defaultVNI,
+		MTU: be.extIface.Iface.MTU, // 默认是外部接口的 MTU
+	}
+
+	if len(config.Backend) > 0 {
+		// 如果 net-conf.json 有配置 Backend, 则使用配置文件中的 MTU
+		if err := json.Unmarshal(config.Backend, &cfg); err != nil {
+			return nil, fmt.Errorf("error decoding VXLAN backend config: %v", err)
+		}
+	}
+
+  // ...
+  if config.EnableIPv4 {
+		devAttrs := vxlanDeviceAttrs{
+			vni:       uint32(cfg.VNI),
+			name:      fmt.Sprintf("flannel.%d", cfg.VNI),
+			MTU:       cfg.MTU,
+			vtepIndex: be.extIface.Iface.Index,
+			vtepAddr:  be.extIface.IfaceAddr,
+			vtepPort:  cfg.Port,
+			gbp:       cfg.GBP,
+			learning:  cfg.Learning,
+			hwAddr:    hwAddr,
+		}
+
+		// 创建 vxlan 设备
+		dev, err = newVXLANDevice(&devAttrs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+  // ...
+  if config.EnableIPv4 {
+		// 设置 subnet ip
+		if err := dev.Configure(ip.IP4Net{IP: lease.Subnet.IP, PrefixLen: 32}, config.Network); err != nil {
+			return nil, fmt.Errorf("failed to configure interface %s: %w", dev.link.Attrs().Name, err)
+		}
+	}
+
+  // ...
+	return newNetwork(be.subnetMgr, be.extIface, dev, v6Dev, ip.IP4Net{}, lease, cfg.MTU)
+}
+
+func newVXLANDevice(devAttrs *vxlanDeviceAttrs) (*vxlanDevice, error) {
+	link := &netlink.Vxlan{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:         devAttrs.name,
+			HardwareAddr: hardwareAddr,
+			MTU:          devAttrs.MTU - 50, // 这里设置 vxlan 网卡的 MTU 设置为比外部网络小 50
+		},
+		VxlanId:      int(devAttrs.vni),
+		VtepDevIndex: devAttrs.vtepIndex,
+		SrcAddr:      devAttrs.vtepAddr,
+		Port:         devAttrs.vtepPort,
+		Learning:     devAttrs.learning,
+		GBP:          devAttrs.gbp,
+	}
+
+	link, err = ensureLink(link)
+	if err != nil {
+		return nil, err
+	}
+}
+```
+
 ---
 
-TODO
+TODO: `DirectRouting` 优化
