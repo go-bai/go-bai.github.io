@@ -168,7 +168,7 @@
  方式一：直接修改 prometheus 配置
  &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
 &lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>tmux 使用笔记</title><link>/posts/tmux/</link><pubDate>Sun, 11 May 2025 15:56:58 +0800</pubDate><guid>/posts/tmux/</guid><description>&lt;p>&lt;code>tmux&lt;/code> 是一个强大的终端复用工具，可以在一个终端窗口中管理多个会话、窗口和窗格。&lt;strong>一个令我相见恨晚的工具&lt;/strong>，下面记录一下安装和常用命令与快捷键。&lt;/p>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Exit Status 与 waitpid：进程退出状态的内核机制</title><link>/notes/exit-status-and-waitpid/</link><pubDate>Sat, 02 Nov 2024 00:00:00 +0000</pubDate><guid>/notes/exit-status-and-waitpid/</guid><description>深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制</description></item><item><title>tmux 使用笔记</title><link>/posts/tmux/</link><pubDate>Sun, 11 May 2025 15:56:58 +0800</pubDate><guid>/posts/tmux/</guid><description>&lt;p>&lt;code>tmux&lt;/code> 是一个强大的终端复用工具，可以在一个终端窗口中管理多个会话、窗口和窗格。&lt;strong>一个令我相见恨晚的工具&lt;/strong>，下面记录一下安装和常用命令与快捷键。&lt;/p>
 &lt;h2 id="安装">
  安装
  &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85">#&lt;/a>
@@ -2773,78 +2773,4 @@ Another option is to run PRAGMA synchronous=OFF. This command will cause SQLite 
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git checkout your_workspace_branch
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 把暂存的代码从堆栈弹出到当前分支&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>git stash pop
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>关于我</title><link>/posts/about/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/posts/about/</guid><description>&lt;blockquote>
-&lt;p>golang 服务端开发工程师，喜欢一些基础设施相关的东西&lt;/p>&lt;/blockquote>
-&lt;h3 id="目前在学的内容">
- 目前在学的内容
- &lt;a class="anchor" href="#%e7%9b%ae%e5%89%8d%e5%9c%a8%e5%ad%a6%e7%9a%84%e5%86%85%e5%ae%b9">#&lt;/a>
-&lt;/h3>
-&lt;ul>
-&lt;li>&lt;strong>golang&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>linux&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>kubernetes&lt;/strong>&lt;/li>
-&lt;li>&lt;strong>kubevirt&lt;/strong>&lt;/li>
-&lt;li>ceph&lt;/li>
-&lt;li>prometheus&lt;/li>
-&lt;li>postgresql&lt;/li>
-&lt;/ul>
-&lt;h3 id="我的设备">
- 我的设备
- &lt;a class="anchor" href="#%e6%88%91%e7%9a%84%e8%ae%be%e5%a4%87">#&lt;/a>
-&lt;/h3>
-&lt;ul>
-&lt;li>Macbook Pro 2018 15 inch 16+256&lt;/li>
-&lt;li>零刻 SER5 Pro AMD Ryzen7-5700U 64G内存+1TB固态
-&lt;ul>
-&lt;li>Ubuntu 22.04 + QEMU/KVM&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>5G CPE VN009&lt;/li>
-&lt;li>iPad mini6&lt;/li>
-&lt;li>OnePlus 9R&lt;/li>
-&lt;/ul>
-&lt;h3 id="联系方式">
- 联系方式
- &lt;a class="anchor" href="#%e8%81%94%e7%b3%bb%e6%96%b9%e5%bc%8f">#&lt;/a>
-&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>echo YWRtaW5AZ29jbi50b3AK | base64 -d
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>友链</title><link>/posts/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/posts/links/</guid><description>&lt;style>
- .friend-link {
- display: flex;
- align-items: center;
- padding: 12px;
- margin: 8px;
- border: 1px solid #eee;
- border-radius: 8px;
- text-decoration: none;
- color: inherit;
- transition: 0.3s;
- }
- .friend-link:hover {
- box-shadow: 0 2px 8px rgba(0,0,0,0.1);
- }
- .friend-avatar {
- width: 40px;
- height: 40px;
- border-radius: 50%;
- margin-right: 12px;
- }
- .friend-info {
- display: flex;
- flex-direction: column;
- }
- .friend-desc {
- font-size: 14px;
- color: #666;
- margin-top: 4px;
- }
-&lt;/style>
-&lt;div class="friend-links">
- &lt;a href="https://blog.cugxuan.cn/" target="_blank" class="friend-link">
- &lt;img src="https://image.cugxuan.cn/avater.jpg" alt="avatar" class="friend-avatar">
- &lt;div class="friend-info">
- &lt;span>泫&lt;/span>
- &lt;span class="friend-desc">公众号【泫言】：记录有意思的东西，聊点技术（Go/C++/Linux），偶尔安利数码产品，讲讲思考。&lt;/span>
- &lt;/div>
- &lt;/a>
-&lt;/div></description></item></channel></rss>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>
