@@ -7,12 +7,13 @@ enableGitInfo: true # auto update time based on git record, like: Last modified 
 
 permalinks:
   posts: "/posts/:contentbasename/"
+  notes: "/notes/:contentbasename/"
 
 params:
   BookTheme: auto
   BookToC: true
   BookLogo: favicon.ico
-  BookSection: posts # render content/posts/
+  BookSection: "/" # render entire content directory
   BookDateFormat: '2006-01-02'
   BookSearch: true
   BookRepo: https://github.com/go-bai/go-bai.github.io

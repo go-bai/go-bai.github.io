@@ -1,6 +1,7 @@
 ---
 title: "友链"
 bookSearchExclude: true
+weight: 9999
 ---
 
 <style>

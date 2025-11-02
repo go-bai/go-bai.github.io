@@ -9,7 +9,7 @@ title: Home
     <div class="spinner" style="width: 40px; height: 40px; border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top-color: #09f; animation: spin 1s linear infinite;"></div>
   </div>
   <img src="http://ghchart.rshah.org/go-bai" alt="go-bai's github chart" style="width: 100%; height: 100%; object-fit: contain;" onload="document.getElementById('loading').style.display='none'" onerror="document.getElementById('loading').innerHTML='加载失败'"/>
-  
+
   <style>
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -19,6 +19,14 @@ title: Home
 </div>
 
 ------
+
+## ✏️ 随笔
+
+- 2024-11-02 [Exit Status 与 waitpid：进程退出状态的内核机制](/notes/exit-status-and-waitpid/)
+
+------
+
+## 📝 博客文章
 
 - 2025-05-11 [tmux 使用笔记](/posts/tmux/)
 - 2025-05-10 [OpenWrt v2](/posts/openwrt-v2/)

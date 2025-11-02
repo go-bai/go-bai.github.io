@@ -1,6 +1,7 @@
 ---
 title: "关于我"
 bookSearchExclude: true
+weight: 9998
 ---
 
 > golang 服务端开发工程师，喜欢一些基础设施相关的东西
