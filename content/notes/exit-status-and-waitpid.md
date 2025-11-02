@@ -1,6 +1,6 @@
 ---
 title: "Exit Status 与 waitpid：进程退出状态的内核机制"
-date: 2024-11-02
+date: 2025-11-02
 tags: ["Linux", "系统编程", "进程管理", "系统调用"]
 summary: "深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制"
 weight: 4

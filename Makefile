@@ -5,7 +5,7 @@ init:
 	git submodule foreach git pull origin master
 
 .PHONY: push
-push:
+push: gen-blog-index
 	git submodule update --recursive --remote
 	git add .
 	git commit -m "auto push"
