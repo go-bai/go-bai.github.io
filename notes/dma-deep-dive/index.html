@@ -1,7 +1,7 @@
-<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="从硬件原理到内核实现，全面解析 DMA 技术的工作机制、编程接口和性能优化"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/notes/dma-deep-dive/"><meta property="og:site_name" content="gobai's notes"><meta property="og:title" content="DMA 从入门到精通：直接内存访问的内核机制"><meta property="og:description" content="从硬件原理到内核实现，全面解析 DMA 技术的工作机制、编程接口和性能优化"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="notes"><meta property="article:published_time" content="2025-11-02T00:00:00+00:00"><meta property="article:modified_time" content="2025-11-02T12:38:24+08:00"><meta property="article:tag" content="Linux"><meta property="article:tag" content="DMA"><meta property="article:tag" content="内核"><meta property="article:tag" content="硬件"><meta property="article:tag" content="性能优化"><title>DMA 从入门到精通：直接内存访问的内核机制 | gobai's notes</title>
-<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/notes/dma-deep-dive/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.0b3a6b5980c3d0c03613562fbbd7552479e8d393bc13719123ff863602843c02.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/notes/dma-deep-dive/"><meta property="og:site_name" content="gobai's notes"><meta property="og:title" content="DMA 深度解析：直接内存访问的内核机制与实现"><meta property="og:description" content="深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="notes"><meta property="article:published_time" content="2025-11-02T00:00:00+00:00"><meta property="article:modified_time" content="2025-11-03T12:06:25+08:00"><meta property="article:tag" content="Linux"><meta property="article:tag" content="DMA"><meta property="article:tag" content="内核"><meta property="article:tag" content="硬件"><meta property="article:tag" content="性能优化"><title>DMA 深度解析：直接内存访问的内核机制与实现 | gobai's notes</title>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/notes/dma-deep-dive/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.16977695c2938929d7dc9bcde76e10d8cdac95ba52c8fcbe69d017ae289e191e.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
 <input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's notes</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><input type=checkbox id=section-762c546cfaa9598dcaf49c6a9361dd1f class=toggle checked>
-<label for=section-762c546cfaa9598dcaf49c6a9361dd1f class="flex justify-between"><a role=button>随笔</a></label><ul><li><a href=/notes/exit-status-and-waitpid/>Exit Status 与 waitpid：进程退出状态的内核机制</a></li><li><a href=/notes/dma-deep-dive/ class=active>DMA 从入门到精通：直接内存访问的内核机制</a></li></ul></li><li><input type=checkbox id=section-6fbaa392869835c97ad5493eff4f5733 class=toggle>
+<label for=section-762c546cfaa9598dcaf49c6a9361dd1f class="flex justify-between"><a role=button>随笔</a></label><ul><li><a href=/notes/exit-status-and-waitpid/>Exit Status 与 waitpid：进程退出状态的内核机制</a></li><li><a href=/notes/dma-deep-dive/ class=active>DMA 深度解析：直接内存访问的内核机制与实现</a></li><li><a href=/notes/check-rdma-support/>如何检查网卡和存储设备是否支持 RDMA</a></li></ul></li><li><input type=checkbox id=section-6fbaa392869835c97ad5493eff4f5733 class=toggle>
 <label for=section-6fbaa392869835c97ad5493eff4f5733 class="flex justify-between"><a role=button>博客</a></label><ul><li><span>Golang</span><ul><li><input type=checkbox id=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class=toggle>
 <label for=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class="flex justify-between"><a role=button>语言基础</a></label><ul><li><a href=/posts/go-memory-escape/>Go 内存逃逸</a></li><li><a href=/posts/go-gc/>Go GC 垃圾回收</a></li><li><a href=/posts/go-make-and-new/>Go make 与 new 区别</a></li><li><a href=/posts/go-gmp/>Go GMP 模型</a></li></ul></li><li><input type=checkbox id=section-42d8c4148cb4c5a3e3d8addaded05197 class=toggle>
 <label for=section-42d8c4148cb4c5a3e3d8addaded05197 class="flex justify-between"><a role=button>数据结构</a></label><ul><li><a href=/posts/go-interface/>Go interface</a></li><li><a href=/posts/go-chan/>Go channel</a></li></ul></li><li><input type=checkbox id=section-1ca588caf6263863db394d8b5e8e27c7 class=toggle>
@@ -23,119 +23,119 @@
 <label for=section-3dd648d0479248759f2c07b8d5ee80be class="flex justify-between"><a role=button>Ceph</a></label><ul><li><a href=/posts/rook-ceph/>安装 Rook Ceph</a></li></ul></li><li><input type=checkbox id=section-ba2b1bb537fff210d58a51efd7bbb7f9 class=toggle>
 <label for=section-ba2b1bb537fff210d58a51efd7bbb7f9 class="flex justify-between"><a role=button>LeetCode</a></label><ul><li><input type=checkbox id=section-3ef90a077ef0405107c088f6e344d4df class=toggle>
 <label for=section-3ef90a077ef0405107c088f6e344d4df class="flex justify-between"><a role=button>链表</a></label><ul><li><a href=/posts/reverse-nodes-in-k-group/>25. K 个一组翻转链表</a></li></ul></li></ul></li><li><input type=checkbox id=section-bceaf15d0fd4d92497330a70b95e69d1 class=toggle>
-<label for=section-bceaf15d0fd4d92497330a70b95e69d1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li></ul></li><li><a href=/about/>关于我</a><ul></ul></li><li><a href=/links/>友链</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>DMA 从入门到精通：直接内存访问的内核机制</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#什么是-dma>什么是 DMA？</a><ul><li><a href=#为什么需要-dma>为什么需要 DMA？</a></li></ul></li><li><a href=#dma-的工作原理>DMA 的工作原理</a><ul><li><a href=#基本组件>基本组件</a></li><li><a href=#dma-传输流程>DMA 传输流程</a></li><li><a href=#总线仲裁谁来使用总线>总线仲裁：谁来使用总线？</a></li></ul></li><li><a href=#linux-内核中的-dma>Linux 内核中的 DMA</a><ul><li><a href=#内核视角dma-的挑战>内核视角：DMA 的挑战</a><ul><li><a href=#1-地址转换问题>1. 地址转换问题</a></li><li><a href=#2-缓存一致性问题>2. 缓存一致性问题</a></li><li><a href=#3-内存区域限制>3. 内存区域限制</a></li></ul></li><li><a href=#dma-api内核编程接口>DMA API：内核编程接口</a><ul><li><a href=#一致性-dma-映射coherent-dma>一致性 DMA 映射（Coherent DMA）</a></li><li><a href=#流式-dma-映射streaming-dma>流式 DMA 映射（Streaming DMA）</a></li><li><a href=#scatter-gather-dma>Scatter-Gather DMA</a></li></ul></li><li><a href=#实战一个简单的-dma-驱动示例>实战：一个简单的 DMA 驱动示例</a></li></ul></li><li><a href=#dma-性能优化>DMA 性能优化</a><ul><li><a href=#1-选择合适的-dma-模式>1. 选择合适的 DMA 模式</a></li><li><a href=#2-批量传输>2. 批量传输</a></li><li><a href=#3-使用-dma-池>3. 使用 DMA 池</a></li><li><a href=#4-对齐优化>4. 对齐优化</a></li></ul></li><li><a href=#实际应用案例>实际应用案例</a><ul><li><a href=#案例-1网卡驱动中的-dma>案例 1：网卡驱动中的 DMA</a></li><li><a href=#案例-2磁盘驱动中的-dma>案例 2：磁盘驱动中的 DMA</a></li></ul></li><li><a href=#常见问题与调试>常见问题与调试</a><ul><li><a href=#问题-1dma-传输错误>问题 1：DMA 传输错误</a></li><li><a href=#问题-2数据损坏>问题 2：数据损坏</a></li><li><a href=#问题-3性能不如预期>问题 3：性能不如预期</a></li><li><a href=#调试工具>调试工具</a></li></ul></li><li><a href=#总结>总结</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></aside></header><article class="markdown book-article"><h2 id=什么是-dma>什么是 DMA？
-<a class=anchor href=#%e4%bb%80%e4%b9%88%e6%98%af-dma>#</a></h2><p>想象一下，你要从图书馆搬书到办公室。有两种方式：</p><ol><li><strong>传统方式（CPU 拷贝）</strong>：你亲自一本一本地搬，期间不能做其他事情</li><li><strong>DMA 方式</strong>：你雇一个搬运工，告诉他从哪搬到哪，然后你就可以去做别的事了</li></ol><p>DMA（Direct Memory Access，直接内存访问）就是计算机中的"搬运工"——让硬件设备在不占用 CPU 的情况下，直接读写内存。</p><h3 id=为什么需要-dma>为什么需要 DMA？
-<a class=anchor href=#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81-dma>#</a></h3><p>在没有 DMA 之前，数据传输必须经过 CPU：</p><pre tabindex=0><code>磁盘 → CPU 寄存器 → 内存 (需要 CPU 参与每个字节的传输)
-</code></pre><p>这样做的问题：</p><ul><li><strong>CPU 被占用</strong>：传输大量数据时 CPU 无法做其他工作</li><li><strong>效率低下</strong>：CPU 的计算能力被浪费在简单的数据搬运上</li><li><strong>性能瓶颈</strong>：数据传输速度受限于 CPU 的处理速度</li></ul><p>有了 DMA 之后：</p><pre tabindex=0><code>磁盘 → DMA 控制器 → 内存 (CPU 只需设置，不参与实际传输)
-</code></pre><h2 id=dma-的工作原理>DMA 的工作原理
-<a class=anchor href=#dma-%e7%9a%84%e5%b7%a5%e4%bd%9c%e5%8e%9f%e7%90%86>#</a></h2><h3 id=基本组件>基本组件
-<a class=anchor href=#%e5%9f%ba%e6%9c%ac%e7%bb%84%e4%bb%b6>#</a></h3><p>一个完整的 DMA 系统包含：</p><ol><li><strong>DMA 控制器（DMAC）</strong>：负责协调数据传输的硬件</li><li><strong>总线</strong>：连接 CPU、内存、DMA 控制器和 I/O 设备</li><li><strong>内存</strong>：数据的源或目的地</li><li><strong>I/O 设备</strong>：数据的另一端（如磁盘、网卡）</li></ol><h3 id=dma-传输流程>DMA 传输流程
-<a class=anchor href=#dma-%e4%bc%a0%e8%be%93%e6%b5%81%e7%a8%8b>#</a></h3><pre tabindex=0><code>┌─────────┐      ┌──────────────┐      ┌────────┐
-│   CPU   │◄────►│ DMA 控制器   │◄────►│  内存  │
-└─────────┘      └──────────────┘      └────────┘
-                        ▲
-                        │
-                        ▼
-                  ┌──────────┐
-                  │ I/O 设备 │
-                  └──────────┘
-</code></pre><p><strong>步骤详解</strong>：</p><ol><li><p><strong>初始化阶段（CPU 参与）</strong>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// CPU 设置 DMA 控制器
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>DMA<span style=color:#f92672>-&gt;</span>source_addr <span style=color:#f92672>=</span> disk_buffer;      <span style=color:#75715e>// 源地址
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>DMA<span style=color:#f92672>-&gt;</span>dest_addr <span style=color:#f92672>=</span> memory_buffer;      <span style=color:#75715e>// 目标地址
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>DMA<span style=color:#f92672>-&gt;</span>transfer_size <span style=color:#f92672>=</span> <span style=color:#ae81ff>4096</span>;           <span style=color:#75715e>// 传输大小
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>DMA<span style=color:#f92672>-&gt;</span>control <span style=color:#f92672>=</span> DMA_START <span style=color:#f92672>|</span> DMA_READ; <span style=color:#75715e>// 启动传输
-</span></span></span></code></pre></div></li><li><p><strong>传输阶段（CPU 不参与）</strong>：</p><ul><li>DMA 控制器向 I/O 设备发起读请求</li><li>设备将数据放到总线上</li><li>DMA 控制器从总线读取数据</li><li>DMA 控制器将数据写入内存</li><li>重复上述过程直到传输完成</li></ul></li><li><p><strong>完成阶段（通知 CPU）</strong>：</p><ul><li>DMA 控制器发起中断（IRQ）</li><li>CPU 响应中断，处理后续逻辑</li></ul></li></ol><h3 id=总线仲裁谁来使用总线>总线仲裁：谁来使用总线？
-<a class=anchor href=#%e6%80%bb%e7%ba%bf%e4%bb%b2%e8%a3%81%e8%b0%81%e6%9d%a5%e4%bd%bf%e7%94%a8%e6%80%bb%e7%ba%bf>#</a></h3><p>当 DMA 工作时，它需要占用总线传输数据。这就产生了一个问题：CPU 和 DMA 都要用总线，谁优先？</p><p><strong>两种模式</strong>：</p><ol><li><p><strong>周期挪用（Cycle Stealing）</strong>：</p><ul><li>DMA 在 CPU 不使用总线时"偷偷"传输</li><li>CPU 优先级更高</li><li>传输速度较慢但对 CPU 影响小</li></ul></li><li><p><strong>突发模式（Burst Mode）</strong>：</p><ul><li>DMA 一次性传输大块数据</li><li>DMA 完全占用总线，CPU 被暂停</li><li>传输速度快但可能影响系统响应</li></ul></li></ol><h2 id=linux-内核中的-dma>Linux 内核中的 DMA
-<a class=anchor href=#linux-%e5%86%85%e6%a0%b8%e4%b8%ad%e7%9a%84-dma>#</a></h2><h3 id=内核视角dma-的挑战>内核视角：DMA 的挑战
-<a class=anchor href=#%e5%86%85%e6%a0%b8%e8%a7%86%e8%a7%92dma-%e7%9a%84%e6%8c%91%e6%88%98>#</a></h3><p>在 Linux 内核中使用 DMA 面临几个挑战：</p><h4 id=1-地址转换问题>1. 地址转换问题
-<a class=anchor href=#1-%e5%9c%b0%e5%9d%80%e8%bd%ac%e6%8d%a2%e9%97%ae%e9%a2%98>#</a></h4><p>CPU 使用的是<strong>虚拟地址</strong>，但 DMA 控制器只能理解<strong>物理地址</strong>：</p><pre tabindex=0><code>CPU 看到：      0x7fff12345000 (虚拟地址)
-              ↓ (页表转换)
-DMA 需要：     0x10234000 (物理地址)
-</code></pre><p>内核必须在设置 DMA 前进行地址转换：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 获取物理地址
+<label for=section-bceaf15d0fd4d92497330a70b95e69d1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li></ul></li><li><a href=/about/>关于我</a><ul></ul></li><li><a href=/links/>友链</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>DMA 深度解析：直接内存访问的内核机制与实现</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#dma-概述>DMA 概述</a><ul><li><a href=#传统-io-vs-dma>传统 I/O vs DMA</a></li></ul></li><li><a href=#dma-硬件架构>DMA 硬件架构</a><ul><li><a href=#核心组件>核心组件</a></li><li><a href=#dma-传输流程>DMA 传输流程</a></li><li><a href=#总线仲裁>总线仲裁</a></li></ul></li><li><a href=#linux-内核-dma-子系统>Linux 内核 DMA 子系统</a><ul><li><a href=#内核-dma-实现面临的挑战>内核 DMA 实现面临的挑战</a><ul><li><a href=#1-地址转换问题>1. 地址转换问题</a></li><li><a href=#2-缓存一致性问题>2. 缓存一致性问题</a></li><li><a href=#3-内存区域限制>3. 内存区域限制</a></li></ul></li><li><a href=#dma-api内核编程接口>DMA API：内核编程接口</a><ul><li><a href=#一致性-dma-映射coherent-dma>一致性 DMA 映射（Coherent DMA）</a></li><li><a href=#流式-dma-映射streaming-dma>流式 DMA 映射（Streaming DMA）</a></li><li><a href=#scatter-gather-dma>Scatter-Gather DMA</a></li></ul></li><li><a href=#实战一个简单的-dma-驱动示例>实战：一个简单的 DMA 驱动示例</a></li></ul></li><li><a href=#dma-性能优化>DMA 性能优化</a><ul><li><a href=#1-选择合适的-dma-模式>1. 选择合适的 DMA 模式</a></li><li><a href=#2-批量传输>2. 批量传输</a></li><li><a href=#3-使用-dma-池>3. 使用 DMA 池</a></li><li><a href=#4-对齐优化>4. 对齐优化</a></li></ul></li><li><a href=#实际应用案例>实际应用案例</a><ul><li><a href=#案例-1网卡驱动中的-dma>案例 1：网卡驱动中的 DMA</a></li><li><a href=#案例-2磁盘驱动中的-dma>案例 2：磁盘驱动中的 DMA</a></li></ul></li><li><a href=#常见问题与调试>常见问题与调试</a><ul><li><a href=#问题-1dma-传输错误>问题 1：DMA 传输错误</a></li><li><a href=#问题-2数据损坏>问题 2：数据损坏</a></li><li><a href=#问题-3性能不如预期>问题 3：性能不如预期</a></li><li><a href=#调试工具>调试工具</a></li></ul></li><li><a href=#总结>总结</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></aside></header><article class="markdown book-article"><h2 id=dma-概述>DMA 概述
+<a class=anchor href=#dma-%e6%a6%82%e8%bf%b0>#</a></h2><p>DMA（Direct Memory Access）是一种允许外设直接访问系统内存的硬件机制，无需 CPU 参与数据传输的每个步骤。这种技术显著提升了 I/O 性能，释放 CPU 资源用于其他计算任务。</p><h3 id=传统-io-vs-dma>传统 I/O vs DMA
+<a class=anchor href=#%e4%bc%a0%e7%bb%9f-io-vs-dma>#</a></h3><p>传统的编程式 I/O (Programmed I/O, PIO)：</p><pre tabindex=0><code>Disk -&gt; CPU Registers -&gt; Memory (CPU involved in every byte transfer)
+</code></pre><p>问题：</p><ul><li>CPU 周期浪费在数据搬运上</li><li>CPU 开销导致吞吐量低</li><li>传输期间 CPU 无法执行其他任务</li></ul><p>使用 DMA 后：</p><pre tabindex=0><code>Disk -&gt; DMA Controller -&gt; Memory (CPU only initiates, not involved in transfer)
+</code></pre><p>优势：</p><ul><li>CPU 被释放用于计算</li><li>更高的 I/O 带宽</li><li>中断驱动的操作延迟更低</li></ul><h2 id=dma-硬件架构>DMA 硬件架构
+<a class=anchor href=#dma-%e7%a1%ac%e4%bb%b6%e6%9e%b6%e6%9e%84>#</a></h2><h3 id=核心组件>核心组件
+<a class=anchor href=#%e6%a0%b8%e5%bf%83%e7%bb%84%e4%bb%b6>#</a></h3><ol><li><strong>DMA 控制器 (DMAC)</strong>：协调设备和内存之间的数据传输</li><li><strong>系统总线</strong>：连接 CPU、内存、DMAC 和外设</li><li><strong>内存</strong>：数据的源或目的地</li><li><strong>I/O 设备</strong>：外设，如磁盘控制器、网卡</li></ol><h3 id=dma-传输流程>DMA 传输流程
+<a class=anchor href=#dma-%e4%bc%a0%e8%be%93%e6%b5%81%e7%a8%8b>#</a></h3><p>架构图：</p><pre tabindex=0><code>+----------+      +---------------+      +---------+
+|   CPU    |&lt;----&gt;| DMA Controller|&lt;----&gt;| Memory  |
++----------+      +---------------+      +---------+
+                         ^
+                         |
+                         v
+                  +------------+
+                  | I/O Device |
+                  +------------+
+</code></pre><p>传输阶段详解：</p><ol><li><p><strong>初始化阶段（CPU 参与）</strong>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// CPU programs DMA controller
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>DMA<span style=color:#f92672>-&gt;</span>source_addr <span style=color:#f92672>=</span> disk_buffer;
+</span></span><span style=display:flex><span>DMA<span style=color:#f92672>-&gt;</span>dest_addr <span style=color:#f92672>=</span> memory_buffer;
+</span></span><span style=display:flex><span>DMA<span style=color:#f92672>-&gt;</span>transfer_size <span style=color:#f92672>=</span> <span style=color:#ae81ff>4096</span>;
+</span></span><span style=display:flex><span>DMA<span style=color:#f92672>-&gt;</span>control <span style=color:#f92672>=</span> DMA_START <span style=color:#f92672>|</span> DMA_READ;
+</span></span></code></pre></div></li><li><p><strong>传输阶段（CPU 空闲）</strong>：</p><ul><li>DMAC 向设备请求数据</li><li>设备将数据放到总线上</li><li>DMAC 从总线读取数据</li><li>DMAC 将数据写入内存</li><li>重复上述过程直到传输完成</li></ul></li><li><p><strong>完成阶段（通知 CPU）</strong>：</p><ul><li>DMAC 发起中断 (IRQ)</li><li>CPU 处理中断并处理结果</li></ul></li></ol><h3 id=总线仲裁>总线仲裁
+<a class=anchor href=#%e6%80%bb%e7%ba%bf%e4%bb%b2%e8%a3%81>#</a></h3><p>DMA 工作时，需要与 CPU 竞争总线访问权。</p><p>传输模式：</p><ol><li><p><strong>周期挪用 (Cycle Stealing)</strong>：</p><ul><li>DMAC 在 CPU 空闲时"偷取"总线周期</li><li>CPU 优先级更高</li><li>传输较慢但对 CPU 影响最小</li></ul></li><li><p><strong>突发模式 (Burst Mode)</strong>：</p><ul><li>DMAC 完全控制总线</li><li>CPU 在传输期间被暂停</li><li>传输更快但可能影响系统响应性</li></ul></li></ol><h2 id=linux-内核-dma-子系统>Linux 内核 DMA 子系统
+<a class=anchor href=#linux-%e5%86%85%e6%a0%b8-dma-%e5%ad%90%e7%b3%bb%e7%bb%9f>#</a></h2><h3 id=内核-dma-实现面临的挑战>内核 DMA 实现面临的挑战
+<a class=anchor href=#%e5%86%85%e6%a0%b8-dma-%e5%ae%9e%e7%8e%b0%e9%9d%a2%e4%b8%b4%e7%9a%84%e6%8c%91%e6%88%98>#</a></h3><p>在 Linux 内核中使用 DMA 面临几个挑战：</p><h4 id=1-地址转换问题>1. 地址转换问题
+<a class=anchor href=#1-%e5%9c%b0%e5%9d%80%e8%bd%ac%e6%8d%a2%e9%97%ae%e9%a2%98>#</a></h4><p>CPU 使用的是<strong>虚拟地址</strong>，但 DMA 控制器只能理解<strong>物理地址</strong>：</p><pre tabindex=0><code>CPU sees:       0x7fff12345000 (virtual address)
+                  ↓ (page table translation)
+DMA requires:   0x10234000 (physical address)
+</code></pre><p>内核必须在设置 DMA 前进行地址转换：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Get physical address
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>dma_addr_t</span> phys_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>virt_to_phys</span>(virtual_addr);
 </span></span></code></pre></div><h4 id=2-缓存一致性问题>2. 缓存一致性问题
-<a class=anchor href=#2-%e7%bc%93%e5%ad%98%e4%b8%80%e8%87%b4%e6%80%a7%e9%97%ae%e9%a2%98>#</a></h4><p>现代 CPU 都有缓存（Cache），这会导致数据不一致：</p><pre tabindex=0><code>场景 1: DMA 读取（设备 → 内存）
-┌─────────┐     ┌───────┐     ┌────────┐
-│  设备   │────►│  内存 │     │ Cache  │
-└─────────┘     └───────┘     └────────┘
-                    新数据        旧数据
+<a class=anchor href=#2-%e7%bc%93%e5%ad%98%e4%b8%80%e8%87%b4%e6%80%a7%e9%97%ae%e9%a2%98>#</a></h4><p>现代 CPU 都有缓存（Cache），这会导致数据不一致：</p><p>场景示意：</p><pre tabindex=0><code>Scenario 1: DMA Read (Device -&gt; Memory)
++---------+     +--------+     +-------+
+| Device  |----&gt;| Memory |     | Cache |
++---------+     +--------+     +-------+
+                New data       Old data
 
-问题：CPU 从 Cache 读到的是旧数据！
+Problem: CPU reads stale data from cache!
 
-场景 2: DMA 写入（内存 → 设备）
-┌─────────┐     ┌───────┐     ┌────────┐
-│  设备   │◄────│  内存 │     │ Cache  │
-└─────────┘     └───────┘     └────────┘
-                    旧数据        新数据
+Scenario 2: DMA Write (Memory -&gt; Device)
++---------+     +--------+     +-------+
+| Device  |&lt;----| Memory |     | Cache |
++---------+     +--------+     +-------+
+                Old data       New data
 
-问题：设备读到的是旧数据，CPU 修改的新数据还在 Cache 中！
-</code></pre><p><strong>解决方案</strong>：缓存刷新操作</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// DMA 读取前：使 Cache 无效（让 CPU 从内存读新数据）
+Problem: Device gets old data, CPU changes still in cache!
+</code></pre><p><strong>解决方案</strong>：缓存刷新操作</p><p>同步 API：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Before DMA read: invalidate cache
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_sync_single_for_device</span>(dev, dma_addr, size, DMA_FROM_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// DMA 读取后：
+</span></span><span style=display:flex><span><span style=color:#75715e>// After DMA read:
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_sync_single_for_cpu</span>(dev, dma_addr, size, DMA_FROM_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// DMA 写入前：刷新 Cache（将 CPU 的新数据写回内存）
+</span></span><span style=display:flex><span><span style=color:#75715e>// Before DMA write: flush cache
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_sync_single_for_device</span>(dev, dma_addr, size, DMA_TO_DEVICE);
 </span></span></code></pre></div><h4 id=3-内存区域限制>3. 内存区域限制
-<a class=anchor href=#3-%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f%e9%99%90%e5%88%b6>#</a></h4><p>某些老旧的 DMA 控制器只能访问特定的内存区域：</p><ul><li><strong>ISA DMA</strong>：只能访问低 16MB 内存（24 位地址线）</li><li><strong>32 位 DMA</strong>：只能访问低 4GB 内存</li><li><strong>64 位 DMA</strong>：可以访问全部内存</li></ul><p>Linux 定义了 DMA Zone：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 内核内存区域
+<a class=anchor href=#3-%e5%86%85%e5%ad%98%e5%8c%ba%e5%9f%9f%e9%99%90%e5%88%b6>#</a></h4><p>某些老旧的 DMA 控制器只能访问特定的内存区域：</p><ul><li><strong>ISA DMA</strong>：只能访问低 16MB 内存（24 位地址线）</li><li><strong>32 位 DMA</strong>：只能访问低 4GB 内存</li><li><strong>64 位 DMA</strong>：可以访问全部内存</li></ul><p>Linux 定义了 DMA Zone：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Kernel memory zones
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>ZONE_DMA       <span style=color:#75715e>// 0-16MB (ISA DMA)
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>ZONE_DMA32     <span style=color:#75715e>// 0-4GB  (32位 DMA)
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>ZONE_NORMAL    <span style=color:#75715e>// 4GB+   (所有内存)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>ZONE_DMA32     <span style=color:#75715e>// 0-4GB  (32-bit DMA)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>ZONE_NORMAL    <span style=color:#75715e>// 4GB+   (all memory)
 </span></span></span></code></pre></div><h3 id=dma-api内核编程接口>DMA API：内核编程接口
 <a class=anchor href=#dma-api%e5%86%85%e6%a0%b8%e7%bc%96%e7%a8%8b%e6%8e%a5%e5%8f%a3>#</a></h3><h4 id=一致性-dma-映射coherent-dma>一致性 DMA 映射（Coherent DMA）
-<a class=anchor href=#%e4%b8%80%e8%87%b4%e6%80%a7-dma-%e6%98%a0%e5%b0%84coherent-dma>#</a></h4><p>适合需要频繁访问的小块数据（如设备描述符、命令队列）：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 分配 DMA 一致性内存
+<a class=anchor href=#%e4%b8%80%e8%87%b4%e6%80%a7-dma-%e6%98%a0%e5%b0%84coherent-dma>#</a></h4><p>适合需要频繁访问的小块数据（如设备描述符、命令队列）：</p><p>API 示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Allocate DMA coherent memory
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>virt_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_alloc_coherent</span>(dev, size, <span style=color:#f92672>&amp;</span>dma_addr, GFP_KERNEL);
-</span></span><span style=display:flex><span><span style=color:#75715e>// virt_addr: CPU 虚拟地址
-</span></span></span><span style=display:flex><span><span style=color:#75715e>// dma_addr:  DMA 物理地址
-</span></span></span><span style=display:flex><span><span style=color:#75715e>// 特点：不需要缓存同步操作，硬件保证一致性
+</span></span><span style=display:flex><span><span style=color:#75715e>// virt_addr: CPU virtual address
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// dma_addr:  DMA physical address
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// Feature: no cache sync needed, hardware guarantees coherency
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 使用完后释放
+</span></span><span style=display:flex><span><span style=color:#75715e>// Release after use
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_free_coherent</span>(dev, size, virt_addr, dma_addr);
 </span></span></code></pre></div><h4 id=流式-dma-映射streaming-dma>流式 DMA 映射（Streaming DMA）
-<a class=anchor href=#%e6%b5%81%e5%bc%8f-dma-%e6%98%a0%e5%b0%84streaming-dma>#</a></h4><p>适合大块数据的单向传输（如网络数据包、磁盘 I/O）：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 单个缓冲区
+<a class=anchor href=#%e6%b5%81%e5%bc%8f-dma-%e6%98%a0%e5%b0%84streaming-dma>#</a></h4><p>适合大块数据的单向传输（如网络数据包、磁盘 I/O）：</p><p>API 示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Single buffer mapping
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>dma_addr_t</span> dma_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_single</span>(dev, buffer, size, DMA_TO_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 使用 DMA 传输...
+</span></span><span style=display:flex><span><span style=color:#75715e>// Perform DMA transfer...
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 完成后解除映射
+</span></span><span style=display:flex><span><span style=color:#75715e>// Unmap after completion
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_unmap_single</span>(dev, dma_addr, size, DMA_TO_DEVICE);
 </span></span></code></pre></div><p><strong>传输方向</strong>：</p><ul><li><code>DMA_TO_DEVICE</code>：内存 → 设备（如写磁盘）</li><li><code>DMA_FROM_DEVICE</code>：设备 → 内存（如读网卡）</li><li><code>DMA_BIDIRECTIONAL</code>：双向传输</li></ul><h4 id=scatter-gather-dma>Scatter-Gather DMA
-<a class=anchor href=#scatter-gather-dma>#</a></h4><p>将多个不连续的内存块一次性传输，避免多次 DMA 设置：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 准备 scatter-gather 列表
+<a class=anchor href=#scatter-gather-dma>#</a></h4><p>将多个不连续的内存块一次性传输，避免多次 DMA 设置：</p><p>API 示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Prepare scatter-gather list
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>struct</span> scatterlist sg[<span style=color:#ae81ff>3</span>];
 </span></span><span style=display:flex><span><span style=color:#a6e22e>sg_init_table</span>(sg, <span style=color:#ae81ff>3</span>);
-</span></span><span style=display:flex><span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>0</span>], buf1, len1);  <span style=color:#75715e>// 第一块内存
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>1</span>], buf2, len2);  <span style=color:#75715e>// 第二块内存
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>2</span>], buf3, len3);  <span style=color:#75715e>// 第三块内存
+</span></span><span style=display:flex><span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>0</span>], buf1, len1);  <span style=color:#75715e>// First block
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>1</span>], buf2, len2);  <span style=color:#75715e>// Second block
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>sg_set_buf</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>2</span>], buf3, len3);  <span style=color:#75715e>// Third block
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 映射整个列表
+</span></span><span style=display:flex><span><span style=color:#75715e>// Map entire list
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>int</span> nents <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_sg</span>(dev, sg, <span style=color:#ae81ff>3</span>, DMA_TO_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// DMA 控制器会依次传输这些块
-</span></span></span><span style=display:flex><span><span style=color:#75715e>// 完成后解除映射
+</span></span><span style=display:flex><span><span style=color:#75715e>// DMAC transfers these blocks sequentially
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// Unmap after completion
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_unmap_sg</span>(dev, sg, nents, DMA_TO_DEVICE);
 </span></span></code></pre></div><h3 id=实战一个简单的-dma-驱动示例>实战：一个简单的 DMA 驱动示例
-<a class=anchor href=#%e5%ae%9e%e6%88%98%e4%b8%80%e4%b8%aa%e7%ae%80%e5%8d%95%e7%9a%84-dma-%e9%a9%b1%e5%8a%a8%e7%a4%ba%e4%be%8b>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;linux/dma-mapping.h&gt;</span><span style=color:#75715e>
+<a class=anchor href=#%e5%ae%9e%e6%88%98%e4%b8%80%e4%b8%aa%e7%ae%80%e5%8d%95%e7%9a%84-dma-%e9%a9%b1%e5%8a%a8%e7%a4%ba%e4%be%8b>#</a></h3><p>完整的内核驱动代码：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;linux/dma-mapping.h&gt;</span><span style=color:#75715e>
 </span></span></span><span style=display:flex><span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;linux/module.h&gt;</span><span style=color:#75715e>
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 设备结构
+</span></span><span style=display:flex><span><span style=color:#75715e>// Device structure
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>struct</span> my_device {
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>struct</span> device <span style=color:#f92672>*</span>dev;
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>virt_addr;      <span style=color:#75715e>// CPU 虚拟地址
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>dma_addr_t</span> dma_addr;  <span style=color:#75715e>// DMA 物理地址
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>virt_addr;      <span style=color:#75715e>// CPU virtual address
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>dma_addr_t</span> dma_addr;  <span style=color:#75715e>// DMA physical address
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>size_t</span> size;
 </span></span><span style=display:flex><span>};
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 初始化 DMA
+</span></span><span style=display:flex><span><span style=color:#75715e>// Initialize DMA
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>my_device_init_dma</span>(<span style=color:#66d9ef>struct</span> my_device <span style=color:#f92672>*</span>mydev, <span style=color:#66d9ef>size_t</span> size)
 </span></span><span style=display:flex><span>{
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 1. 设置 DMA 掩码（支持 32 位地址）
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 1. Set DMA mask (support 32-bit address)
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>dma_set_mask_and_coherent</span>(mydev<span style=color:#f92672>-&gt;</span>dev, <span style=color:#a6e22e>DMA_BIT_MASK</span>(<span style=color:#ae81ff>32</span>))) {
 </span></span><span style=display:flex><span>        <span style=color:#a6e22e>dev_err</span>(mydev<span style=color:#f92672>-&gt;</span>dev, <span style=color:#e6db74>&#34;DMA not supported</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
 </span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#f92672>-</span>EIO;
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 2. 分配 DMA 一致性内存
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 2. Allocate DMA coherent memory
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>    mydev<span style=color:#f92672>-&gt;</span>size <span style=color:#f92672>=</span> size;
 </span></span><span style=display:flex><span>    mydev<span style=color:#f92672>-&gt;</span>virt_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_alloc_coherent</span>(mydev<span style=color:#f92672>-&gt;</span>dev, size,
 </span></span><span style=display:flex><span>                                          <span style=color:#f92672>&amp;</span>mydev<span style=color:#f92672>-&gt;</span>dma_addr,
@@ -153,27 +153,27 @@ DMA 需要：     0x10234000 (物理地址)
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 启动 DMA 传输（伪代码）
+</span></span><span style=display:flex><span><span style=color:#75715e>// Start DMA transfer (pseudocode)
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#a6e22e>my_device_start_dma</span>(<span style=color:#66d9ef>struct</span> my_device <span style=color:#f92672>*</span>mydev)
 </span></span><span style=display:flex><span>{
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 设置 DMA 控制器寄存器
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Configure DMA controller registers
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>writel</span>(mydev<span style=color:#f92672>-&gt;</span>dma_addr, mydev<span style=color:#f92672>-&gt;</span>regs <span style=color:#f92672>+</span> DMA_SRC_ADDR);
 </span></span><span style=display:flex><span>    <span style=color:#a6e22e>writel</span>(mydev<span style=color:#f92672>-&gt;</span>size, mydev<span style=color:#f92672>-&gt;</span>regs <span style=color:#f92672>+</span> DMA_TRANSFER_SIZE);
 </span></span><span style=display:flex><span>    <span style=color:#a6e22e>writel</span>(DMA_START <span style=color:#f92672>|</span> DMA_INT_ENABLE, mydev<span style=color:#f92672>-&gt;</span>regs <span style=color:#f92672>+</span> DMA_CONTROL);
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// DMA 完成中断处理
+</span></span><span style=display:flex><span><span style=color:#75715e>// DMA completion interrupt handler
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>irqreturn_t</span> <span style=color:#a6e22e>my_device_irq_handler</span>(<span style=color:#66d9ef>int</span> irq, <span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>data)
 </span></span><span style=display:flex><span>{
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>struct</span> my_device <span style=color:#f92672>*</span>mydev <span style=color:#f92672>=</span> data;
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 检查是否是 DMA 完成中断
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Check if DMA complete interrupt
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>    u32 status <span style=color:#f92672>=</span> <span style=color:#a6e22e>readl</span>(mydev<span style=color:#f92672>-&gt;</span>regs <span style=color:#f92672>+</span> DMA_STATUS);
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (status <span style=color:#f92672>&amp;</span> DMA_COMPLETE) {
-</span></span><span style=display:flex><span>        <span style=color:#75715e>// 处理传输完成的数据
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Process transferred data
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#a6e22e>process_dma_data</span>(mydev<span style=color:#f92672>-&gt;</span>virt_addr, mydev<span style=color:#f92672>-&gt;</span>size);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>        <span style=color:#75715e>// 清除中断标志
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Clear interrupt flag
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#a6e22e>writel</span>(DMA_COMPLETE, mydev<span style=color:#f92672>-&gt;</span>regs <span style=color:#f92672>+</span> DMA_STATUS);
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> IRQ_HANDLED;
@@ -182,7 +182,7 @@ DMA 需要：     0x10234000 (物理地址)
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> IRQ_NONE;
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 清理 DMA 资源
+</span></span><span style=display:flex><span><span style=color:#75715e>// Cleanup DMA resources
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#a6e22e>my_device_cleanup_dma</span>(<span style=color:#66d9ef>struct</span> my_device <span style=color:#f92672>*</span>mydev)
 </span></span><span style=display:flex><span>{
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (mydev<span style=color:#f92672>-&gt;</span>virt_addr) {
@@ -192,92 +192,92 @@ DMA 需要：     0x10234000 (物理地址)
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h2 id=dma-性能优化>DMA 性能优化
 <a class=anchor href=#dma-%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96>#</a></h2><h3 id=1-选择合适的-dma-模式>1. 选择合适的 DMA 模式
-<a class=anchor href=#1-%e9%80%89%e6%8b%a9%e5%90%88%e9%80%82%e7%9a%84-dma-%e6%a8%a1%e5%bc%8f>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 小数据，频繁访问 → 一致性 DMA
+<a class=anchor href=#1-%e9%80%89%e6%8b%a9%e5%90%88%e9%80%82%e7%9a%84-dma-%e6%a8%a1%e5%bc%8f>#</a></h3><p>根据使用场景选择：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Small data, frequent access -&gt; Coherent DMA
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>ring_buffer <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_alloc_coherent</span>(dev, <span style=color:#ae81ff>4096</span>, <span style=color:#f92672>&amp;</span>dma_addr, GFP_KERNEL);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 大数据，单次传输 → 流式 DMA
+</span></span><span style=display:flex><span><span style=color:#75715e>// Large data, one-time transfer -&gt; Streaming DMA
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>dma_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_single</span>(dev, data_buffer, <span style=color:#ae81ff>1024</span><span style=color:#f92672>*</span><span style=color:#ae81ff>1024</span>, DMA_TO_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 多个分散的块 → Scatter-Gather
+</span></span><span style=display:flex><span><span style=color:#75715e>// Multiple scattered blocks -&gt; Scatter-Gather
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_map_sg</span>(dev, sg_list, num_entries, DMA_TO_DEVICE);
 </span></span></code></pre></div><h3 id=2-批量传输>2. 批量传输
-<a class=anchor href=#2-%e6%89%b9%e9%87%8f%e4%bc%a0%e8%be%93>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 不好的做法：多次小传输
+<a class=anchor href=#2-%e6%89%b9%e9%87%8f%e4%bc%a0%e8%be%93>#</a></h3><p>对比示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Bad: multiple small transfers
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>100</span>; i<span style=color:#f92672>++</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>dma_transfer</span>(small_buffer[i], <span style=color:#ae81ff>4096</span>);  <span style=color:#75715e>// 每次 4KB
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>dma_transfer</span>(small_buffer[i], <span style=color:#ae81ff>4096</span>);  <span style=color:#75715e>// 4KB each time
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 好的做法：一次大传输
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_transfer</span>(large_buffer, <span style=color:#ae81ff>400</span><span style=color:#f92672>*</span><span style=color:#ae81ff>1024</span>);  <span style=color:#75715e>// 一次 400KB
+</span></span><span style=display:flex><span><span style=color:#75715e>// Good: one large transfer
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_transfer</span>(large_buffer, <span style=color:#ae81ff>400</span><span style=color:#f92672>*</span><span style=color:#ae81ff>1024</span>);  <span style=color:#75715e>// 400KB once
 </span></span></span></code></pre></div><h3 id=3-使用-dma-池>3. 使用 DMA 池
-<a class=anchor href=#3-%e4%bd%bf%e7%94%a8-dma-%e6%b1%a0>#</a></h3><p>对于频繁分配/释放的小块 DMA 内存：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 创建 DMA 池
+<a class=anchor href=#3-%e4%bd%bf%e7%94%a8-dma-%e6%b1%a0>#</a></h3><p>对于频繁分配/释放的小块 DMA 内存：</p><p>池管理示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Create DMA pool
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>struct</span> dma_pool <span style=color:#f92672>*</span>pool <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_pool_create</span>(<span style=color:#e6db74>&#34;mypool&#34;</span>, dev, size, align, <span style=color:#ae81ff>0</span>);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 从池中分配
+</span></span><span style=display:flex><span><span style=color:#75715e>// Allocate from pool
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_pool_alloc</span>(pool, GFP_KERNEL, <span style=color:#f92672>&amp;</span>dma_addr);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 归还到池中
+</span></span><span style=display:flex><span><span style=color:#75715e>// Return to pool
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_pool_free</span>(pool, addr, dma_addr);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 销毁池
+</span></span><span style=display:flex><span><span style=color:#75715e>// Destroy pool
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_pool_destroy</span>(pool);
 </span></span></code></pre></div><h3 id=4-对齐优化>4. 对齐优化
-<a class=anchor href=#4-%e5%af%b9%e9%bd%90%e4%bc%98%e5%8c%96>#</a></h3><p>DMA 传输对齐的数据更高效：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 确保缓冲区对齐到 cache line（通常 64 字节）
+<a class=anchor href=#4-%e5%af%b9%e9%bd%90%e4%bc%98%e5%8c%96>#</a></h3><p>DMA 传输对齐的数据更高效：</p><p>对齐示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Align buffer to cache line (typically 64 bytes)
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>buffer <span style=color:#a6e22e>__attribute__</span>((<span style=color:#a6e22e>aligned</span>(<span style=color:#ae81ff>64</span>)));
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// 或使用内核宏
+</span></span><span style=display:flex><span><span style=color:#75715e>// Or use kernel macro
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>buffer <span style=color:#f92672>=</span> <span style=color:#a6e22e>kmalloc</span>(size, GFP_KERNEL <span style=color:#f92672>|</span> __GFP_DMA);
 </span></span></code></pre></div><h2 id=实际应用案例>实际应用案例
 <a class=anchor href=#%e5%ae%9e%e9%99%85%e5%ba%94%e7%94%a8%e6%a1%88%e4%be%8b>#</a></h2><h3 id=案例-1网卡驱动中的-dma>案例 1：网卡驱动中的 DMA
-<a class=anchor href=#%e6%a1%88%e4%be%8b-1%e7%bd%91%e5%8d%a1%e9%a9%b1%e5%8a%a8%e4%b8%ad%e7%9a%84-dma>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 网卡接收数据包的流程
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#ae81ff>1.</span> <span style=color:#960050;background-color:#1e0010>驱动分配</span> sk_buff <span style=color:#960050;background-color:#1e0010>和</span> DMA <span style=color:#960050;background-color:#1e0010>缓冲区</span>
-</span></span><span style=display:flex><span>   skb <span style=color:#f92672>=</span> <span style=color:#a6e22e>netdev_alloc_skb</span>(dev, PKT_SIZE);
-</span></span><span style=display:flex><span>   dma_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_single</span>(dev, skb<span style=color:#f92672>-&gt;</span>data, PKT_SIZE, DMA_FROM_DEVICE);
+<a class=anchor href=#%e6%a1%88%e4%be%8b-1%e7%bd%91%e5%8d%a1%e9%a9%b1%e5%8a%a8%e4%b8%ad%e7%9a%84-dma>#</a></h3><p>网卡接收数据包的完整流程：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// NIC receive packet flow
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// 1. Driver allocates sk_buff and DMA buffer
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>skb <span style=color:#f92672>=</span> <span style=color:#a6e22e>netdev_alloc_skb</span>(dev, PKT_SIZE);
+</span></span><span style=display:flex><span>dma_addr <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_single</span>(dev, skb<span style=color:#f92672>-&gt;</span>data, PKT_SIZE, DMA_FROM_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>2.</span> <span style=color:#960050;background-color:#1e0010>将</span> DMA <span style=color:#960050;background-color:#1e0010>地址告诉网卡</span>
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>writel</span>(dma_addr, nic_regs <span style=color:#f92672>+</span> RX_DESC_ADDR);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 2. Tell NIC the DMA address
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>writel</span>(dma_addr, nic_regs <span style=color:#f92672>+</span> RX_DESC_ADDR);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>3.</span> <span style=color:#960050;background-color:#1e0010>网卡接收到数据包，通过</span> DMA <span style=color:#960050;background-color:#1e0010>写入内存</span>
-</span></span><span style=display:flex><span>   (<span style=color:#960050;background-color:#1e0010>硬件自动完成</span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>4.</span> <span style=color:#960050;background-color:#1e0010>网卡发起中断通知</span> CPU
-</span></span><span style=display:flex><span>   IRQ <span style=color:#960050;background-color:#1e0010>→</span> <span style=color:#a6e22e>irq_handler</span>()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>5.</span> <span style=color:#960050;background-color:#1e0010>驱动同步</span> cache<span style=color:#960050;background-color:#1e0010>，处理数据包</span>
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>dma_unmap_single</span>(dev, dma_addr, PKT_SIZE, DMA_FROM_DEVICE);
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>netif_rx</span>(skb);  <span style=color:#75715e>// 传递给网络协议栈
+</span></span><span style=display:flex><span><span style=color:#75715e>// 3. NIC receives packet, writes to memory via DMA
+</span></span></span><span style=display:flex><span><span style=color:#75715e>//    (Hardware handles automatically)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 4. NIC raises interrupt to notify CPU
+</span></span></span><span style=display:flex><span><span style=color:#75715e>//    IRQ -&gt; irq_handler()
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 5. Driver syncs cache, processes packet
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_unmap_single</span>(dev, dma_addr, PKT_SIZE, DMA_FROM_DEVICE);
+</span></span><span style=display:flex><span><span style=color:#a6e22e>netif_rx</span>(skb);  <span style=color:#75715e>// Pass to network stack
 </span></span></span></code></pre></div><h3 id=案例-2磁盘驱动中的-dma>案例 2：磁盘驱动中的 DMA
-<a class=anchor href=#%e6%a1%88%e4%be%8b-2%e7%a3%81%e7%9b%98%e9%a9%b1%e5%8a%a8%e4%b8%ad%e7%9a%84-dma>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 读取磁盘扇区
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#ae81ff>1.</span> <span style=color:#960050;background-color:#1e0010>准备</span> scatter<span style=color:#f92672>-</span>gather <span style=color:#960050;background-color:#1e0010>列表（多个内存页）</span>
-</span></span><span style=display:flex><span>   <span style=color:#66d9ef>for</span> (i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> nr_pages; i<span style=color:#f92672>++</span>)
-</span></span><span style=display:flex><span>       <span style=color:#a6e22e>sg_set_page</span>(<span style=color:#f92672>&amp;</span>sg[i], pages[i], PAGE_SIZE, <span style=color:#ae81ff>0</span>);
+<a class=anchor href=#%e6%a1%88%e4%be%8b-2%e7%a3%81%e7%9b%98%e9%a9%b1%e5%8a%a8%e4%b8%ad%e7%9a%84-dma>#</a></h3><p>读取磁盘扇区的流程：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// Read disk sectors
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// 1. Prepare scatter-gather list (multiple memory pages)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> nr_pages; i<span style=color:#f92672>++</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>sg_set_page</span>(<span style=color:#f92672>&amp;</span>sg[i], pages[i], PAGE_SIZE, <span style=color:#ae81ff>0</span>);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>2.</span> <span style=color:#960050;background-color:#1e0010>映射到</span> DMA
-</span></span><span style=display:flex><span>   nents <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_sg</span>(dev, sg, nr_pages, DMA_FROM_DEVICE);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 2. Map to DMA
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>nents <span style=color:#f92672>=</span> <span style=color:#a6e22e>dma_map_sg</span>(dev, sg, nr_pages, DMA_FROM_DEVICE);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>3.</span> <span style=color:#960050;background-color:#1e0010>配置磁盘控制器</span>
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>disk_set_dma_addr</span>(<span style=color:#a6e22e>sg_dma_address</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>0</span>]));
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>disk_set_transfer_size</span>(total_size);
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>disk_command</span>(READ_DMA);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 3. Configure disk controller
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>disk_set_dma_addr</span>(<span style=color:#a6e22e>sg_dma_address</span>(<span style=color:#f92672>&amp;</span>sg[<span style=color:#ae81ff>0</span>]));
+</span></span><span style=display:flex><span><span style=color:#a6e22e>disk_set_transfer_size</span>(total_size);
+</span></span><span style=display:flex><span><span style=color:#a6e22e>disk_command</span>(READ_DMA);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>4.</span> <span style=color:#960050;background-color:#1e0010>等待</span> DMA <span style=color:#960050;background-color:#1e0010>完成</span>
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>wait_for_completion</span>(<span style=color:#f92672>&amp;</span>disk<span style=color:#f92672>-&gt;</span>dma_done);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 4. Wait for DMA completion
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>wait_for_completion</span>(<span style=color:#f92672>&amp;</span>disk<span style=color:#f92672>-&gt;</span>dma_done);
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#ae81ff>5.</span> <span style=color:#960050;background-color:#1e0010>解除映射</span>
-</span></span><span style=display:flex><span>   <span style=color:#a6e22e>dma_unmap_sg</span>(dev, sg, nents, DMA_FROM_DEVICE);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 5. Unmap
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_unmap_sg</span>(dev, sg, nents, DMA_FROM_DEVICE);
 </span></span></code></pre></div><h2 id=常见问题与调试>常见问题与调试
 <a class=anchor href=#%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98%e4%b8%8e%e8%b0%83%e8%af%95>#</a></h2><h3 id=问题-1dma-传输错误>问题 1：DMA 传输错误
-<a class=anchor href=#%e9%97%ae%e9%a2%98-1dma-%e4%bc%a0%e8%be%93%e9%94%99%e8%af%af>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 检查 DMA 映射是否成功</span>
+<a class=anchor href=#%e9%97%ae%e9%a2%98-1dma-%e4%bc%a0%e8%be%93%e9%94%99%e8%af%af>#</a></h3><p>检查映射是否成功：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 检查 DMA 映射是否成功</span>
 </span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>dma_mapping_error<span style=color:#f92672>(</span>dev, dma_addr<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
 </span></span><span style=display:flex><span>    pr_err<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;DMA mapping failed\n&#34;</span><span style=color:#f92672>)</span>;
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> -ENOMEM;
 </span></span><span style=display:flex><span><span style=color:#f92672>}</span>
 </span></span></code></pre></div><h3 id=问题-2数据损坏>问题 2：数据损坏
-<a class=anchor href=#%e9%97%ae%e9%a2%98-2%e6%95%b0%e6%8d%ae%e6%8d%9f%e5%9d%8f>#</a></h3><p>通常是缓存一致性问题：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 确保 DMA 前后正确同步
+<a class=anchor href=#%e9%97%ae%e9%a2%98-2%e6%95%b0%e6%8d%ae%e6%8d%9f%e5%9d%8f>#</a></h3><p>通常是缓存一致性问题：</p><p>同步示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 确保 DMA 前后正确同步
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_sync_single_for_device</span>(...);  <span style=color:#75715e>// DMA 开始前
 </span></span></span><span style=display:flex><span><span style=color:#75715e>// DMA 传输...
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>dma_sync_single_for_cpu</span>(...);     <span style=color:#75715e>// DMA 完成后
 </span></span></span></code></pre></div><h3 id=问题-3性能不如预期>问题 3：性能不如预期
-<a class=anchor href=#%e9%97%ae%e9%a2%98-3%e6%80%a7%e8%83%bd%e4%b8%8d%e5%a6%82%e9%a2%84%e6%9c%9f>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 检查 DMA 模式</span>
+<a class=anchor href=#%e9%97%ae%e9%a2%98-3%e6%80%a7%e8%83%bd%e4%b8%8d%e5%a6%82%e9%a2%84%e6%9c%9f>#</a></h3><p>性能分析命令：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 检查 DMA 模式</span>
 </span></span><span style=display:flex><span>cat /proc/interrupts | grep dma
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e># 检查缓冲区对齐</span>
@@ -286,7 +286,7 @@ DMA 需要：     0x10234000 (物理地址)
 </span></span><span style=display:flex><span><span style=color:#75715e># 测量传输速度</span>
 </span></span><span style=display:flex><span>dd <span style=color:#66d9ef>if</span><span style=color:#f92672>=</span>/dev/sda of<span style=color:#f92672>=</span>/dev/null bs<span style=color:#f92672>=</span>1M count<span style=color:#f92672>=</span><span style=color:#ae81ff>1000</span>
 </span></span></code></pre></div><h3 id=调试工具>调试工具
-<a class=anchor href=#%e8%b0%83%e8%af%95%e5%b7%a5%e5%85%b7>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 1. 查看 DMA 使用情况</span>
+<a class=anchor href=#%e8%b0%83%e8%af%95%e5%b7%a5%e5%85%b7>#</a></h3><p>常用的调试命令：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 1. 查看 DMA 使用情况</span>
 </span></span><span style=display:flex><span>cat /proc/dma
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e># 2. 查看设备 DMA 配置</span>
@@ -300,5 +300,5 @@ DMA 需要：     0x10234000 (物理地址)
 </span></span><span style=display:flex><span>cat /sys/kernel/debug/tracing/trace
 </span></span></code></pre></div><h2 id=总结>总结
 <a class=anchor href=#%e6%80%bb%e7%bb%93>#</a></h2><p>DMA 技术的核心价值：</p><ol><li><strong>提升性能</strong>：释放 CPU，让其专注于计算任务</li><li><strong>降低延迟</strong>：减少数据拷贝次数，提高吞吐量</li><li><strong>节省功耗</strong>：CPU 可以进入低功耗状态</li></ol><p>使用 DMA 的关键点：</p><ul><li>✅ 理解虚拟地址和物理地址的转换</li><li>✅ 注意缓存一致性，正确使用同步 API</li><li>✅ 根据场景选择合适的 DMA 模式</li><li>✅ 考虑硬件限制（地址范围、对齐要求）</li><li>✅ 处理错误情况和异常中断</li></ul><h2 id=参考资料>参考资料
-<a class=anchor href=#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99>#</a></h2><ul><li><p><strong>Linux 内核文档</strong>：</p><ul><li>Documentation/core-api/dma-api.rst</li><li>Documentation/core-api/dma-api-howto.rst</li></ul></li><li><p><strong>内核源码</strong>：</p><ul><li><code>kernel/dma/</code> - DMA 子系统核心代码</li><li><code>include/linux/dma-mapping.h</code> - DMA API 接口定义</li></ul></li><li><p><strong>书籍</strong>：</p><ul><li>《Linux Device Drivers》第 15 章 - Memory Mapping and DMA</li><li>《Understanding the Linux Kernel》第 13 章 - I/O Architecture</li></ul></li><li><p><strong>在线资源</strong>：</p><ul><li>LWN.net: <a href=https://lwn.net/Kernel/Index/#Direct_memory_access>https://lwn.net/Kernel/Index/#Direct_memory_access</a></li><li>Linux DMA Engine: <a href=https://www.kernel.org/doc/html/latest/driver-api/dmaengine/>https://www.kernel.org/doc/html/latest/driver-api/dmaengine/</a></li></ul></li></ul></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/65afd2cf977d767daaf84934ac6ed3339a5e7fb3 title='Last modified by go-bai | 2025-11-02' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
-<span>2025-11-02</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#什么是-dma>什么是 DMA？</a><ul><li><a href=#为什么需要-dma>为什么需要 DMA？</a></li></ul></li><li><a href=#dma-的工作原理>DMA 的工作原理</a><ul><li><a href=#基本组件>基本组件</a></li><li><a href=#dma-传输流程>DMA 传输流程</a></li><li><a href=#总线仲裁谁来使用总线>总线仲裁：谁来使用总线？</a></li></ul></li><li><a href=#linux-内核中的-dma>Linux 内核中的 DMA</a><ul><li><a href=#内核视角dma-的挑战>内核视角：DMA 的挑战</a><ul><li><a href=#1-地址转换问题>1. 地址转换问题</a></li><li><a href=#2-缓存一致性问题>2. 缓存一致性问题</a></li><li><a href=#3-内存区域限制>3. 内存区域限制</a></li></ul></li><li><a href=#dma-api内核编程接口>DMA API：内核编程接口</a><ul><li><a href=#一致性-dma-映射coherent-dma>一致性 DMA 映射（Coherent DMA）</a></li><li><a href=#流式-dma-映射streaming-dma>流式 DMA 映射（Streaming DMA）</a></li><li><a href=#scatter-gather-dma>Scatter-Gather DMA</a></li></ul></li><li><a href=#实战一个简单的-dma-驱动示例>实战：一个简单的 DMA 驱动示例</a></li></ul></li><li><a href=#dma-性能优化>DMA 性能优化</a><ul><li><a href=#1-选择合适的-dma-模式>1. 选择合适的 DMA 模式</a></li><li><a href=#2-批量传输>2. 批量传输</a></li><li><a href=#3-使用-dma-池>3. 使用 DMA 池</a></li><li><a href=#4-对齐优化>4. 对齐优化</a></li></ul></li><li><a href=#实际应用案例>实际应用案例</a><ul><li><a href=#案例-1网卡驱动中的-dma>案例 1：网卡驱动中的 DMA</a></li><li><a href=#案例-2磁盘驱动中的-dma>案例 2：磁盘驱动中的 DMA</a></li></ul></li><li><a href=#常见问题与调试>常见问题与调试</a><ul><li><a href=#问题-1dma-传输错误>问题 1：DMA 传输错误</a></li><li><a href=#问题-2数据损坏>问题 2：数据损坏</a></li><li><a href=#问题-3性能不如预期>问题 3：性能不如预期</a></li><li><a href=#调试工具>调试工具</a></li></ul></li><li><a href=#总结>总结</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></div></aside></main></body></html>
+<a class=anchor href=#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99>#</a></h2><ul><li><p><strong>Linux 内核文档</strong>：</p><ul><li>Documentation/core-api/dma-api.rst</li><li>Documentation/core-api/dma-api-howto.rst</li></ul></li><li><p><strong>内核源码</strong>：</p><ul><li><code>kernel/dma/</code> - DMA 子系统核心代码</li><li><code>include/linux/dma-mapping.h</code> - DMA API 接口定义</li></ul></li><li><p><strong>书籍</strong>：</p><ul><li>《Linux Device Drivers》第 15 章 - Memory Mapping and DMA</li><li>《Understanding the Linux Kernel》第 13 章 - I/O Architecture</li></ul></li><li><p><strong>在线资源</strong>：</p><ul><li>LWN.net: <a href=https://lwn.net/Kernel/Index/#Direct_memory_access>https://lwn.net/Kernel/Index/#Direct_memory_access</a></li><li>Linux DMA Engine: <a href=https://www.kernel.org/doc/html/latest/driver-api/dmaengine/>https://www.kernel.org/doc/html/latest/driver-api/dmaengine/</a></li></ul></li></ul></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/b247bf67ab4f78785e9b9b216008e2371d5ad640 title='Last modified by go-bai | 2025-11-03' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
+<span>2025-11-03</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#dma-概述>DMA 概述</a><ul><li><a href=#传统-io-vs-dma>传统 I/O vs DMA</a></li></ul></li><li><a href=#dma-硬件架构>DMA 硬件架构</a><ul><li><a href=#核心组件>核心组件</a></li><li><a href=#dma-传输流程>DMA 传输流程</a></li><li><a href=#总线仲裁>总线仲裁</a></li></ul></li><li><a href=#linux-内核-dma-子系统>Linux 内核 DMA 子系统</a><ul><li><a href=#内核-dma-实现面临的挑战>内核 DMA 实现面临的挑战</a><ul><li><a href=#1-地址转换问题>1. 地址转换问题</a></li><li><a href=#2-缓存一致性问题>2. 缓存一致性问题</a></li><li><a href=#3-内存区域限制>3. 内存区域限制</a></li></ul></li><li><a href=#dma-api内核编程接口>DMA API：内核编程接口</a><ul><li><a href=#一致性-dma-映射coherent-dma>一致性 DMA 映射（Coherent DMA）</a></li><li><a href=#流式-dma-映射streaming-dma>流式 DMA 映射（Streaming DMA）</a></li><li><a href=#scatter-gather-dma>Scatter-Gather DMA</a></li></ul></li><li><a href=#实战一个简单的-dma-驱动示例>实战：一个简单的 DMA 驱动示例</a></li></ul></li><li><a href=#dma-性能优化>DMA 性能优化</a><ul><li><a href=#1-选择合适的-dma-模式>1. 选择合适的 DMA 模式</a></li><li><a href=#2-批量传输>2. 批量传输</a></li><li><a href=#3-使用-dma-池>3. 使用 DMA 池</a></li><li><a href=#4-对齐优化>4. 对齐优化</a></li></ul></li><li><a href=#实际应用案例>实际应用案例</a><ul><li><a href=#案例-1网卡驱动中的-dma>案例 1：网卡驱动中的 DMA</a></li><li><a href=#案例-2磁盘驱动中的-dma>案例 2：磁盘驱动中的 DMA</a></li></ul></li><li><a href=#常见问题与调试>常见问题与调试</a><ul><li><a href=#问题-1dma-传输错误>问题 1：DMA 传输错误</a></li><li><a href=#问题-2数据损坏>问题 2：数据损坏</a></li><li><a href=#问题-3性能不如预期>问题 3：性能不如预期</a></li><li><a href=#调试工具>调试工具</a></li></ul></li><li><a href=#总结>总结</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></div></aside></main></body></html>

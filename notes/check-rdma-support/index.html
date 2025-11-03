@@ -1,0 +1,230 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="/notes/check-rdma-support/"><meta property="og:site_name" content="gobai's notes"><meta property="og:title" content="如何检查网卡和存储设备是否支持 RDMA"><meta property="og:description" content="全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="notes"><meta property="article:published_time" content="2025-11-02T00:00:00+00:00"><meta property="article:modified_time" content="2025-11-03T12:06:25+08:00"><meta property="article:tag" content="Linux"><meta property="article:tag" content="RDMA"><meta property="article:tag" content="网络"><meta property="article:tag" content="存储"><meta property="article:tag" content="InfiniBand"><title>如何检查网卡和存储设备是否支持 RDMA | gobai's notes</title>
+<link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=/notes/check-rdma-support/><link rel=stylesheet href=/book.min.434035e7885c7f5d12818bd9f111cf1a0925c6fb78382667381c3d5eda3fb4f1.css><script defer src=/fuse.min.js></script><script defer src=/en.search.min.16977695c2938929d7dc9bcde76e10d8cdac95ba52c8fcbe69d017ae289e191e.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/favicon.ico alt=Logo class=book-icon><span>gobai's notes</span></a></h2><div class="book-search hidden"><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><input type=checkbox id=section-762c546cfaa9598dcaf49c6a9361dd1f class=toggle checked>
+<label for=section-762c546cfaa9598dcaf49c6a9361dd1f class="flex justify-between"><a role=button>随笔</a></label><ul><li><a href=/notes/exit-status-and-waitpid/>Exit Status 与 waitpid：进程退出状态的内核机制</a></li><li><a href=/notes/dma-deep-dive/>DMA 深度解析：直接内存访问的内核机制与实现</a></li><li><a href=/notes/check-rdma-support/ class=active>如何检查网卡和存储设备是否支持 RDMA</a></li></ul></li><li><input type=checkbox id=section-6fbaa392869835c97ad5493eff4f5733 class=toggle>
+<label for=section-6fbaa392869835c97ad5493eff4f5733 class="flex justify-between"><a role=button>博客</a></label><ul><li><span>Golang</span><ul><li><input type=checkbox id=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class=toggle>
+<label for=section-98d0efdb3baf67b2c791a7fd1bbf6ca1 class="flex justify-between"><a role=button>语言基础</a></label><ul><li><a href=/posts/go-memory-escape/>Go 内存逃逸</a></li><li><a href=/posts/go-gc/>Go GC 垃圾回收</a></li><li><a href=/posts/go-make-and-new/>Go make 与 new 区别</a></li><li><a href=/posts/go-gmp/>Go GMP 模型</a></li></ul></li><li><input type=checkbox id=section-42d8c4148cb4c5a3e3d8addaded05197 class=toggle>
+<label for=section-42d8c4148cb4c5a3e3d8addaded05197 class="flex justify-between"><a role=button>数据结构</a></label><ul><li><a href=/posts/go-interface/>Go interface</a></li><li><a href=/posts/go-chan/>Go channel</a></li></ul></li><li><input type=checkbox id=section-1ca588caf6263863db394d8b5e8e27c7 class=toggle>
+<label for=section-1ca588caf6263863db394d8b5e8e27c7 class="flex justify-between"><a role=button>标准库</a></label><ul></ul></li><li><input type=checkbox id=section-241d5557475d85971162af97f6d52ccb class=toggle>
+<label for=section-241d5557475d85971162af97f6d52ccb class="flex justify-between"><a role=button>三方库</a></label><ul><li><a href=/posts/sqlx-vs-xorm/>sqlx vs xorm</a></li></ul></li><li><input type=checkbox id=section-da889a16058efe316dfcb82b9003429e class=toggle>
+<label for=section-da889a16058efe316dfcb82b9003429e class="flex justify-between"><a role=button>开发工具</a></label><ul><li><a href=/posts/go-delve/>Go Delve</a></li><li><a href=/posts/go-testing/>Go Testing</a></li></ul></li><li><input type=checkbox id=section-fcb09aa495225b08f1e972b051618bb6 class=toggle>
+<label for=section-fcb09aa495225b08f1e972b051618bb6 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/solve-timezone-issue-in-go-application-in-container/>Go应用在容器中的时区</a></li><li><a href=/posts/go-app-reduce-size/>减小go程序编译后的体积</a></li></ul></li></ul></li><li><input type=checkbox id=section-f91fe725fab4dcbef0dd504359ff7b63 class=toggle>
+<label for=section-f91fe725fab4dcbef0dd504359ff7b63 class="flex justify-between"><a role=button>Linux</a></label><ul><li><input type=checkbox id=section-176ad016ae09a9f0440dca17617492cb class=toggle>
+<label for=section-176ad016ae09a9f0440dca17617492cb class="flex justify-between"><a role=button>Network</a></label><ul><li><a href=/posts/openwrt-v2/>OpenWrt v2</a></li><li><a href=/posts/linux-iptables/>Linux iptables</a></li><li><a href=/posts/linux-bridge/>Linux Bridge</a></li><li><a href=/posts/wireless-to-wired-network/>无线转有线网络</a></li><li><a href=/posts/openwrt/>OpenWrt</a></li><li><a href=/posts/dhclient/>dhclient 问题</a></li><li><a href=/posts/creating-a-bridged-network-with-netplan-on-ubuntu-22-04/>在 Ubuntu 22.04 使用 netplan 创建桥接网络</a></li></ul></li><li><input type=checkbox id=section-33e3a313f4903205bd4597f5f4045be9 class=toggle>
+<label for=section-33e3a313f4903205bd4597f5f4045be9 class="flex justify-between"><a role=button>OS</a></label><ul><li><a href=/posts/netpoll/>Netpoll</a></li><li><a href=/posts/linux-boot-process-bios/>Linux 启动流程 (BIOS)</a></li><li><a href=/posts/multi-bootable-usb/>Multi-Bootable USB</a></li></ul></li><li><input type=checkbox id=section-3b63411eed8d0cecdd3250e70daaaace class=toggle>
+<label for=section-3b63411eed8d0cecdd3250e70daaaace class="flex justify-between"><a role=button>Storage</a></label><ul><li><a href=/posts/procfs/>proc filesystem</a></li><li><a href=/posts/partitioning-disks/>Linux 磁盘分区</a></li><li><a href=/posts/inode/>Linux 文件系统之 inode</a></li><li><a href=/posts/delete-partition-and-expand-another/>删除分区并扩容另一个分区和根文件系统</a></li></ul></li><li><input type=checkbox id=section-244a9b038b0e0aa873cb558da61a18b1 class=toggle>
+<label for=section-244a9b038b0e0aa873cb558da61a18b1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/tmux/>tmux 使用笔记</a></li><li><a href=/posts/filebrowser/>Filebrowser 部署</a></li><li><a href=/posts/rclone/>Rclone 使用笔记</a></li><li><a href=/posts/shell-script/>Shell Script</a></li><li><a href=/posts/ubuntu-config/>Ubuntu Config</a></li><li><a href=/posts/systemd-journal/>About Systemd</a></li></ul></li></ul></li><li><input type=checkbox id=section-db6ac5e9808e911c643d4dada0e07ebd class=toggle>
+<label for=section-db6ac5e9808e911c643d4dada0e07ebd class="flex justify-between"><a role=button>Kubernetes</a></label><ul><li><a href=/posts/k8s-informer/>k8s informer 介绍</a></li><li><a href=/posts/flannel/>深入了解 Kubernetes CNI 网络插件 Flannel</a></li><li><a href=/posts/kube-scheduler/>Kube Scheduler</a></li><li><a href=/posts/cri/>CRI 工作原理</a></li><li><a href=/posts/cni/>CNI 工作原理</a></li><li><a href=/posts/csi/>CSI 工作原理</a></li><li><a href=/posts/builing-multi-platform-container-images-guide/>构建多平台容器镜像</a></li><li><a href=/posts/k8s-namespace/>k8s namespaces</a></li><li><a href=/posts/k8s-cgroup/>k8s cgroups</a></li><li><a href=/posts/rke2/>RKE2 安装 k8s 集群</a></li><li><a href=/posts/controller-runtime/>Controller Runtime</a></li><li><input type=checkbox id=section-8edd6114a0c1ce280c6628362e538ba7 class=toggle>
+<label for=section-8edd6114a0c1ce280c6628362e538ba7 class="flex justify-between"><a role=button>问题记录</a></label><ul><li><a href=/posts/failed-to-reserve-sandbox-name/>failed to reserve sandbox name</a></li></ul></li></ul></li><li><input type=checkbox id=section-45ed28834a9c7fe37d3e4d15606fec65 class=toggle>
+<label for=section-45ed28834a9c7fe37d3e4d15606fec65 class="flex justify-between"><a role=button>Database</a></label><ul><li><a href=/posts/sqlite3/>SQLite3</a></li></ul></li><li><span>Virtualization</span><ul><li><input type=checkbox id=section-7c5a43731ddd199a055dda51c8660688 class=toggle>
+<label for=section-7c5a43731ddd199a055dda51c8660688 class="flex justify-between"><a role=button>KubeVirt</a></label><ul><li><a href=/posts/kubevirt-sidecar/>Kubevirt Hook Sidecar</a></li></ul></li><li><input type=checkbox id=section-01c36c077fb673b3c49c2a334c82e286 class=toggle>
+<label for=section-01c36c077fb673b3c49c2a334c82e286 class="flex justify-between"><a role=button>libvirt</a></label><ul><li><a href=/posts/libvirt/>Libvirt 使用笔记</a></li><li><a href=/posts/create-vm-with-cloudinit/>创建虚拟机时使用 cloudinit 初始化</a></li></ul></li></ul></li><li><input type=checkbox id=section-51c4e989897e79573c9215830bc89f6c class=toggle>
+<label for=section-51c4e989897e79573c9215830bc89f6c class="flex justify-between"><a role=button>Prometheus</a></label><ul><li><a href=/posts/prometheus-basics/>Prometheus 基础</a></li><li><a href=/posts/kube-prometheus-stack/>kube-prometheus-stack 安装</a></li><li><a href=/posts/node-exporter/>node-exporter 安装</a></li></ul></li><li><input type=checkbox id=section-3dd648d0479248759f2c07b8d5ee80be class=toggle>
+<label for=section-3dd648d0479248759f2c07b8d5ee80be class="flex justify-between"><a role=button>Ceph</a></label><ul><li><a href=/posts/rook-ceph/>安装 Rook Ceph</a></li></ul></li><li><input type=checkbox id=section-ba2b1bb537fff210d58a51efd7bbb7f9 class=toggle>
+<label for=section-ba2b1bb537fff210d58a51efd7bbb7f9 class="flex justify-between"><a role=button>LeetCode</a></label><ul><li><input type=checkbox id=section-3ef90a077ef0405107c088f6e344d4df class=toggle>
+<label for=section-3ef90a077ef0405107c088f6e344d4df class="flex justify-between"><a role=button>链表</a></label><ul><li><a href=/posts/reverse-nodes-in-k-group/>25. K 个一组翻转链表</a></li></ul></li></ul></li><li><input type=checkbox id=section-bceaf15d0fd4d92497330a70b95e69d1 class=toggle>
+<label for=section-bceaf15d0fd4d92497330a70b95e69d1 class="flex justify-between"><a role=button>其他</a></label><ul><li><a href=/posts/vscode-extensions/>Vscode Extensions</a></li><li><a href=/posts/macos-config/>MacOS Config</a></li><li><a href=/posts/vim-tricks/>Vim Tricks</a></li><li><a href=/posts/git-tricks/>Git Tricks</a></li></ul></li></ul></li><li><a href=/about/>关于我</a><ul></ul></li><li><a href=/links/>友链</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label><h3>如何检查网卡和存储设备是否支持 RDMA</h3><label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#什么是-rdma>什么是 RDMA</a><ul><li><a href=#rdma-的三种主要实现>RDMA 的三种主要实现</a></li></ul></li><li><a href=#检查网卡是否支持-rdma>检查网卡是否支持 RDMA</a><ul><li><a href=#1-查看网卡硬件信息>1. 查看网卡硬件信息</a></li><li><a href=#2-检查-rdma-设备>2. 检查 RDMA 设备</a></li><li><a href=#3-查看-rdma-设备详细信息>3. 查看 RDMA 设备详细信息</a></li><li><a href=#4-检查-rdma-协议支持>4. 检查 RDMA 协议支持</a></li><li><a href=#5-使用-rdma-工具>5. 使用 rdma 工具</a></li><li><a href=#6-检查驱动和模块>6. 检查驱动和模块</a></li><li><a href=#7-检查网络接口的-rdma-功能>7. 检查网络接口的 RDMA 功能</a></li></ul></li><li><a href=#检查存储设备是否支持-rdma>检查存储设备是否支持 RDMA</a><ul><li><a href=#1-nvme-over-fabrics-nvme-of>1. NVMe over Fabrics (NVMe-oF)</a></li><li><a href=#2-iscsi-extensions-for-rdma-iser>2. iSCSI Extensions for RDMA (iSER)</a></li><li><a href=#3-smb-direct-smb-over-rdma>3. SMB Direct (SMB over RDMA)</a></li></ul></li><li><a href=#验证-rdma-功能>验证 RDMA 功能</a><ul><li><a href=#1-安装测试工具>1. 安装测试工具</a></li><li><a href=#2-基本连通性测试>2. 基本连通性测试</a></li><li><a href=#3-性能测试>3. 性能测试</a></li><li><a href=#4-使用-rping-测试-rdma-连接>4. 使用 rping 测试 RDMA 连接</a></li></ul></li><li><a href=#常见网卡-rdma-支持情况>常见网卡 RDMA 支持情况</a><ul><li><a href=#支持-rdma-的主要网卡厂商和型号>支持 RDMA 的主要网卡厂商和型号</a></li><li><a href=#查看网卡是否在支持列表中>查看网卡是否在支持列表中</a></li></ul></li><li><a href=#故障排查>故障排查</a><ul><li><a href=#问题-1找不到-rdma-设备>问题 1：找不到 RDMA 设备</a></li><li><a href=#问题-2rdma-设备存在但无法使用>问题 2：RDMA 设备存在但无法使用</a></li><li><a href=#问题-3性能不达预期>问题 3：性能不达预期</a></li><li><a href=#问题-4roce-无法工作>问题 4：RoCE 无法工作</a></li></ul></li><li><a href=#实用脚本>实用脚本</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></aside></header><article class="markdown book-article"><h2 id=什么是-rdma>什么是 RDMA
+<a class=anchor href=#%e4%bb%80%e4%b9%88%e6%98%af-rdma>#</a></h2><p>RDMA (Remote Direct Memory Access，远程直接内存访问) 是一种网络技术，允许网络适配器直接在应用程序内存和远程系统内存之间传输数据，完全绕过操作系统和 CPU。</p><h3 id=rdma-的三种主要实现>RDMA 的三种主要实现
+<a class=anchor href=#rdma-%e7%9a%84%e4%b8%89%e7%a7%8d%e4%b8%bb%e8%a6%81%e5%ae%9e%e7%8e%b0>#</a></h3><ol><li><strong>InfiniBand</strong>：专用的高性能互连技术</li><li><strong>RoCE (RDMA over Converged Ethernet)</strong>：在以太网上实现 RDMA<ul><li>RoCE v1：基于以太网链路层</li><li>RoCE v2：基于 IP/UDP，可路由</li></ul></li><li><strong>iWARP</strong>：在 TCP/IP 上实现 RDMA</li></ol><h2 id=检查网卡是否支持-rdma>检查网卡是否支持 RDMA
+<a class=anchor href=#%e6%a3%80%e6%9f%a5%e7%bd%91%e5%8d%a1%e6%98%af%e5%90%a6%e6%94%af%e6%8c%81-rdma>#</a></h2><h3 id=1-查看网卡硬件信息>1. 查看网卡硬件信息
+<a class=anchor href=#1-%e6%9f%a5%e7%9c%8b%e7%bd%91%e5%8d%a1%e7%a1%ac%e4%bb%b6%e4%bf%a1%e6%81%af>#</a></h3><p>使用 lspci 查看网卡型号：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>lspci | grep -i ethernet
+</span></span><span style=display:flex><span>lspci | grep -i infiniband
+</span></span><span style=display:flex><span>lspci | grep -i network
+</span></span></code></pre></div><p>查看详细信息：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>lspci -v -s &lt;bus_id&gt;
+</span></span></code></pre></div><h3 id=2-检查-rdma-设备>2. 检查 RDMA 设备
+<a class=anchor href=#2-%e6%a3%80%e6%9f%a5-rdma-%e8%ae%be%e5%a4%87>#</a></h3><p>查看系统是否识别 RDMA 设备：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ls -l /sys/class/infiniband/
+</span></span></code></pre></div><p>查看 RDMA 设备列表：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ibv_devices
+</span></span></code></pre></div><p>输出示例：</p><pre tabindex=0><code>    device                 node GUID
+    ------              ----------------
+    mlx5_0              248a0703001a2d88
+    mlx5_1              248a0703001a2d89
+</code></pre><h3 id=3-查看-rdma-设备详细信息>3. 查看 RDMA 设备详细信息
+<a class=anchor href=#3-%e6%9f%a5%e7%9c%8b-rdma-%e8%ae%be%e5%a4%87%e8%af%a6%e7%bb%86%e4%bf%a1%e6%81%af>#</a></h3><p>查看特定设备的属性：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ibv_devinfo
+</span></span></code></pre></div><p>输出示例：</p><pre tabindex=0><code>hca_id: mlx5_0
+        transport:                      InfiniBand (0)
+        fw_ver:                         16.35.1012
+        node_guid:                      248a:0703:001a:2d88
+        sys_image_guid:                 248a:0703:001a:2d88
+        vendor_id:                      0x02c9
+        vendor_part_id:                 4123
+        hw_ver:                         0x0
+        board_id:                       MT_0000000012
+        phys_port_cnt:                  1
+                port:   1
+                        state:                  PORT_ACTIVE (4)
+                        max_mtu:                4096 (5)
+                        active_mtu:             4096 (5)
+                        sm_lid:                 0
+                        port_lid:               0
+                        port_lmc:               0x00
+                        link_layer:             Ethernet
+</code></pre><h3 id=4-检查-rdma-协议支持>4. 检查 RDMA 协议支持
+<a class=anchor href=#4-%e6%a3%80%e6%9f%a5-rdma-%e5%8d%8f%e8%ae%ae%e6%94%af%e6%8c%81>#</a></h3><p>查看网卡支持的 RDMA 协议类型：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 查看 link_layer</span>
+</span></span><span style=display:flex><span>cat /sys/class/infiniband/*/ports/*/link_layer
+</span></span></code></pre></div><p>可能的输出：</p><ul><li><code>InfiniBand</code>：支持原生 InfiniBand</li><li><code>Ethernet</code>：支持 RoCE 或 iWARP</li></ul><p>查看 GID 类型（判断 RoCE 版本）：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 查看 GID 表</span>
+</span></span><span style=display:flex><span>ibv_devinfo -v | grep GID
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 或者直接查看</span>
+</span></span><span style=display:flex><span>cat /sys/class/infiniband/mlx5_0/ports/1/gid_attrs/types/*
+</span></span></code></pre></div><p>GID 类型说明：</p><ul><li><code>IB/RoCE v1</code>：RoCE v1</li><li><code>RoCE v2</code>：RoCE v2</li><li><code>IB</code>：InfiniBand</li></ul><h3 id=5-使用-rdma-工具>5. 使用 rdma 工具
+<a class=anchor href=#5-%e4%bd%bf%e7%94%a8-rdma-%e5%b7%a5%e5%85%b7>#</a></h3><p>现代 Linux 系统推荐使用 <code>rdma</code> 命令：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 查看所有 RDMA 设备</span>
+</span></span><span style=display:flex><span>rdma link
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 输出示例</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># link mlx5_0/1 state ACTIVE physical_state LINK_UP netdev ens1f0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 查看 RDMA 系统信息</span>
+</span></span><span style=display:flex><span>rdma system
+</span></span></code></pre></div><h3 id=6-检查驱动和模块>6. 检查驱动和模块
+<a class=anchor href=#6-%e6%a3%80%e6%9f%a5%e9%a9%b1%e5%8a%a8%e5%92%8c%e6%a8%a1%e5%9d%97>#</a></h3><p>查看是否加载了 RDMA 相关模块：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>lsmod | grep -E <span style=color:#e6db74>&#39;rdma|infiniband|mlx|ib_&#39;</span>
+</span></span></code></pre></div><p>常见模块：</p><ul><li><code>rdma_cm</code>：RDMA 连接管理</li><li><code>ib_core</code>：InfiniBand 核心</li><li><code>ib_uverbs</code>：用户空间访问接口</li><li><code>mlx5_core</code>, <code>mlx5_ib</code>：Mellanox ConnectX 驱动</li><li><code>bnxt_re</code>：Broadcom 网卡 RDMA</li><li><code>i40iw</code>：Intel XL710 iWARP</li></ul><p>查看网卡驱动信息：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ethtool -i &lt;interface_name&gt;
+</span></span></code></pre></div><h3 id=7-检查网络接口的-rdma-功能>7. 检查网络接口的 RDMA 功能
+<a class=anchor href=#7-%e6%a3%80%e6%9f%a5%e7%bd%91%e7%bb%9c%e6%8e%a5%e5%8f%a3%e7%9a%84-rdma-%e5%8a%9f%e8%83%bd>#</a></h3><p>查看网络接口是否关联了 RDMA 设备：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 查看网络接口</span>
+</span></span><span style=display:flex><span>ip link show
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 查看 RDMA 设备和网络接口的映射</span>
+</span></span><span style=display:flex><span>rdma link show
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 或者</span>
+</span></span><span style=display:flex><span>ls -l /sys/class/net/*/device/infiniband
+</span></span></code></pre></div><h2 id=检查存储设备是否支持-rdma>检查存储设备是否支持 RDMA
+<a class=anchor href=#%e6%a3%80%e6%9f%a5%e5%ad%98%e5%82%a8%e8%ae%be%e5%a4%87%e6%98%af%e5%90%a6%e6%94%af%e6%8c%81-rdma>#</a></h2><h3 id=1-nvme-over-fabrics-nvme-of>1. NVMe over Fabrics (NVMe-oF)
+<a class=anchor href=#1-nvme-over-fabrics-nvme-of>#</a></h3><p>NVMe-oF 可以使用 RDMA 作为传输层。</p><p>查看 NVMe 设备：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>nvme list
+</span></span></code></pre></div><p>查看 NVMe 设备的传输类型：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>nvme list-subsys
+</span></span></code></pre></div><p>输出示例：</p><pre tabindex=0><code>nvme-subsys0 - NQN=nqn.2014-08.org.nvmexpress:uuid:...
+\
+ +- nvme0 rdma traddr=192.168.1.100 trsvcid=4420 live
+</code></pre><p><code>rdma</code> 表示使用 RDMA 传输。</p><p>查看 NVMe 控制器详细信息：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>nvme id-ctrl /dev/nvme0 | grep -i transport
+</span></span></code></pre></div><h3 id=2-iscsi-extensions-for-rdma-iser>2. iSCSI Extensions for RDMA (iSER)
+<a class=anchor href=#2-iscsi-extensions-for-rdma-iser>#</a></h3><p>查看 iSCSI 会话是否使用 iSER：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>iscsiadm -m session -P <span style=color:#ae81ff>3</span> | grep -A5 <span style=color:#e6db74>&#34;iface.transport_name&#34;</span>
+</span></span></code></pre></div><p>如果输出包含 <code>iser</code>，则使用了 RDMA。</p><p>查看 iSER 模块：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>lsmod | grep ib_iser
+</span></span></code></pre></div><h3 id=3-smb-direct-smb-over-rdma>3. SMB Direct (SMB over RDMA)
+<a class=anchor href=#3-smb-direct-smb-over-rdma>#</a></h3><p>查看 SMB 挂载是否使用 RDMA：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>mount | grep cifs
+</span></span><span style=display:flex><span>cat /proc/fs/cifs/DebugData | grep -i rdma
+</span></span></code></pre></div><h2 id=验证-rdma-功能>验证 RDMA 功能
+<a class=anchor href=#%e9%aa%8c%e8%af%81-rdma-%e5%8a%9f%e8%83%bd>#</a></h2><h3 id=1-安装测试工具>1. 安装测试工具
+<a class=anchor href=#1-%e5%ae%89%e8%a3%85%e6%b5%8b%e8%af%95%e5%b7%a5%e5%85%b7>#</a></h3><p>在 Ubuntu/Debian 上：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>apt-get install perftest libibverbs-dev
+</span></span></code></pre></div><p>在 RHEL/CentOS 上：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>yum install perftest libibverbs-utils
+</span></span></code></pre></div><h3 id=2-基本连通性测试>2. 基本连通性测试
+<a class=anchor href=#2-%e5%9f%ba%e6%9c%ac%e8%bf%9e%e9%80%9a%e6%80%a7%e6%b5%8b%e8%af%95>#</a></h3><p>在服务器端：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ib_write_bw -d mlx5_0 -i <span style=color:#ae81ff>1</span>
+</span></span></code></pre></div><p>在客户端：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ib_write_bw -d mlx5_0 -i <span style=color:#ae81ff>1</span> &lt;server_ip&gt;
+</span></span></code></pre></div><h3 id=3-性能测试>3. 性能测试
+<a class=anchor href=#3-%e6%80%a7%e8%83%bd%e6%b5%8b%e8%af%95>#</a></h3><p>测试 RDMA Write 带宽：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Server</span>
+</span></span><span style=display:flex><span>ib_write_bw -a -d mlx5_0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Client</span>
+</span></span><span style=display:flex><span>ib_write_bw -a -d mlx5_0 &lt;server_ip&gt;
+</span></span></code></pre></div><p>测试 RDMA Read 带宽：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Server</span>
+</span></span><span style=display:flex><span>ib_read_bw -a -d mlx5_0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Client</span>
+</span></span><span style=display:flex><span>ib_read_bw -a -d mlx5_0 &lt;server_ip&gt;
+</span></span></code></pre></div><p>测试延迟：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Server</span>
+</span></span><span style=display:flex><span>ib_write_lat -d mlx5_0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Client</span>
+</span></span><span style=display:flex><span>ib_write_lat -d mlx5_0 &lt;server_ip&gt;
+</span></span></code></pre></div><h3 id=4-使用-rping-测试-rdma-连接>4. 使用 rping 测试 RDMA 连接
+<a class=anchor href=#4-%e4%bd%bf%e7%94%a8-rping-%e6%b5%8b%e8%af%95-rdma-%e8%bf%9e%e6%8e%a5>#</a></h3><p>测试 RDMA CM (Connection Manager)：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Server</span>
+</span></span><span style=display:flex><span>rping -s -a 0.0.0.0 -v -C <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Client</span>
+</span></span><span style=display:flex><span>rping -c -a &lt;server_ip&gt; -v -C <span style=color:#ae81ff>10</span>
+</span></span></code></pre></div><p>参数说明：</p><ul><li><code>-s</code>：服务器模式</li><li><code>-c</code>：客户端模式</li><li><code>-a</code>：地址</li><li><code>-v</code>：详细输出</li><li><code>-C</code>：传输次数</li></ul><h2 id=常见网卡-rdma-支持情况>常见网卡 RDMA 支持情况
+<a class=anchor href=#%e5%b8%b8%e8%a7%81%e7%bd%91%e5%8d%a1-rdma-%e6%94%af%e6%8c%81%e6%83%85%e5%86%b5>#</a></h2><h3 id=支持-rdma-的主要网卡厂商和型号>支持 RDMA 的主要网卡厂商和型号
+<a class=anchor href=#%e6%94%af%e6%8c%81-rdma-%e7%9a%84%e4%b8%bb%e8%a6%81%e7%bd%91%e5%8d%a1%e5%8e%82%e5%95%86%e5%92%8c%e5%9e%8b%e5%8f%b7>#</a></h3><p><strong>Mellanox (NVIDIA)</strong>：</p><ul><li>ConnectX-4/5/6/7 系列</li><li>支持 InfiniBand 和 RoCE v2</li></ul><p><strong>Intel</strong>：</p><ul><li>X722 系列（iWARP）</li><li>E810 系列（部分型号支持 RoCE）</li></ul><p><strong>Broadcom</strong>：</p><ul><li>NetXtreme-E 系列</li><li>支持 RoCE v2</li></ul><p><strong>Chelsio</strong>：</p><ul><li>T5/T6 系列</li><li>支持 iWARP</li></ul><p><strong>Marvell (Cavium)</strong>：</p><ul><li>FastLinQ 41000/45000 系列</li><li>支持 RoCE v2</li></ul><h3 id=查看网卡是否在支持列表中>查看网卡是否在支持列表中
+<a class=anchor href=#%e6%9f%a5%e7%9c%8b%e7%bd%91%e5%8d%a1%e6%98%af%e5%90%a6%e5%9c%a8%e6%94%af%e6%8c%81%e5%88%97%e8%a1%a8%e4%b8%ad>#</a></h3><p>检查内核支持的 RDMA 驱动：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ls /lib/modules/<span style=color:#66d9ef>$(</span>uname -r<span style=color:#66d9ef>)</span>/kernel/drivers/infiniband/hw/
+</span></span></code></pre></div><h2 id=故障排查>故障排查
+<a class=anchor href=#%e6%95%85%e9%9a%9c%e6%8e%92%e6%9f%a5>#</a></h2><h3 id=问题-1找不到-rdma-设备>问题 1：找不到 RDMA 设备
+<a class=anchor href=#%e9%97%ae%e9%a2%98-1%e6%89%be%e4%b8%8d%e5%88%b0-rdma-%e8%ae%be%e5%a4%87>#</a></h3><p>检查步骤：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 1. 确认硬件</span>
+</span></span><span style=display:flex><span>lspci | grep -i network
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 2. 检查驱动是否加载</span>
+</span></span><span style=display:flex><span>lsmod | grep -E <span style=color:#e6db74>&#39;mlx|ib_&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 3. 查看内核日志</span>
+</span></span><span style=display:flex><span>dmesg | grep -i rdma
+</span></span><span style=display:flex><span>dmesg | grep -i infiniband
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 4. 手动加载驱动</span>
+</span></span><span style=display:flex><span>modprobe rdma_cm
+</span></span><span style=display:flex><span>modprobe ib_core
+</span></span><span style=display:flex><span>modprobe mlx5_ib  <span style=color:#75715e># 根据你的网卡选择驱动</span>
+</span></span></code></pre></div><h3 id=问题-2rdma-设备存在但无法使用>问题 2：RDMA 设备存在但无法使用
+<a class=anchor href=#%e9%97%ae%e9%a2%98-2rdma-%e8%ae%be%e5%a4%87%e5%ad%98%e5%9c%a8%e4%bd%86%e6%97%a0%e6%b3%95%e4%bd%bf%e7%94%a8>#</a></h3><p>检查端口状态：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 查看端口是否 ACTIVE</span>
+</span></span><span style=display:flex><span>ibv_devinfo | grep state
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 查看网络接口是否 UP</span>
+</span></span><span style=display:flex><span>ip link show
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 检查 RDMA 子系统状态</span>
+</span></span><span style=display:flex><span>rdma link show
+</span></span></code></pre></div><h3 id=问题-3性能不达预期>问题 3：性能不达预期
+<a class=anchor href=#%e9%97%ae%e9%a2%98-3%e6%80%a7%e8%83%bd%e4%b8%8d%e8%be%be%e9%a2%84%e6%9c%9f>#</a></h3><p>检查配置：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 1. 检查 MTU 设置</span>
+</span></span><span style=display:flex><span>ip link show &lt;interface&gt;
+</span></span><span style=display:flex><span>ibv_devinfo | grep mtu
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 2. 检查网卡硬件卸载功能</span>
+</span></span><span style=display:flex><span>ethtool -k &lt;interface&gt; | grep offload
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 3. 检查 IRQ 亲和性</span>
+</span></span><span style=display:flex><span>cat /proc/interrupts | grep mlx
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 4. 检查 NUMA 配置</span>
+</span></span><span style=display:flex><span>numactl --hardware
+</span></span></code></pre></div><h3 id=问题-4roce-无法工作>问题 4：RoCE 无法工作
+<a class=anchor href=#%e9%97%ae%e9%a2%98-4roce-%e6%97%a0%e6%b3%95%e5%b7%a5%e4%bd%9c>#</a></h3><p>RoCE 特殊要求：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># 1. 启用无损以太网（PFC - Priority Flow Control）</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 对于 RoCE v1，必须配置</span>
+</span></span><span style=display:flex><span>dcbtool sc &lt;interface&gt; pfc e:1 a:1,1,1,1,1,1,1,1
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 2. 检查交换机是否支持 PFC/ECN</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># RoCE 对网络质量要求高，需要无丢包环境</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 3. 验证 RoCE 配置</span>
+</span></span><span style=display:flex><span>cma_roce_mode  <span style=color:#75715e># 查看 RoCE 模式</span>
+</span></span></code></pre></div><h2 id=实用脚本>实用脚本
+<a class=anchor href=#%e5%ae%9e%e7%94%a8%e8%84%9a%e6%9c%ac>#</a></h2><p>完整的 RDMA 检测脚本：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e>#!/bin/bash
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;=== RDMA Hardware Detection ===&#34;</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;1. Network Adapters:&#34;</span>
+</span></span><span style=display:flex><span>lspci | grep -E <span style=color:#e6db74>&#39;Ethernet|InfiniBand|Network&#39;</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;2. RDMA Devices:&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> command -v ibv_devices &amp;&gt; /dev/null; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>    ibv_devices
+</span></span><span style=display:flex><span><span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>    echo <span style=color:#e6db74>&#34;ibv_devices not found. Install libibverbs-utils&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;3. RDMA Device Details:&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> command -v ibv_devinfo &amp;&gt; /dev/null; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>    ibv_devinfo | grep -E <span style=color:#e6db74>&#39;hca_id|transport|link_layer|state&#39;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;4. RDMA Modules:&#34;</span>
+</span></span><span style=display:flex><span>lsmod | grep -E <span style=color:#e6db74>&#39;rdma|ib_|mlx|bnxt&#39;</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;5. RDMA Links:&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> command -v rdma &amp;&gt; /dev/null; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>    rdma link show
+</span></span><span style=display:flex><span><span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span>echo
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>echo <span style=color:#e6db74>&#34;6. Network Interfaces with RDMA:&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> iface in <span style=color:#66d9ef>$(</span>ls /sys/class/net/<span style=color:#66d9ef>)</span>; <span style=color:#66d9ef>do</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> -L <span style=color:#e6db74>&#34;/sys/class/net/</span>$iface<span style=color:#e6db74>/device/infiniband&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+</span></span><span style=display:flex><span>        rdma_dev<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>ls /sys/class/net/$iface/device/infiniband/<span style=color:#66d9ef>)</span>
+</span></span><span style=display:flex><span>        echo <span style=color:#e6db74>&#34;</span>$iface<span style=color:#e6db74> -&gt; </span>$rdma_dev<span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fi</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>done</span>
+</span></span></code></pre></div><p>保存为 <code>check_rdma.sh</code> 并执行：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>chmod +x check_rdma.sh
+</span></span><span style=display:flex><span>./check_rdma.sh
+</span></span></code></pre></div><h2 id=参考资料>参考资料
+<a class=anchor href=#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99>#</a></h2><ul><li><p><strong>Linux RDMA 文档</strong>：</p><ul><li><a href=https://www.kernel.org/doc/html/latest/infiniband/>https://www.kernel.org/doc/html/latest/infiniband/</a></li><li>Documentation/infiniband/ in kernel source</li></ul></li><li><p><strong>厂商文档</strong>：</p><ul><li>NVIDIA Mellanox OFED：https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/</li><li>Intel Ethernet RDMA：https://www.intel.com/content/www/us/en/products/docs/network-io/</li></ul></li><li><p><strong>工具和库</strong>：</p><ul><li>rdma-core：https://github.com/linux-rdma/rdma-core</li><li>perftest：https://github.com/linux-rdma/perftest</li></ul></li><li><p><strong>标准规范</strong>：</p><ul><li>InfiniBand Architecture Specification</li><li>RoCE v2 Specification (Annex A17 in InfiniBand spec)</li><li>RFC 5040-5043 (iWARP specifications)</li></ul></li></ul></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/go-bai/go-bai.github.io/commit/b247bf67ab4f78785e9b9b216008e2371d5ad640 title='Last modified by go-bai | 2025-11-03' target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt>
+<span>2025-11-03</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#什么是-rdma>什么是 RDMA</a><ul><li><a href=#rdma-的三种主要实现>RDMA 的三种主要实现</a></li></ul></li><li><a href=#检查网卡是否支持-rdma>检查网卡是否支持 RDMA</a><ul><li><a href=#1-查看网卡硬件信息>1. 查看网卡硬件信息</a></li><li><a href=#2-检查-rdma-设备>2. 检查 RDMA 设备</a></li><li><a href=#3-查看-rdma-设备详细信息>3. 查看 RDMA 设备详细信息</a></li><li><a href=#4-检查-rdma-协议支持>4. 检查 RDMA 协议支持</a></li><li><a href=#5-使用-rdma-工具>5. 使用 rdma 工具</a></li><li><a href=#6-检查驱动和模块>6. 检查驱动和模块</a></li><li><a href=#7-检查网络接口的-rdma-功能>7. 检查网络接口的 RDMA 功能</a></li></ul></li><li><a href=#检查存储设备是否支持-rdma>检查存储设备是否支持 RDMA</a><ul><li><a href=#1-nvme-over-fabrics-nvme-of>1. NVMe over Fabrics (NVMe-oF)</a></li><li><a href=#2-iscsi-extensions-for-rdma-iser>2. iSCSI Extensions for RDMA (iSER)</a></li><li><a href=#3-smb-direct-smb-over-rdma>3. SMB Direct (SMB over RDMA)</a></li></ul></li><li><a href=#验证-rdma-功能>验证 RDMA 功能</a><ul><li><a href=#1-安装测试工具>1. 安装测试工具</a></li><li><a href=#2-基本连通性测试>2. 基本连通性测试</a></li><li><a href=#3-性能测试>3. 性能测试</a></li><li><a href=#4-使用-rping-测试-rdma-连接>4. 使用 rping 测试 RDMA 连接</a></li></ul></li><li><a href=#常见网卡-rdma-支持情况>常见网卡 RDMA 支持情况</a><ul><li><a href=#支持-rdma-的主要网卡厂商和型号>支持 RDMA 的主要网卡厂商和型号</a></li><li><a href=#查看网卡是否在支持列表中>查看网卡是否在支持列表中</a></li></ul></li><li><a href=#故障排查>故障排查</a><ul><li><a href=#问题-1找不到-rdma-设备>问题 1：找不到 RDMA 设备</a></li><li><a href=#问题-2rdma-设备存在但无法使用>问题 2：RDMA 设备存在但无法使用</a></li><li><a href=#问题-3性能不达预期>问题 3：性能不达预期</a></li><li><a href=#问题-4roce-无法工作>问题 4：RoCE 无法工作</a></li></ul></li><li><a href=#实用脚本>实用脚本</a></li><li><a href=#参考资料>参考资料</a></li></ul></nav></div></aside></main></body></html>
