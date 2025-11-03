@@ -22,8 +22,9 @@ title: Home
 
 ## ✏️ 随笔
 
+- 2025-11-02 [如何检查网卡和存储设备是否支持 RDMA](/notes/check-rdma-support/)
 - 2025-11-02 [Exit Status 与 waitpid：进程退出状态的内核机制](/notes/exit-status-and-waitpid/)
-- 2025-11-02 [DMA 从入门到精通：直接内存访问的内核机制](/notes/dma-deep-dive/)
+- 2025-11-02 [DMA 深度解析：直接内存访问的内核机制与实现](/notes/dma-deep-dive/)
 
 ------
 
