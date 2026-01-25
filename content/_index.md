@@ -30,6 +30,7 @@ title: Home
 
 ## 📝 博客文章
 
+- 2026-01-25 [Incus 容器无法联网？两种常见原因及排查指南](/posts/incus-container-network-troubleshooting/)
 - 2025-05-11 [tmux 使用笔记](/posts/tmux/)
 - 2025-05-10 [OpenWrt v2](/posts/openwrt-v2/)
 - 2025-04-14 [25. K 个一组翻转链表](/posts/reverse-nodes-in-k-group/)
