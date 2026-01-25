@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Network on gobai's notes</title><link>/posts/linux/network/</link><description>Recent content in Network on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/network/index.xml" rel="self" type="application/rss+xml"/><item><title>OpenWrt v2</title><link>/posts/openwrt-v2/</link><pubDate>Sat, 10 May 2025 17:38:38 +0800</pubDate><guid>/posts/openwrt-v2/</guid><description>&lt;p>最近更新了家中 &lt;code>OpenWrt&lt;/code> 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Network on gobai's notes</title><link>/posts/linux/network/</link><description>Recent content in Network on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/network/index.xml" rel="self" type="application/rss+xml"/><item><title>Incus 容器无法联网？两种常见原因及排查指南</title><link>/posts/incus-container-network-troubleshooting/</link><pubDate>Sun, 25 Jan 2026 19:37:55 +0800</pubDate><guid>/posts/incus-container-network-troubleshooting/</guid><description>&lt;p>最近在使用 Incus 创建容器时遇到了网络问题：容器死活无法访问外网。经过排查，发现有两种常见原因会导致这个问题。本文记录完整的排查过程和解决方案，希望能帮助遇到类似问题的朋友。&lt;/p>
+&lt;h2 id="问题现象">
+ 问题现象
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e7%8e%b0%e8%b1%a1">#&lt;/a>
+&lt;/h2>
+&lt;p>创建容器后，容器正常启动并获取到了 IP 地址，但无法访问外网：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ incus list
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>+-------+---------+--------------------+------+-----------+
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| NAME | STATE | IPV4 | IPV6 | TYPE |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>+-------+---------+--------------------+------+-----------+
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| first | RUNNING | 10.81.40.80 &lt;span style="color:#f92672">(&lt;/span>eth0&lt;span style="color:#f92672">)&lt;/span> | | CONTAINER |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>+-------+---------+--------------------+------+-----------+
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 到网关通&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ incus exec first -- ping -c &lt;span style="color:#ae81ff">2&lt;/span> 10.81.40.1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">64&lt;/span> bytes from 10.81.40.1: icmp_seq&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span> ttl&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">64&lt;/span> time&lt;span style="color:#f92672">=&lt;/span>0.149 ms ✓
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 到外网不通&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ incus exec first -- ping -c &lt;span style="color:#ae81ff">2&lt;/span> 8.8.8.8
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">0&lt;/span> received, 100% packet loss ✗
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="通用排查步骤">
+ 通用排查步骤
+ &lt;a class="anchor" href="#%e9%80%9a%e7%94%a8%e6%8e%92%e6%9f%a5%e6%ad%a5%e9%aa%a4">#&lt;/a>
+&lt;/h2>
+&lt;p>在定位具体原因之前，先做基础检查：&lt;/p></description></item><item><title>OpenWrt v2</title><link>/posts/openwrt-v2/</link><pubDate>Sat, 10 May 2025 17:38:38 +0800</pubDate><guid>/posts/openwrt-v2/</guid><description>&lt;p>最近更新了家中 &lt;code>OpenWrt&lt;/code> 的网络, 在宿主机增加一个 USB 网卡连通互联网, 拓扑图如下:&lt;/p>
 &lt;p>&lt;img src="/posts/linux/imgs/allinone.drawio.png" alt="穷人版家庭网络拓扑图" />&lt;/p>
 &lt;h2 id="准备-qcow2-镜像">
  准备 qcow2 镜像
