@@ -30,6 +30,7 @@ title: Home
 
 ## 📝 博客文章
 
+- 2026-10-05 [Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音](/posts/fcitx5-rime-ice/)
 - 2026-01-25 [Incus 容器无法联网？两种常见原因及排查指南](/posts/incus-container-network-troubleshooting/)
 - 2025-05-11 [tmux 使用笔记](/posts/tmux/)
 - 2025-05-10 [OpenWrt v2](/posts/openwrt-v2/)

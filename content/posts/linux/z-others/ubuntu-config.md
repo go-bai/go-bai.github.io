@@ -7,6 +7,8 @@ date: 2023-09-24T10:56:12+08:00
 
 ## 配置中文输入法
 
+> 现在已经换成 fcitx5 + 雾凇拼音，好用很多，见 [Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音](/posts/fcitx5-rime-ice/)，下面是之前 ibus 的配置方式
+
 1. Open Settings, go to `Region & Language` -> `Manage Installed Languages` -> `Install / Remove languages`.
 2. Select `Chinese (Simplified)`. Make sure `Keyboard Input method system` has `Ibus` selected. Apply.
 3. Reboot
