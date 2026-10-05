@@ -1,4 +1,29 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>tmux 使用笔记</title><link>/posts/tmux/</link><pubDate>Sun, 11 May 2025 15:56:58 +0800</pubDate><guid>/posts/tmux/</guid><description>&lt;p>&lt;code>tmux&lt;/code> 是一个强大的终端复用工具，可以在一个终端窗口中管理多个会话、窗口和窗格。&lt;strong>一个令我相见恨晚的工具&lt;/strong>，下面记录一下安装和常用命令与快捷键。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>其他 on gobai's notes</title><link>/posts/linux/z-others/</link><description>Recent content in 其他 on gobai's notes</description><generator>Hugo</generator><language>en-us</language><atom:link href="/posts/linux/z-others/index.xml" rel="self" type="application/rss+xml"/><item><title>Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音</title><link>/posts/fcitx5-rime-ice/</link><pubDate>Mon, 05 Oct 2026 10:00:00 +0800</pubDate><guid>/posts/fcitx5-rime-ice/</guid><description>&lt;blockquote>
+&lt;p>以下配置都是在 &lt;code>Ubuntu 22.04&lt;/code> + &lt;code>GNOME 42 Wayland&lt;/code> 下完成的&lt;/p>&lt;/blockquote>
+&lt;p>之前一直用系统自带的 &lt;code>ibus&lt;/code> 智能拼音，词库弱、新词基本打不出来，Chrome 在 Wayland 下输入法还时好时坏。这次换成了 &lt;code>fcitx5&lt;/code> + &lt;a href="https://github.com/iDvel/rime-ice">雾凇拼音 (rime-ice)&lt;/a>，&lt;strong>比以前好用太多了&lt;/strong>，下面记录一下完整配置和踩过的坑。&lt;/p>
+&lt;p>最终效果：&lt;/p>
+&lt;ul>
+&lt;li>只保留一个输入法 &lt;code>Rime 雾凇拼音&lt;/code>，&lt;code>Shift&lt;/code> 切换中/英&lt;/li>
+&lt;li>新词、长句联想很准，比如 &lt;code>jushenzhineng&lt;/code> → &lt;code>具身智能&lt;/code>&lt;/li>
+&lt;li>自带一堆 Lua 扩展：&lt;code>rq&lt;/code> 日期、&lt;code>sj&lt;/code> 时间、&lt;code>xq&lt;/code> 星期、&lt;code>nl&lt;/code> 农历、&lt;code>R1234&lt;/code> 数字大写、&lt;code>cC1+2&lt;/code> 计算器、&lt;code>uuid&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="安装-fcitx5-和-rime">
+ 安装 fcitx5 和 Rime
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-fcitx5-%e5%92%8c-rime">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo apt install -y fcitx5 fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 fcitx5-config-qt &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> fcitx5-rime librime-plugin-lua librime-bin
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>fcitx5&lt;/code> 是输入法框架，&lt;code>Rime&lt;/code> 是跑在它上面的输入引擎，雾凇拼音是 Rime 的一套配置和词库&lt;/li>
+&lt;li>&lt;code>librime-plugin-lua&lt;/code> 必须装，雾凇的日期、计算器等功能都是 Lua 写的&lt;/li>
+&lt;li>不需要装 &lt;code>fcitx5-chinese-addons&lt;/code>（fcitx5 自带拼音），只用雾凇的话装了反而多一个输入法要切&lt;/li>
+&lt;/ul>
+&lt;h2 id="切换系统输入法框架为-fcitx5">
+ 切换系统输入法框架为 fcitx5
+ &lt;a class="anchor" href="#%e5%88%87%e6%8d%a2%e7%b3%bb%e7%bb%9f%e8%be%93%e5%85%a5%e6%b3%95%e6%a1%86%e6%9e%b6%e4%b8%ba-fcitx5">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>im-config -n fcitx5
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>会生成 &lt;code>~/.xinputrc&lt;/code>，内容是 &lt;code>run_im fcitx5&lt;/code>。&lt;/p></description></item><item><title>tmux 使用笔记</title><link>/posts/tmux/</link><pubDate>Sun, 11 May 2025 15:56:58 +0800</pubDate><guid>/posts/tmux/</guid><description>&lt;p>&lt;code>tmux&lt;/code> 是一个强大的终端复用工具，可以在一个终端窗口中管理多个会话、窗口和窗格。&lt;strong>一个令我相见恨晚的工具&lt;/strong>，下面记录一下安装和常用命令与快捷键。&lt;/p>
 &lt;h2 id="安装">
  安装
  &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85">#&lt;/a>
@@ -460,6 +485,8 @@
  配置中文输入法
  &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e4%b8%ad%e6%96%87%e8%be%93%e5%85%a5%e6%b3%95">#&lt;/a>
 &lt;/h2>
+&lt;blockquote>
+&lt;p>现在已经换成 fcitx5 + 雾凇拼音，好用很多，见 &lt;a href="/posts/fcitx5-rime-ice/">Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音&lt;/a>，下面是之前 ibus 的配置方式&lt;/p>&lt;/blockquote>
 &lt;ol>
 &lt;li>Open Settings, go to &lt;code>Region &amp;amp; Language&lt;/code> -&amp;gt; &lt;code>Manage Installed Languages&lt;/code> -&amp;gt; &lt;code>Install / Remove languages&lt;/code>.&lt;/li>
 &lt;li>Select &lt;code>Chinese (Simplified)&lt;/code>. Make sure &lt;code>Keyboard Input method system&lt;/code> has &lt;code>Ibus&lt;/code> selected. Apply.&lt;/li>
@@ -468,13 +495,7 @@
 &lt;li>Click on the &amp;ldquo;+&amp;rdquo; sign under &lt;code>Input sources&lt;/code>.&lt;/li>
 &lt;li>Select &lt;code>Chinese (China)&lt;/code> and then &lt;code>Chinese (Intelligent Pinyin)&lt;/code>.&lt;/li>
 &lt;/ol>
-&lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p>
-&lt;h2 id="修正简体中文显示为异体日文字形">
- 修正简体中文显示为异体(日文)字形
- &lt;a class="anchor" href="#%e4%bf%ae%e6%ad%a3%e7%ae%80%e4%bd%93%e4%b8%ad%e6%96%87%e6%98%be%e7%a4%ba%e4%b8%ba%e5%bc%82%e4%bd%93%e6%97%a5%e6%96%87%e5%ad%97%e5%bd%a2">#&lt;/a>
-&lt;/h2>
-&lt;blockquote>
-&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
+&lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p></description></item><item><title>About Systemd</title><link>/posts/systemd-journal/</link><pubDate>Sun, 14 Nov 2021 01:47:04 +0800</pubDate><guid>/posts/systemd-journal/</guid><description>&lt;p>记录一下查看和操作 &lt;code>systemd&lt;/code> 日志的几个常用命令&lt;/p>
 &lt;h2 id="常用过滤日志日志的命令">
  常用过滤日志日志的命令
  &lt;a class="anchor" href="#%e5%b8%b8%e7%94%a8%e8%bf%87%e6%bb%a4%e6%97%a5%e5%bf%97%e6%97%a5%e5%bf%97%e7%9a%84%e5%91%bd%e4%bb%a4">#&lt;/a>

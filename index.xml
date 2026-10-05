@@ -168,7 +168,32 @@
  方式一：直接修改 prometheus 配置
  &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
 &lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Exit Status 与 waitpid：进程退出状态的内核机制</title><link>/notes/exit-status-and-waitpid/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/exit-status-and-waitpid/</guid><description>深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制</description></item><item><title>DMA 深度解析：直接内存访问的内核机制与实现</title><link>/notes/dma-deep-dive/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/dma-deep-dive/</guid><description>深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术</description></item><item><title>如何检查网卡和存储设备是否支持 RDMA</title><link>/notes/check-rdma-support/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/check-rdma-support/</guid><description>全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试</description></item><item><title>Incus 容器无法联网？两种常见原因及排查指南</title><link>/posts/incus-container-network-troubleshooting/</link><pubDate>Sun, 25 Jan 2026 19:37:55 +0800</pubDate><guid>/posts/incus-container-network-troubleshooting/</guid><description>&lt;p>最近在使用 Incus 创建容器时遇到了网络问题：容器死活无法访问外网。经过排查，发现有两种常见原因会导致这个问题。本文记录完整的排查过程和解决方案，希望能帮助遇到类似问题的朋友。&lt;/p>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Exit Status 与 waitpid：进程退出状态的内核机制</title><link>/notes/exit-status-and-waitpid/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/exit-status-and-waitpid/</guid><description>深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制</description></item><item><title>DMA 深度解析：直接内存访问的内核机制与实现</title><link>/notes/dma-deep-dive/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/dma-deep-dive/</guid><description>深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术</description></item><item><title>如何检查网卡和存储设备是否支持 RDMA</title><link>/notes/check-rdma-support/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/check-rdma-support/</guid><description>全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试</description></item><item><title>Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音</title><link>/posts/fcitx5-rime-ice/</link><pubDate>Mon, 05 Oct 2026 10:00:00 +0800</pubDate><guid>/posts/fcitx5-rime-ice/</guid><description>&lt;blockquote>
+&lt;p>以下配置都是在 &lt;code>Ubuntu 22.04&lt;/code> + &lt;code>GNOME 42 Wayland&lt;/code> 下完成的&lt;/p>&lt;/blockquote>
+&lt;p>之前一直用系统自带的 &lt;code>ibus&lt;/code> 智能拼音，词库弱、新词基本打不出来，Chrome 在 Wayland 下输入法还时好时坏。这次换成了 &lt;code>fcitx5&lt;/code> + &lt;a href="https://github.com/iDvel/rime-ice">雾凇拼音 (rime-ice)&lt;/a>，&lt;strong>比以前好用太多了&lt;/strong>，下面记录一下完整配置和踩过的坑。&lt;/p>
+&lt;p>最终效果：&lt;/p>
+&lt;ul>
+&lt;li>只保留一个输入法 &lt;code>Rime 雾凇拼音&lt;/code>，&lt;code>Shift&lt;/code> 切换中/英&lt;/li>
+&lt;li>新词、长句联想很准，比如 &lt;code>jushenzhineng&lt;/code> → &lt;code>具身智能&lt;/code>&lt;/li>
+&lt;li>自带一堆 Lua 扩展：&lt;code>rq&lt;/code> 日期、&lt;code>sj&lt;/code> 时间、&lt;code>xq&lt;/code> 星期、&lt;code>nl&lt;/code> 农历、&lt;code>R1234&lt;/code> 数字大写、&lt;code>cC1+2&lt;/code> 计算器、&lt;code>uuid&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="安装-fcitx5-和-rime">
+ 安装 fcitx5 和 Rime
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-fcitx5-%e5%92%8c-rime">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo apt install -y fcitx5 fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 fcitx5-config-qt &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> fcitx5-rime librime-plugin-lua librime-bin
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>fcitx5&lt;/code> 是输入法框架，&lt;code>Rime&lt;/code> 是跑在它上面的输入引擎，雾凇拼音是 Rime 的一套配置和词库&lt;/li>
+&lt;li>&lt;code>librime-plugin-lua&lt;/code> 必须装，雾凇的日期、计算器等功能都是 Lua 写的&lt;/li>
+&lt;li>不需要装 &lt;code>fcitx5-chinese-addons&lt;/code>（fcitx5 自带拼音），只用雾凇的话装了反而多一个输入法要切&lt;/li>
+&lt;/ul>
+&lt;h2 id="切换系统输入法框架为-fcitx5">
+ 切换系统输入法框架为 fcitx5
+ &lt;a class="anchor" href="#%e5%88%87%e6%8d%a2%e7%b3%bb%e7%bb%9f%e8%be%93%e5%85%a5%e6%b3%95%e6%a1%86%e6%9e%b6%e4%b8%ba-fcitx5">#&lt;/a>
+&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>im-config -n fcitx5
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>会生成 &lt;code>~/.xinputrc&lt;/code>，内容是 &lt;code>run_im fcitx5&lt;/code>。&lt;/p></description></item><item><title>Incus 容器无法联网？两种常见原因及排查指南</title><link>/posts/incus-container-network-troubleshooting/</link><pubDate>Sun, 25 Jan 2026 19:37:55 +0800</pubDate><guid>/posts/incus-container-network-troubleshooting/</guid><description>&lt;p>最近在使用 Incus 创建容器时遇到了网络问题：容器死活无法访问外网。经过排查，发现有两种常见原因会导致这个问题。本文记录完整的排查过程和解决方案，希望能帮助遇到类似问题的朋友。&lt;/p>
 &lt;h2 id="问题现象">
  问题现象
  &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e7%8e%b0%e8%b1%a1">#&lt;/a>
@@ -2533,6 +2558,8 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
  配置中文输入法
  &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e4%b8%ad%e6%96%87%e8%be%93%e5%85%a5%e6%b3%95">#&lt;/a>
 &lt;/h2>
+&lt;blockquote>
+&lt;p>现在已经换成 fcitx5 + 雾凇拼音，好用很多，见 &lt;a href="/posts/fcitx5-rime-ice/">Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音&lt;/a>，下面是之前 ibus 的配置方式&lt;/p>&lt;/blockquote>
 &lt;ol>
 &lt;li>Open Settings, go to &lt;code>Region &amp;amp; Language&lt;/code> -&amp;gt; &lt;code>Manage Installed Languages&lt;/code> -&amp;gt; &lt;code>Install / Remove languages&lt;/code>.&lt;/li>
 &lt;li>Select &lt;code>Chinese (Simplified)&lt;/code>. Make sure &lt;code>Keyboard Input method system&lt;/code> has &lt;code>Ibus&lt;/code> selected. Apply.&lt;/li>
@@ -2541,13 +2568,7 @@ new只分配内存，并把内存置零，不做初始化&lt;/p></description></
 &lt;li>Click on the &amp;ldquo;+&amp;rdquo; sign under &lt;code>Input sources&lt;/code>.&lt;/li>
 &lt;li>Select &lt;code>Chinese (China)&lt;/code> and then &lt;code>Chinese (Intelligent Pinyin)&lt;/code>.&lt;/li>
 &lt;/ol>
-&lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p>
-&lt;h2 id="修正简体中文显示为异体日文字形">
- 修正简体中文显示为异体(日文)字形
- &lt;a class="anchor" href="#%e4%bf%ae%e6%ad%a3%e7%ae%80%e4%bd%93%e4%b8%ad%e6%96%87%e6%98%be%e7%a4%ba%e4%b8%ba%e5%bc%82%e4%bd%93%e6%97%a5%e6%96%87%e5%ad%97%e5%bd%a2">#&lt;/a>
-&lt;/h2>
-&lt;blockquote>
-&lt;p>ubuntu/linux对中文支持的不太好, 在选择汉字字体时, 优先选择的是日文或者韩文, 需要手动调整优先级后重启操作系统解决&lt;/p></description></item><item><title>Go应用在容器中的时区</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">
+&lt;p>&lt;a href="https://askubuntu.com/questions/1408873/ubuntu-22-04-chinese-simplified-pinyin-input-support">ubuntu-22-04-chinese-simplified-pinyin-input-support&lt;/a>&lt;/p></description></item><item><title>Go应用在容器中的时区</title><link>/posts/solve-timezone-issue-in-go-application-in-container/</link><pubDate>Sat, 18 Feb 2023 16:12:01 +0800</pubDate><guid>/posts/solve-timezone-issue-in-go-application-in-container/</guid><description>&lt;h2 id="容器中的时区问题">
  容器中的时区问题
  &lt;a class="anchor" href="#%e5%ae%b9%e5%99%a8%e4%b8%ad%e7%9a%84%e6%97%b6%e5%8c%ba%e9%97%ae%e9%a2%98">#&lt;/a>
 &lt;/h2>
