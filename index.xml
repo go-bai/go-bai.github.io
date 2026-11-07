@@ -168,7 +168,22 @@
  方式一：直接修改 prometheus 配置
  &lt;a class="anchor" href="#%e6%96%b9%e5%bc%8f%e4%b8%80%e7%9b%b4%e6%8e%a5%e4%bf%ae%e6%94%b9-prometheus-%e9%85%8d%e7%bd%ae">#&lt;/a>
 &lt;/h3>
-&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Exit Status 与 waitpid：进程退出状态的内核机制</title><link>/notes/exit-status-and-waitpid/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/exit-status-and-waitpid/</guid><description>深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制</description></item><item><title>DMA 深度解析：直接内存访问的内核机制与实现</title><link>/notes/dma-deep-dive/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/dma-deep-dive/</guid><description>深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术</description></item><item><title>如何检查网卡和存储设备是否支持 RDMA</title><link>/notes/check-rdma-support/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/check-rdma-support/</guid><description>全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试</description></item><item><title>Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音</title><link>/posts/fcitx5-rime-ice/</link><pubDate>Mon, 05 Oct 2026 10:00:00 +0800</pubDate><guid>/posts/fcitx5-rime-ice/</guid><description>&lt;blockquote>
+&lt;p>修改 &lt;code>kube-prometheus-stack&lt;/code> chart 配置并更新，或者直接修改保存配置的 configmap 中的 job 配置, 记得修改 &lt;code>{EDIT_HERE}&lt;/code> 为实际值&lt;/p></description></item><item><title>Exit Status 与 waitpid：进程退出状态的内核机制</title><link>/notes/exit-status-and-waitpid/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/exit-status-and-waitpid/</guid><description>深入理解 exit status 的内核实现、waitpid 系统调用以及进程退出状态的传递机制</description></item><item><title>DMA 深度解析：直接内存访问的内核机制与实现</title><link>/notes/dma-deep-dive/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/dma-deep-dive/</guid><description>深入剖析 DMA 硬件架构、Linux 内核 DMA 子系统实现、编程接口及性能优化技术</description></item><item><title>如何检查网卡和存储设备是否支持 RDMA</title><link>/notes/check-rdma-support/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>/notes/check-rdma-support/</guid><description>全面介绍如何在 Linux 系统中检查网卡和存储设备的 RDMA 支持情况，包括硬件识别、驱动验证和功能测试</description></item><item><title>chrome-devtools-mcp 折腾记：别让每个 Claude 会话都起一个 Chrome</title><link>/posts/chrome-devtools-mcp/</link><pubDate>Sat, 17 Oct 2026 22:00:00 +0800</pubDate><guid>/posts/chrome-devtools-mcp/</guid><description>&lt;blockquote>
+&lt;p>环境：Ubuntu 22.04 + GNOME 42 (X11) + Chrome 149 + chrome-devtools-mcp 1.2.0&lt;/p>&lt;/blockquote>
+&lt;p>用 Claude Code 的 &lt;code>chrome-devtools&lt;/code> 插件做网页调试，发现一个很蠢的问题：&lt;strong>每开一个 Claude 会话就多一个 Chrome 进程&lt;/strong>，而且是个带 &lt;code>--headless --isolated&lt;/code> 的临时 Chrome，登录态全空，用完 profile 就删。&lt;/p>
+&lt;p>这篇记录一下原因和最终方案：用一个独立的调试专用 Chrome（非默认 profile + 固定调试端口），所有 MCP 会话用 &lt;code>--browserUrl&lt;/code> 挂上去，不启动任何额外 Chrome。&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>2026-11 更新&lt;/strong>：用了三周后发现内存大头不是 Chrome 而是 MCP 进程，真正贵的是 token。浏览器操作已经改成隔离子代理 + agent-browser CLI，见文末&lt;a href="#2026-11-%e6%9b%b4%e6%96%b0%e7%9c%81%e4%b8%8b%e6%9d%a5%e7%9a%84%e6%98%af%e5%86%85%e5%ad%98%e7%83%a7%e6%8e%89%e7%9a%84%e6%98%af-token">更新&lt;/a>。&lt;/p>&lt;/blockquote>
+&lt;h2 id="现象">
+ 现象
+ &lt;a class="anchor" href="#%e7%8e%b0%e8%b1%a1">#&lt;/a>
+&lt;/h2>
+&lt;p>&lt;code>ps&lt;/code> 里能看到一串：&lt;/p>
+&lt;pre tabindex="0">&lt;code>npm exec chrome-devtools-mcp@1.2.0 --headless --isolated --chrome-arg=--no-sandbox --chrome-arg=--disable-gpu
+ └─ sh -c ...
+ └─ node .../chrome-devtools-mcp/build/src/index.js
+ └─ /opt/google/chrome/chrome --headless --user-data-dir=/tmp/chrome-profile-xxx ...
+&lt;/code>&lt;/pre>&lt;p>几个会话就是几组，内存蹭蹭涨。而且因为是隔离 profile，&lt;strong>每次都要重新登录&lt;/strong>。&lt;/p></description></item><item><title>Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音</title><link>/posts/fcitx5-rime-ice/</link><pubDate>Mon, 05 Oct 2026 10:00:00 +0800</pubDate><guid>/posts/fcitx5-rime-ice/</guid><description>&lt;blockquote>
 &lt;p>以下配置都是在 &lt;code>Ubuntu 22.04&lt;/code> + &lt;code>GNOME 42 Wayland&lt;/code> 下完成的&lt;/p>&lt;/blockquote>
 &lt;p>之前一直用系统自带的 &lt;code>ibus&lt;/code> 智能拼音，词库弱、新词基本打不出来，Chrome 在 Wayland 下输入法还时好时坏。这次换成了 &lt;code>fcitx5&lt;/code> + &lt;a href="https://github.com/iDvel/rime-ice">雾凇拼音 (rime-ice)&lt;/a>，&lt;strong>比以前好用太多了&lt;/strong>，下面记录一下完整配置和踩过的坑。&lt;/p>
 &lt;p>最终效果：&lt;/p>
