@@ -30,6 +30,7 @@ title: Home
 
 ## 📝 博客文章
 
+- 2026-10-17 [chrome-devtools-mcp 折腾记：别让每个 Claude 会话都起一个 Chrome](/posts/chrome-devtools-mcp/)
 - 2026-10-05 [Ubuntu 22.04 GNOME Wayland 配置 fcitx5 + 雾凇拼音](/posts/fcitx5-rime-ice/)
 - 2026-01-25 [Incus 容器无法联网？两种常见原因及排查指南](/posts/incus-container-network-troubleshooting/)
 - 2025-05-11 [tmux 使用笔记](/posts/tmux/)
